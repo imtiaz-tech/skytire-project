@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+enum Role {
+  USER
+  ADMIN
+  DEFAULT_USER
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  memberId            Int       @unique
+  name                String
+  email               String    @unique
+  password            String
+  role                Role      @default(DEFAULT_USER)
+  resetPasswordToken  String?
+  resetPasswordExpire DateTime?
+  token               String?
+  tokenExpire         DateTime?
+  isActive            Boolean   @default(true)
+  isSubscribed        Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([email])
+  @@index([memberId])
+}
+
+model Tire {
+  id          Int                     @id @default(autoincrement())
+  name        String
+  brand       String
+  description String?
+  embedding   Unsupported("vector(1536)")?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
