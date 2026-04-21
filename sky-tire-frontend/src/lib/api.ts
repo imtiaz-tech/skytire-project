@@ -11,17 +11,10 @@ async function apiFetch(endpoint: string, options: RequestInit & { next?: NextFe
     headers.set('Content-Type', 'application/json');
   }
 
-  // Handle client-side auth token
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-  }
-
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include', // Send session cookies with every request
   });
 
   const data = await response.json().catch(() => null);

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, ValidationPipe, UsePipes, Param, Session } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, ValidationPipe, UsePipes, Param, Session } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.validation';
 
@@ -18,6 +18,12 @@ export class AuthController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   login(@Body() loginDto: LoginDto, @Session() session: any) {
     return this.authService.login(loginDto, session);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  getMe(@Session() session: any) {
+    return this.authService.getMe(session);
   }
 
   @Post('logout')

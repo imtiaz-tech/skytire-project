@@ -11,31 +11,41 @@ export interface User {
 
 export interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+  initialLoading: boolean; // true until first /auth/me check completes
   error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
   isAuthenticated: false,
   loading: false,
+  initialLoading: true,
   error: null,
 };
+
+// Fetch current user from session (GET /auth/me)
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.data?.message || 'Not authenticated');
+    }
+  }
+);
 
 // Async Thunk for Sign Up
 export const signupUser = createAsyncThunk(
   'auth/signup',
   async (formData: any, { rejectWithValue }) => {
     try {
-      console.log('--- Signup Attempt ---');
       const response = await api.post('/auth/signup', formData);
-      console.log("🚀 ~ response:", response)
-      return response.data; // { user, token, message }
+      return response.data;
     } catch (err: any) {
-      console.error('Signup API Error Trace:', err);
       return rejectWithValue(err.data?.message || err.message || 'Signup failed.');
     }
   }
@@ -46,12 +56,23 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: any, { rejectWithValue }) => {
     try {
-      console.log('--- Login Attempt ---');
       const response = await api.post('/auth/login', credentials);
-      return response.data; // { user, token, message }
+      return response.data; // { user, message }
     } catch (err: any) {
-      console.error('Login API Error Trace:', err);
       return rejectWithValue(err.data?.message || err.message || 'Login failed.');
+    }
+  }
+);
+
+// Async Thunk for Logout
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/logout', {});
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.data?.message || err.message || 'Logout failed.');
     }
   }
 );
@@ -60,26 +81,26 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-      }
-    },
     clearError: (state) => {
       state.error = null;
     },
-    hydrateToken: (state) => {
-      if (typeof window !== 'undefined') {
-        state.token = localStorage.getItem('token');
-      }
-    }
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Current User (GET /auth/me)
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.initialLoading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action: PayloadAction<any>) => {
+        state.initialLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.initialLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+      })
       // Signup
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
@@ -89,10 +110,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
-        state.token = action.payload.token;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', action.payload.token);
-        }
       })
       .addCase(signupUser.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
@@ -107,17 +124,19 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
-        state.token = action.payload.token;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', action.payload.token);
-        }
       })
       .addCase(loginUser.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Logout
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
       });
   },
 });
 
-export const { logout, clearError, hydrateToken } = authSlice.actions;
+export const { clearError } = authSlice.actions;
 export default authSlice.reducer;

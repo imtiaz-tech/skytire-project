@@ -68,6 +68,24 @@ export class AuthService {
     return { message: 'Login successful', user: result };
   }
 
+  async getMe(session: any) {
+    const userId = session?.userId;
+    if (!userId) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+
+    const { password, resetPasswordToken, resetPasswordExpire, ...result } = user;
+    return result;
+  }
+
   async logout(session: any) {
     if (session) {
       await session.destroy();
