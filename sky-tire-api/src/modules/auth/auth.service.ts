@@ -1,27 +1,20 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { hashPassword, comparePassword } from '../../lib/bcrypt';
-import { signToken } from '../../lib/jwt';
 import { generateUniqueMemberId } from '../../utils/generateMemberId';
 import { SignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.validation';
 import * as crypto from 'crypto';
-import * as nodemailer from 'nodemailer';
+import { MailService } from '../../mail/mail.service';
+import { forgotPasswordEmailTemplate } from '../../mail/templates/forgot-password.template';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  private transporter: nodemailer.Transporter;
-
-  constructor(private prisma: PrismaService) {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
-      port: parseInt(process.env.SMTP_PORT || '465', 10),
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_MAIL || 'info@skytire.com',
-        pass: process.env.SMTP_PASSWORD || 'SkyTireBusinessBy@26Wala',
-      },
-    });
-  }
+  constructor(
+    private prisma: PrismaService,
+    private mailService: MailService,
+    private configService: ConfigService,
+  ) {}
 
   async signup(dto: SignupDto) {
     const existingUser = await this.prisma.user.findFirst({
@@ -47,12 +40,10 @@ export class AuthService {
     });
 
     const { password, ...result } = user;
-    const token = signToken({ userId: user.id, role: user.role, email: user.email });
-
-    return { message: 'User registered successfully', user: result, token };
+    return { message: 'User registered successfully', user: result };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, session: any) {
     const user = await this.prisma.user.findFirst({
       where: { email: dto.email },
     });
@@ -70,10 +61,18 @@ export class AuthService {
       throw new UnauthorizedException('Account is disabled');
     }
 
-    const token = signToken({ userId: user.id, role: user.role, email: user.email });
-    const { password, ...result } = user;
+    // Store userId in session
+    session.userId = user.id;
 
-    return { message: 'Login successful', user: result, token };
+    const { password, ...result } = user;
+    return { message: 'Login successful', user: result };
+  }
+
+  async logout(session: any) {
+    if (session) {
+      await session.destroy();
+    }
+    return { message: 'Logout successful' };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -82,7 +81,6 @@ export class AuthService {
     });
 
     if (!user) {
-      // Return success even if user doesn't exist to prevent email enumeration
       return { message: 'If an account with that email exists, we sent a password reset link to it.' };
     }
 
@@ -98,30 +96,24 @@ export class AuthService {
       },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
     const resetUrl = `${frontendUrl}/auth/reset-password/${resetToken}`;
+    const projectLogo = this.configService.get<string>('PROJECT_LOGO', 'https://skytire.com/logo.png');
+    const projectName = this.configService.get<string>('PROJECT_NAME', 'SkyTire');
 
-    const mailOptions = {
-      from: `"Sky Tire" <${process.env.SMTP_MAIL || 'info@skytire.com'}>`,
-      to: user.email,
-      subject: 'Password Reset Request',
-      text: `You requested a password reset. Please go to this link to reset your password: ${resetUrl}`,
-      html: `
-        <p>You requested a password reset.</p>
-        <p>Please click this <a href="${resetUrl}">link</a> to reset your password.</p>
-        <p>If you did not request this, please ignore this email.</p>
-      `,
-    };
+    const html = forgotPasswordEmailTemplate(projectLogo, resetUrl, projectName);
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      await this.mailService.sendEmail({
+        to: user.email,
+        subject: 'Password Reset Request',
+        html,
+      });
     } catch (error) {
-      // Revert token if email fails
       await this.prisma.user.update({
         where: { id: user.id },
         data: { resetPasswordToken: null, resetPasswordExpire: null },
       });
-      console.error('Email error:', error);
       throw new BadRequestException('Email could not be sent');
     }
 
@@ -160,3 +152,4 @@ export class AuthService {
     return { message: 'Password reset completely successfully' };
   }
 }
+
