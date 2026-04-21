@@ -33,7 +33,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-gray-100 bg-white">
+    <aside className="sticky top-0 z-50 flex h-screen w-[220px] flex-shrink-0 flex-col border-r border-gray-100 bg-white">
       {/* Logo */}
       <div className="flex items-center gap-2 px-5 pt-5 pb-4">
         <div className="flex items-center gap-1.5">

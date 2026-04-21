@@ -50,9 +50,9 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f6fa]">
+    <div className="flex min-h-screen bg-[#f5f6fa] text-[#1e2a4a]">
       <AdminSidebar />
-      <main className="ml-[220px] min-h-screen p-6">
+      <main className="relative z-10 flex-1 p-6 overflow-x-hidden">
         {children}
       </main>
     </div>
