@@ -58,7 +58,7 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('Account is disabled');
+      throw new UnauthorizedException('Your account has been deactivated. Please contact support.');
     }
 
     // Store userId in session

@@ -36,6 +36,49 @@ export class UsersService {
     return result;
   }
 
+  async findAll(page: number = 1, limit: number = 10, search?: string) {
+    const skip = (page - 1) * limit;
+    
+    let where: any = {};
+    if (search) {
+      const isSearchNumber = !isNaN(Number(search));
+      where = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          ...(isSearchNumber ? [{ memberId: Number(search) }] : []),
+        ],
+      };
+    }
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          memberId: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      users,
+      total,
+      pages: Math.ceil(total / limit),
+      currentPage: Number(page),
+      limit: Number(limit),
+    };
+  }
+
   async getUserById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
@@ -44,6 +87,19 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        isActive: true,
+      }
+    });
+  }
+
+  async updateStatus(id: number, isActive: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive },
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
       }
     });
   }

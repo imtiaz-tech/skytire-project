@@ -54,3 +54,12 @@ model Session {
   expiresAt DateTime
 }
 
+model GuestUser {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
