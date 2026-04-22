@@ -119,12 +119,12 @@ export class AuthService {
     const projectLogo = this.configService.get<string>('PROJECT_LOGO', 'https://skytire.com/logo.png');
     const projectName = this.configService.get<string>('PROJECT_NAME', 'SkyTire');
 
-    const html = forgotPasswordEmailTemplate(projectLogo, resetUrl, projectName);
+    const html = forgotPasswordEmailTemplate(projectLogo, resetUrl, user.name);
 
     try {
       await this.mailService.sendEmail({
         to: user.email,
-        subject: 'Password Reset Request',
+        subject: 'Reset your Sky Tire Account Password',
         html,
       });
     } catch (error) {

@@ -20,14 +20,14 @@ import {
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Members', href: '/admin/users', icon: Users },
-  { label: 'Guest User', href: '/admin/guest-users', icon: UserRound },
-  { label: 'Tires', href: '/admin/tires', icon: CircleDot },
-  { label: 'Wheels', href: '/admin/wheels', icon: Disc3 },
-  { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
-  { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
-  { label: 'Brands', href: '/admin/brands', icon: Star },
+  // { label: 'Guest User', href: '/admin/guest-users', icon: UserRound },
+  // { label: 'Tires', href: '/admin/tires', icon: CircleDot },
+  // { label: 'Wheels', href: '/admin/wheels', icon: Disc3 },
+  // { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
+  // { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
+  // { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Orders', href: '/admin/orders', icon: Package },
-  { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  // { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
 export default function AdminSidebar() {
@@ -39,7 +39,7 @@ export default function AdminSidebar() {
   const role = user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : 'Admin';
 
   return (
-    <aside className="sticky top-0 z-50 flex h-screen w-[220px] flex-shrink-0 flex-col border-r border-gray-100 bg-white">
+    <aside className="sticky top-0 z-50 flex h-screen w-[280px] flex-shrink-0 flex-col border-r border-gray-100 bg-white">
       {/* Logo */}
       <Link
         href="/"
@@ -84,7 +84,7 @@ export default function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15.5px] font-medium transition-all duration-150 ${
                 isActive
                   ? 'bg-[#3B5998] text-white shadow-sm shadow-blue-200'
                   : 'text-[#3B5998] hover:bg-[#f0f3f9]'
