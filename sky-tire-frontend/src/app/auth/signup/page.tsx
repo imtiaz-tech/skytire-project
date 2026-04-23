@@ -7,11 +7,15 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { signupUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
 import { Mail, Lock, User as UserIcon, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
+import { useFingerprint } from '@/hooks/useFingerprint';
 
 export default function SignupPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
+  const visitorId = useFingerprint();
+  console.log("🚀 ~ SignupPage ~ visitorId:", visitorId)
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,15 +36,16 @@ export default function SignupPage() {
     e.preventDefault();
     if (!isPasswordValid) return;
     try {
-      const result = await dispatch(signupUser(formData)).unwrap();
+      const payload = visitorId ? { ...formData, visitorId } : formData;
+      const result = await dispatch(signupUser(payload)).unwrap();
       const redirectPath = getRoleRedirectPath(result.user);
       router.push(redirectPath);
     } catch (err: any) {
-      console.error('Signup failed with error:', err);
+      console.error('Signup failed:', err);
     }
   };
 
-  const ValidationItem = ({ isValid, text }: { isValid: boolean, text: string }) => (
+  const ValidationItem = ({ isValid, text }: { isValid: boolean; text: string }) => (
     <div className={`flex items-center space-x-2 text-sm ${isValid ? 'text-green-500' : 'text-zinc-500'}`}>
       <CheckCircle2 className={`h-4 w-4 ${isValid ? 'text-green-500' : 'text-zinc-600'}`} />
       <span>{text}</span>
@@ -55,7 +60,7 @@ export default function SignupPage() {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-zinc-400">
-            Join SkyTire for premium wheel & tire packages
+            Join SkyTire for premium wheel &amp; tire packages
           </p>
         </div>
 
@@ -65,7 +70,7 @@ export default function SignupPage() {
               {error}
             </div>
           )}
-          
+
           <div className="relative">
             <UserIcon className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500" />
             <input
@@ -138,7 +143,7 @@ export default function SignupPage() {
           <p className="text-sm text-zinc-500">
             Already have an account?{' '}
             <Link href="/auth/login" className="font-medium text-blue-500 hover:text-blue-400 transition-colors">
-              SignIn here
+              Sign in here
             </Link>
           </p>
         </div>

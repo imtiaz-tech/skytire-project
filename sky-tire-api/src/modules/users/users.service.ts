@@ -2,10 +2,14 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
+import { DevicesService } from '../devices/devices.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private devicesService: DevicesService,
+  ) {}
 
   async createUser(data: CreateUserDto) {
     const existingUser = await this.prisma.user.findFirst({
@@ -65,13 +69,25 @@ export class UsersService {
           role: true,
           isActive: true,
           createdAt: true,
+          devices: {
+            select: {
+              isBanned: true,
+            },
+          },
         },
       }),
       this.prisma.user.count({ where }),
     ]);
 
+    // Compute hasAnyBannedDevice flag for Admin UI device-ban toggle
+    const enriched = users.map(({ devices, ...u }) => ({
+      ...u,
+      allDevicesBanned: devices.length > 0 && devices.every((d) => d.isBanned),
+      deviceCount: devices.length,
+    }));
+
     return {
-      users,
+      users: enriched,
       total,
       pages: Math.ceil(total / limit),
       currentPage: Number(page),
@@ -92,8 +108,13 @@ export class UsersService {
     });
   }
 
+  /**
+   * When admin toggles a user's isActive status:
+   * - If deactivating (isActive = false) → also ban all devices
+   * - If reactivating (isActive = true) → devices remain banned until admin explicitly unbans
+   */
   async updateStatus(id: number, isActive: boolean) {
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { isActive },
       select: {
@@ -102,5 +123,22 @@ export class UsersService {
         isActive: true,
       }
     });
+
+    // Propagate: deactivating a user bans all their devices
+    if (!isActive) {
+      await this.devicesService.banUserDevices(id);
+    }
+
+    return updated;
+  }
+
+  /** Toggle ban state of all devices for a user (admin action) */
+  async toggleDeviceBan(userId: number, ban: boolean) {
+    return this.devicesService.toggleUserDeviceBan(userId, ban);
+  }
+
+  /** Get all devices for a user (admin device history) */
+  async getUserDevices(userId: number) {
+    return this.devicesService.getUserDevices(userId);
   }
 }

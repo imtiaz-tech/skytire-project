@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, History as HistoryIcon, X } from 'lucide-react';
+import { Search, Loader2, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchUsers, toggleUserStatus } from '@/redux/slices/usersSlice';
+import { fetchUsers, toggleUserStatus, toggleDeviceBan } from '@/redux/slices/usersSlice';
 import { User } from '@/redux/types/userTypes';
 import Pagination from '@/components/ui/Pagination';
-
+import DeviceHistoryModal from '@/components/admin/DeviceHistoryModal';
+import OrderHistoryModal from '@/components/admin/OrderHistoryModal';
 
 const UsersPage = () => {
   const dispatch = useAppDispatch();
@@ -16,13 +17,13 @@ const UsersPage = () => {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showDeviceHistoryModal, setShowDeviceHistoryModal] = useState(false);
+  const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
   const limit = 10;
 
   useEffect(() => {
     dispatch(fetchUsers({ page, limit, search }));
   }, [dispatch, page, search]);
-
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,16 +35,34 @@ const UsersPage = () => {
     dispatch(toggleUserStatus({ id: user.id, isActive: !user.isActive }));
   };
 
+  const handleToggleDeviceBan = (user: User) => {
+    // If currently all banned → unban; otherwise ban all
+    dispatch(toggleDeviceBan({ id: user.id, ban: !user.allDevicesBanned }));
+  };
 
-  const openHistory = (user: User) => {
+  const openDeviceHistory = (user: User) => {
     setSelectedUser(user);
-    setShowHistoryModal(true);
+    setShowDeviceHistoryModal(true);
+  };
+
+  const closeDeviceHistory = () => {
+    setShowDeviceHistoryModal(false);
+    setSelectedUser(null);
+  };
+
+  const openOrderHistory = (user: User) => {
+    setSelectedUser(user);
+    setShowOrderHistoryModal(true);
+  };
+
+  const closeOrderHistory = () => {
+    setShowOrderHistoryModal(false);
+    setSelectedUser(null);
   };
 
   const formatPhoneNumber = (phone?: string) => {
     if (!phone) return '--';
     const cleaned = phone.replace(/\D/g, '');
-    // If it's a 10-digit number, format it as +92-XXX-XXXXXXX
     if (cleaned.length === 10) {
       return `+92-${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
     }
@@ -76,7 +95,7 @@ const UsersPage = () => {
             Search
           </button>
         </form>
-        <div className="text-base  text-black-500 font-bold">
+        <div className="text-base text-black-500 font-bold">
           Total: <span className="text-[#1e2a4a] font-bold">({total})</span>
         </div>
       </div>
@@ -87,19 +106,25 @@ const UsersPage = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50">
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider">Member ID</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center">History</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center">Role</th>
-                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center">Active</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Name</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Member ID</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Email</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Phone</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">History</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">Role</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">Active</th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                  Device Ban
+                </th>
+                <th className="px-6 py-4 text-[13px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                  Devices
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center whitespace-nowrap">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#3B5998] animate-spin" />
                       <p className="text-gray-400 text-sm">Loading members...</p>
@@ -108,46 +133,59 @@ const UsersPage = () => {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center whitespace-nowrap">
                     <p className="text-gray-400 font-medium">No members found matching your search.</p>
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-5">
+                    {/* Name */}
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <span className="text-base font-bold text-[#1e2a4a]">{user.name}</span>
                     </td>
-                    <td className="px-6 py-5">
+
+                    {/* Member ID */}
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <span className="text-base text-gray-600 font-medium">{user.memberId}</span>
                     </td>
-                    <td className="px-6 py-5">
+
+                    {/* Email */}
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <span className="text-base text-gray-600">{user.email}</span>
                     </td>
+
+                    {/* Phone */}
                     <td className="px-6 py-5 whitespace-nowrap">
                       <span className="text-base text-gray-600">{formatPhoneNumber(user.phone)}</span>
                     </td>
-                    <td className="px-6 py-5 text-center">
+
+                    {/* Order History */}
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
                       <button
-                        onClick={() => openHistory(user)}
+                        onClick={() => openOrderHistory(user)}
                         className="bg-[#1e2a4a] text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-opacity-90 transition-all uppercase"
                       >
                         History
                       </button>
                     </td>
-                    <td className="px-6 py-5 text-center">
+
+                    {/* Role */}
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
                       <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                        user.role === 'ADMIN' 
-                          ? 'bg-red-50 text-red-500' 
+                        user.role === 'ADMIN'
+                          ? 'bg-red-50 text-red-500'
                           : 'bg-green-50 text-green-500'
                       }`}>
                         {user.role === 'ADMIN' ? 'Admin' : 'User'}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-center">
+
+                    {/* Active Toggle */}
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(user)}
-
+                        title={user.isActive ? 'Deactivate user' : 'Activate user'}
                         className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                           user.isActive ? 'bg-[#00b087]' : 'bg-gray-200'
                         }`}
@@ -159,6 +197,45 @@ const UsersPage = () => {
                         />
                       </button>
                     </td>
+
+                    {/* Device Ban Toggle */}
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleDeviceBan(user)}
+                        title={
+                          user.allDevicesBanned
+                            ? 'Unban all devices'
+                            : user.deviceCount === 0
+                            ? 'No devices registered'
+                            : 'Ban all devices'
+                        }
+                        disabled={user.deviceCount === 0}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                          user.allDevicesBanned ? 'bg-red-500' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            user.allDevicesBanned ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </td>
+
+                    {/* Device History Button */}
+                    <td className="px-6 py-5 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => openDeviceHistory(user)}
+                        className="bg-[#1e2a4a] text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-opacity-90 transition-all uppercase"
+                      >
+                        History
+                        {(user.deviceCount ?? 0) > 0 && (
+                          <span className="ml-1.5 bg-blue-400/30 text-blue-100 text-[10px] px-1.5 py-0.5 rounded-full">
+                            {user.deviceCount}
+                          </span>
+                        )}
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -166,13 +243,14 @@ const UsersPage = () => {
           </table>
         </div>
 
-        {/* Pagination Section */}
+        {/* Pagination */}
         {!loading && users.length > 0 && (
           <div className="px-8 py-6 bg-gray-50/30 border-t border-gray-50 flex items-center justify-between">
             <div className="text-sm font-medium text-gray-500">
-              Showing page <span className="text-[#1e2a4a] font-bold">{page}</span> of <span className="text-[#1e2a4a] font-bold">{totalPages}</span>
+              Showing page <span className="text-[#1e2a4a] font-bold">{page}</span> of{' '}
+              <span className="text-[#1e2a4a] font-bold">{totalPages}</span>
             </div>
-            <Pagination 
+            <Pagination
               currentPage={page}
               totalPages={totalPages}
               onPageChange={(p) => setPage(p)}
@@ -181,47 +259,14 @@ const UsersPage = () => {
         )}
       </div>
 
+      {/* Device History Modal */}
+      {showDeviceHistoryModal && selectedUser && (
+        <DeviceHistoryModal user={selectedUser} onClose={closeDeviceHistory} />
+      )}
 
-      {/* History Modal Placeholder */}
-      {showHistoryModal && selectedUser && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowHistoryModal(false)} />
-          <div className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-[#1e2a4a]">
-              <div>
-                <h2 className="text-xl font-bold text-white">Member History</h2>
-                <p className="text-blue-200 text-sm">{selectedUser.name} ({selectedUser.memberId})</p>
-              </div>
-              <button 
-                onClick={() => setShowHistoryModal(false)}
-                className="p-2 hover:bg-white/10 rounded-xl text-white transition-all"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-8">
-              <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-                  <HistoryIcon className="h-8 w-8 text-[#3B5998]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#1e2a4a]">History is Coming Soon</h3>
-                  <p className="text-gray-400 text-sm max-w-xs mx-auto">
-                    We are currently building the order and interaction history module for members.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end">
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                className="px-6 py-2.5 bg-white border border-gray-200 text-[#1e2a4a] rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
-              >
-                Close Window
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Order History Modal */}
+      {showOrderHistoryModal && selectedUser && (
+        <OrderHistoryModal user={selectedUser} onClose={closeOrderHistory} />
       )}
     </div>
   );

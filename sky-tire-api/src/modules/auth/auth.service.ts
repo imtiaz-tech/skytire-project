@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import { MailService } from '../../mail/mail.service';
 import { forgotPasswordEmailTemplate } from '../../mail/templates/forgot-password.template';
 import { ConfigService } from '@nestjs/config';
+import { DevicesService } from '../devices/devices.service';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +15,7 @@ export class AuthService {
     private prisma: PrismaService,
     private mailService: MailService,
     private configService: ConfigService,
+    private devicesService: DevicesService,
   ) {}
 
   async signup(dto: SignupDto) {
@@ -30,14 +32,21 @@ export class AuthService {
     const hashedPassword = await hashPassword(dto.password);
     const memberId = await generateUniqueMemberId(this.prisma as any);
 
+    const { visitorId, ...userData } = dto;
+
     const user = await this.prisma.user.create({
       data: {
-        ...dto,
+        ...userData,
         password: hashedPassword,
         memberId,
         role: dto.role || 'DEFAULT_USER',
       },
     });
+
+    // Register device if fingerprint provided
+    if (visitorId) {
+      await this.devicesService.validateAndRegisterDevice(user.id, visitorId);
+    }
 
     const { password, ...result } = user;
     return { message: 'User registered successfully', user: result };
@@ -59,6 +68,11 @@ export class AuthService {
 
     if (!user.isActive) {
       throw new UnauthorizedException('Your account has been deactivated. Please contact support.');
+    }
+
+    // Device fraud check (throws ForbiddenException if banned)
+    if (dto.visitorId) {
+      await this.devicesService.validateAndRegisterDevice(user.id, dto.visitorId);
     }
 
     // Store userId in session
@@ -170,4 +184,3 @@ export class AuthService {
     return { message: 'Password reset completely successfully' };
   }
 }
-

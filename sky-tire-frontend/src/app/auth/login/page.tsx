@@ -6,18 +6,22 @@ import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { loginUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
-import { LogIn, Lock, User as UserIcon, Truck, Loader2 ,Eye, EyeOff } from 'lucide-react';
+import { LogIn, Lock, User as UserIcon, Truck, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useFingerprint } from '@/hooks/useFingerprint';
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
+  const visitorId = useFingerprint();
+  console.log("🚀 ~ LoginPage ~ visitorId:", visitorId)
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -25,15 +29,12 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log('Attempting login for user:', formData.email);
-      
-      const result = await dispatch(loginUser(formData)).unwrap();
-      
-      console.log('Login successful:', result);
+      const payload = visitorId ? { ...formData, visitorId } : formData;
+      const result = await dispatch(loginUser(payload)).unwrap();
       const redirectPath = getRoleRedirectPath(result.user);
       router.push(redirectPath);
     } catch (err: any) {
-      console.error('Login failed with error:', err);
+      console.error('Login failed:', err);
     }
   };
 
@@ -84,7 +85,6 @@ export default function LoginPage() {
                 placeholder="Password"
                 onChange={handleChange}
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -125,7 +125,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-zinc-500">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/auth/signup" className="font-medium text-blue-500 hover:text-blue-400 transition-colors">
               Create one now
             </Link>

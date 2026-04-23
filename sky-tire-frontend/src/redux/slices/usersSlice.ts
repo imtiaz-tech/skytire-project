@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@/lib/api';
-import { User, UsersState } from '../types/userTypes';
+import { User, UsersState, Device } from '../types/userTypes';
 
 const initialState: UsersState = {
   users: [],
@@ -8,22 +8,24 @@ const initialState: UsersState = {
   error: null,
   total: 0,
   pages: 0,
+  devicesByUserId: {},
+  deviceLoading: false,
 };
 
-// Fetch Users with pagination and search
+// ─── Fetch Users ──────────────────────────────────────────────────────────────
 export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',
   async ({ page, limit, search }: { page: number; limit: number; search: string }, { rejectWithValue }) => {
     try {
       const response = await api.get(`/admin/users?page=${page}&limit=${limit}&search=${search}`);
-      return response.data; // Expected: { users: User[], total: number, pages: number }
+      return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch users');
     }
   }
 );
 
-// Toggle User Active Status
+// ─── Toggle User Active Status ────────────────────────────────────────────────
 export const toggleUserStatus = createAsyncThunk(
   'users/toggleStatus',
   async ({ id, isActive }: { id: number; isActive: boolean }, { rejectWithValue }) => {
@@ -36,6 +38,33 @@ export const toggleUserStatus = createAsyncThunk(
   }
 );
 
+// ─── Toggle Device Ban for all devices of a user ──────────────────────────────
+export const toggleDeviceBan = createAsyncThunk(
+  'users/toggleDeviceBan',
+  async ({ id, ban }: { id: number; ban: boolean }, { rejectWithValue }) => {
+    try {
+      await api.patch(`/admin/users/${id}/devices/ban`, { ban });
+      return { id, ban };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || 'Failed to update device ban');
+    }
+  }
+);
+
+// ─── Fetch Device History for a user ─────────────────────────────────────────
+export const fetchUserDevices = createAsyncThunk(
+  'users/fetchUserDevices',
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/devices`);
+      return { userId, devices: response.data as Device[] };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch devices');
+    }
+  }
+);
+
+// ─── Slice ────────────────────────────────────────────────────────────────────
 const usersSlice = createSlice({
   name: 'users',
   initialState,
@@ -43,10 +72,13 @@ const usersSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearDevices: (state, action: PayloadAction<number>) => {
+      delete state.devicesByUserId[action.payload];
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Users
+      // ── fetchUsers ──────────────────────────────────────────────────────────
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -61,24 +93,52 @@ const usersSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
-      // Toggle User Status
+
+      // ── toggleUserStatus ────────────────────────────────────────────────────
       .addCase(toggleUserStatus.pending, (state) => {
-        // We could add a local loading state for specific users if needed, 
-        // but for now we follow the general loading pattern or keep it silent for better UX
         state.error = null;
       })
       .addCase(toggleUserStatus.fulfilled, (state, action: PayloadAction<{ id: number; isActive: boolean }>) => {
         const user = state.users.find(u => u.id === action.payload.id);
         if (user) {
           user.isActive = action.payload.isActive;
+          // When deactivating, the backend bans all devices → reflect locally
+          if (!action.payload.isActive) {
+            user.allDevicesBanned = true;
+          }
         }
       })
       .addCase(toggleUserStatus.rejected, (state, action: PayloadAction<any>) => {
+        state.error = action.payload;
+      })
+
+      // ── toggleDeviceBan ─────────────────────────────────────────────────────
+      .addCase(toggleDeviceBan.fulfilled, (state, action: PayloadAction<{ id: number; ban: boolean }>) => {
+        const user = state.users.find(u => u.id === action.payload.id);
+        if (user) {
+          user.allDevicesBanned = action.payload.ban;
+        }
+        // Invalidate cached device list so re-open shows fresh data
+        delete state.devicesByUserId[action.payload.id];
+      })
+      .addCase(toggleDeviceBan.rejected, (state, action: PayloadAction<any>) => {
+        state.error = action.payload;
+      })
+
+      // ── fetchUserDevices ────────────────────────────────────────────────────
+      .addCase(fetchUserDevices.pending, (state) => {
+        state.deviceLoading = true;
+      })
+      .addCase(fetchUserDevices.fulfilled, (state, action: PayloadAction<{ userId: number; devices: Device[] }>) => {
+        state.deviceLoading = false;
+        state.devicesByUserId[action.payload.userId] = action.payload.devices;
+      })
+      .addCase(fetchUserDevices.rejected, (state, action: PayloadAction<any>) => {
+        state.deviceLoading = false;
         state.error = action.payload;
       });
   },
 });
 
-export const { clearError } = usersSlice.actions;
+export const { clearError, clearDevices } = usersSlice.actions;
 export default usersSlice.reducer;

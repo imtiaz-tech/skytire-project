@@ -19,6 +19,10 @@ export class SignupDto {
   @IsEnum(Role)
   @IsOptional()
   role?: Role;
+
+  @IsString()
+  @IsOptional()
+  visitorId?: string;
 }
 
 export class LoginDto {
@@ -29,6 +33,10 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  @IsString()
+  @IsOptional()
+  visitorId?: string;
 }
 
 export class ForgotPasswordDto {
