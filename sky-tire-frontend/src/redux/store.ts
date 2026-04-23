@@ -5,6 +5,8 @@ import wireWheelsReducer from '../features/wire-wheels/slice';
 import accessoriesReducer from '../features/accessories/slice';
 import dashboardReducer from '../features/dashboard/slice';
 import authReducer from './slices/authSlice';
+import usersReducer from './slices/usersSlice';
+
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,7 @@ export const store = configureStore({
     wireWheels: wireWheelsReducer,
     accessories: accessoriesReducer,
     dashboard: dashboardReducer,
+    users: usersReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

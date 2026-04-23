@@ -1,48 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Loader2, History as HistoryIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import apiClient from '@/lib/api';
+import React, { useState, useEffect } from 'react';
+import { Search, Loader2, History as HistoryIcon, X } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { fetchUsers, toggleUserStatus } from '@/redux/slices/usersSlice';
+import { User } from '@/redux/types/userTypes';
+import Pagination from '@/components/ui/Pagination';
 
-interface User {
-  id: number;
-  name: string;
-  memberId: number;
-  email: string;
-  role: string;
-  isActive: boolean;
-  phone?: string;
-}
 
 const UsersPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+  const dispatch = useAppDispatch();
+  const { users, loading, total, pages: totalPages } = useAppSelector((state) => state.users);
+
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const limit = 10;
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get(`/admin/users?page=${page}&limit=${limit}&search=${search}`);
-      setUsers(response.data.users);
-      setTotal(response.data.total);
-      setTotalPages(response.data.pages);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search]);
-
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    dispatch(fetchUsers({ page, limit, search }));
+  }, [dispatch, page, search]);
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +30,10 @@ const UsersPage = () => {
     setPage(1);
   };
 
-  const toggleUserStatus = async (user: User) => {
-    try {
-      await apiClient.patch(`/admin/users/${user.id}/status`, { isActive: !user.isActive });
-      setUsers(users.map(u => u.id === user.id ? { ...u, isActive: !u.isActive } : u));
-    } catch (error) {
-      console.error('Failed to update user status:', error);
-    }
+  const handleToggleStatus = (user: User) => {
+    dispatch(toggleUserStatus({ id: user.id, isActive: !user.isActive }));
   };
+
 
   const openHistory = (user: User) => {
     setSelectedUser(user);
@@ -100,7 +76,7 @@ const UsersPage = () => {
             Search
           </button>
         </form>
-        <div className="text-sm font-medium text-gray-500">
+        <div className="text-base  text-black-500 font-bold">
           Total: <span className="text-[#1e2a4a] font-bold">({total})</span>
         </div>
       </div>
@@ -140,16 +116,16 @@ const UsersPage = () => {
                 users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-5">
-                      <span className="text-[14.5px] font-bold text-[#1e2a4a]">{user.name}</span>
+                      <span className="text-base font-bold text-[#1e2a4a]">{user.name}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="text-[13.5px] text-gray-600 font-medium">{user.memberId}</span>
+                      <span className="text-base text-gray-600 font-medium">{user.memberId}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="text-[13.5px] text-gray-600">{user.email}</span>
+                      <span className="text-base text-gray-600">{user.email}</span>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
-                      <span className="text-[13.5px] text-gray-600">{formatPhoneNumber(user.phone)}</span>
+                      <span className="text-base text-gray-600">{formatPhoneNumber(user.phone)}</span>
                     </td>
                     <td className="px-6 py-5 text-center">
                       <button
@@ -170,7 +146,8 @@ const UsersPage = () => {
                     </td>
                     <td className="px-6 py-5 text-center">
                       <button
-                        onClick={() => toggleUserStatus(user)}
+                        onClick={() => handleToggleStatus(user)}
+
                         className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                           user.isActive ? 'bg-[#00b087]' : 'bg-gray-200'
                         }`}
@@ -189,31 +166,21 @@ const UsersPage = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination Section */}
         {!loading && users.length > 0 && (
-          <div className="px-6 py-4 bg-gray-50/50 flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Page <span className="font-semibold text-[#1e2a4a]">{page}</span> of <span className="font-semibold text-[#1e2a4a]">{totalPages}</span>
+          <div className="px-8 py-6 bg-gray-50/30 border-t border-gray-50 flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-500">
+              Showing page <span className="text-[#1e2a4a] font-bold">{page}</span> of <span className="text-[#1e2a4a] font-bold">{totalPages}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-white hover:text-[#1e2a4a] disabled:opacity-50 disabled:hover:bg-transparent transition-all"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:bg-white hover:text-[#1e2a4a] disabled:opacity-50 disabled:hover:bg-transparent transition-all"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            <Pagination 
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p)}
+            />
           </div>
         )}
       </div>
+
 
       {/* History Modal Placeholder */}
       {showHistoryModal && selectedUser && (

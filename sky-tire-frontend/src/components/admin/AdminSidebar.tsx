@@ -20,14 +20,14 @@ import {
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Members', href: '/admin/users', icon: Users },
-  // { label: 'Guest User', href: '/admin/guest-users', icon: UserRound },
-  // { label: 'Tires', href: '/admin/tires', icon: CircleDot },
-  // { label: 'Wheels', href: '/admin/wheels', icon: Disc3 },
-  // { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
-  // { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
-  // { label: 'Brands', href: '/admin/brands', icon: Star },
+  { label: 'Guest User', href: '/admin/guest-users', icon: UserRound },
+  { label: 'Tires', href: '/admin/tires', icon: CircleDot },
+  { label: 'Wheels', href: '/admin/wheels', icon: Disc3 },
+  { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
+  { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
+  { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Orders', href: '/admin/orders', icon: Package },
-  // { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
 export default function AdminSidebar() {
