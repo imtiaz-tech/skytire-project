@@ -1,20 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { signupUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
 import { Mail, Lock, User as UserIcon, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
-import { useFingerprint } from '@/hooks/useFingerprint';
+import { getVisitorId } from '@/lib/getVisitorId';
 
 export default function SignupPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
-  const visitorId = useFingerprint();
-  console.log("🚀 ~ SignupPage ~ visitorId:", visitorId)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -22,7 +20,8 @@ export default function SignupPage() {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-
+  const [visitorId, setVisitorId] = useState<string | null>(null);
+  console.log("🚀 ~ SignupPage ~ visitorId:", visitorId)
   const isLengthValid = formData.password.length >= 12;
   const isUppercaseValid = /[A-Z]/.test(formData.password);
   const isNumOrSpecialValid = /[0-9!@#$%^&*_=+\-\\]/.test(formData.password);
@@ -31,6 +30,12 @@ export default function SignupPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+    useEffect(() => {
+    getVisitorId().then((id) => {
+      setVisitorId(id);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

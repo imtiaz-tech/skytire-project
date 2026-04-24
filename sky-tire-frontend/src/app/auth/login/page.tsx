@@ -7,14 +7,12 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { loginUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
 import { LogIn, Lock, User as UserIcon, Truck, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useFingerprint } from '@/hooks/useFingerprint';
+import { getVisitorId } from '@/lib/getVisitorId';
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
-  const visitorId = useFingerprint();
-  console.log("🚀 ~ LoginPage ~ visitorId:", visitorId)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -29,6 +27,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const visitorId = await getVisitorId();
       const payload = visitorId ? { ...formData, visitorId } : formData;
       const result = await dispatch(loginUser(payload)).unwrap();
       const redirectPath = getRoleRedirectPath(result.user);
