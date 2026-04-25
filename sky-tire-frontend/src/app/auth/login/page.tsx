@@ -1,18 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { loginUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
 import { LogIn, Lock, User as UserIcon, Truck, Loader2, Eye, EyeOff } from 'lucide-react';
-import { getVisitorId } from '@/lib/getVisitorId';
+import { useVisitorData } from '@fingerprint/react';
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
+  
+  const { data: visitorData } = useVisitorData({ immediate: true });
+  
+  useEffect(() => {
+    if (visitorData) {
+      console.log('Fingerprint Visitor Data:', visitorData);
+      console.log('Fingerprint Visitor ID:', (visitorData as any).visitor_id || (visitorData as any).visitorId);
+    }
+  }, [visitorData]);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -27,8 +36,13 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const visitorId = await getVisitorId();
-      const payload = visitorId ? { ...formData, visitorId } : formData;
+      const eventId = (visitorData as any)?.event_id || (visitorData as any)?.requestId;
+      if (!eventId) {
+        console.warn('Fingerprint visitor data not available yet');
+      }
+      
+      const payload = eventId ? { ...formData, eventId } : formData;
+      
       const result = await dispatch(loginUser(payload)).unwrap();
       const redirectPath = getRoleRedirectPath(result.user);
       router.push(redirectPath);

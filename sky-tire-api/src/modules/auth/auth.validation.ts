@@ -22,7 +22,7 @@ export class SignupDto {
 
   @IsString()
   @IsOptional()
-  visitorId?: string;
+  eventId?: string;
 }
 
 export class LoginDto {
@@ -36,7 +36,7 @@ export class LoginDto {
 
   @IsString()
   @IsOptional()
-  visitorId?: string;
+  eventId?: string;
 }
 
 export class ForgotPasswordDto {

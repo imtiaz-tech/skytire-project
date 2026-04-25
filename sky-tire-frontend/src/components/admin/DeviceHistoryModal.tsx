@@ -87,28 +87,40 @@ export default function DeviceHistoryModal({ user, onClose }: DeviceHistoryModal
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse text-sm min-w-max">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider rounded-tl-xl">
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider rounded-tl-xl whitespace-nowrap">
                       Visitor ID
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center">
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Banned At
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      Browser
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider rounded-tr-xl">
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      OS / Device
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      IP & Location
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      Flags (VPN/Proxy/Bot)
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                       First Seen
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider rounded-tr-xl whitespace-nowrap">
+                      Last Seen
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {devices.map((device) => (
                     <tr key={device.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <code
                           className="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded-lg"
                           title={device.visitorId}
@@ -116,7 +128,7 @@ export default function DeviceHistoryModal({ user, onClose }: DeviceHistoryModal
                           {truncateId(device.visitorId)}
                         </code>
                       </td>
-                      <td className="px-4 py-4 text-center">
+                      <td className="px-4 py-4 text-center whitespace-nowrap">
                         {device.isBanned ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-500 text-[11px] font-bold uppercase tracking-wider">
                             <ShieldBan className="h-3.5 w-3.5" />
@@ -125,15 +137,45 @@ export default function DeviceHistoryModal({ user, onClose }: DeviceHistoryModal
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-500 text-[11px] font-bold uppercase tracking-wider">
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Clean
+                            Active
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">
-                        {formatDate(device.bannedAt)}
+                      <td className="px-4 py-4 text-gray-600 text-xs whitespace-nowrap">
+                        {device.browserName || 'Unknown'} {device.browserVersion ? `(${device.browserVersion})` : ''}
+                        {device.incognito && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-600 uppercase">
+                            Incognito
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-gray-600 text-xs whitespace-nowrap">
+                        {device.os || 'Unknown'} / {device.device || 'Desktop'}
+                      </td>
+                      <td className="px-4 py-4 text-gray-600 text-xs whitespace-nowrap">
+                        <div className="font-medium">{device.ipAddress || '—'}</div>
+                        <div className="text-gray-400 text-[10px]">
+                          {device.city && device.country ? `${device.city}, ${device.country}` : 'Location Unknown'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex gap-1.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${device.vpnDetected ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-400'}`}>
+                            VPN
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${device.proxyDetected ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-400'}`}>
+                            Proxy
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${device.botDetected ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-400'}`}>
+                            Bot
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">
-                        {formatDate(device.createdAt)}
+                        {formatDate(device.firstSeenAt || device.createdAt)}
+                      </td>
+                      <td className="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">
+                        {formatDate(device.lastSeenAt || device.createdAt)}
                       </td>
                     </tr>
                   ))}

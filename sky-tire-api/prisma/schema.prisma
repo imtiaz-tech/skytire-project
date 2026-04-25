@@ -40,15 +40,30 @@ model User {
 }
 
 model Device {
-  id        Int       @id @default(autoincrement())
-  visitorId String    @unique
-  isBanned  Boolean   @default(false)
-  bannedAt  DateTime?
+  id             Int       @id @default(autoincrement())
+  visitorId      String    @unique
+  isBanned       Boolean   @default(false)
+  bannedAt       DateTime?
 
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  browserName    String?
+  browserVersion String?
+  os             String?
+  device         String?
+  ipAddress      String?
+  city           String?
+  country        String?
+  vpnDetected    Boolean   @default(false)
+  proxyDetected  Boolean   @default(false)
+  botDetected    Boolean   @default(false)
+  incognito      Boolean   @default(false)
 
-  createdAt DateTime  @default(now())
+  firstSeenAt    DateTime?
+  lastSeenAt     DateTime?
+
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime  @default(now())
 
   @@index([visitorId])
   @@index([userId])

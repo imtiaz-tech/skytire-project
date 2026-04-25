@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fingerprint Key Diagnostic</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #000; color: #fff; }
+        .card { background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px; }
+        button { background: #007bff; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 15px; background: #222; border-radius: 8px; white-space: pre-wrap; font-family: monospace; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Fingerprint Diagnostic</h2>
+        <p>Testing Public Key: <strong>66tKkNReS1qjXcWaT5JL</strong></p>
+        <button onclick="testFP()">Test Fingerprint</button>
+        <div id="result">Results will appear here...</div>
+    </div>
+
+    <script>
+        async function testFP() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = 'Testing...';
+            
+            try {
+                // We test US region first as per your dashboard
+                const response = await fetch('https://api.fpjs.io/?api_key=66tKkNReS1qjXcWaT5JL&v=3');
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = '<span style="color: #ff4d4d">FAILED: ' + data.error.message + '</span>\n\nFull Response:\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.innerHTML = '<span style="color: #4dff4d">SUCCESS! Key is working.</span>\n\nVisitor ID: ' + data.products.identification.data.visitorId;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = '<span style="color: #ff4d4d">NETWORK ERROR: ' + err.message + '</span>\n(This usually means an ad-blocker is blocking the test)';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -3,6 +3,19 @@ export interface Device {
   visitorId: string;
   isBanned: boolean;
   bannedAt: string | null;
+  browserName?: string;
+  browserVersion?: string;
+  os?: string;
+  device?: string;
+  ipAddress?: string;
+  city?: string;
+  country?: string;
+  vpnDetected?: boolean;
+  proxyDetected?: boolean;
+  botDetected?: boolean;
+  incognito?: boolean;
+  firstSeenAt?: string | null;
+  lastSeenAt?: string | null;
   createdAt: string;
   userId: number;
 }

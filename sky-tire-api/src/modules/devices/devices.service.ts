@@ -10,7 +10,9 @@ export class DevicesService {
    * Called on every login/signup before session is granted.
    * Returns the device record (existing or newly created).
    */
-  async validateAndRegisterDevice(userId: number, visitorId: string) {
+  async validateAndRegisterDevice(userId: number, fpData: any) {
+    const { visitorId, ...deviceData } = fpData;
+    
     // 1. Check if the device already exists anywhere in the system
     const existingDevice = await this.prisma.device.findUnique({
       where: { visitorId },
@@ -23,7 +25,17 @@ export class DevicesService {
           'This device has been banned. Please contact support.',
         );
       }
-      // Device exists and is clean — return it (no update needed)
+      
+      // Update device intelligence and lastSeenAt
+      await this.prisma.device.update({
+        where: { id: existingDevice.id },
+        data: {
+          ...deviceData,
+          lastSeenAt: deviceData.lastSeenAt || new Date(),
+        },
+      });
+      
+      // Device exists and is clean — return it
       return existingDevice;
     }
 
@@ -38,6 +50,7 @@ export class DevicesService {
 
     const device = await this.prisma.device.create({
       data: {
+        ...deviceData,
         visitorId,
         userId,
         isBanned,

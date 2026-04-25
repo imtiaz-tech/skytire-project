@@ -8,6 +8,7 @@ import { MailService } from '../../mail/mail.service';
 import { forgotPasswordEmailTemplate } from '../../mail/templates/forgot-password.template';
 import { ConfigService } from '@nestjs/config';
 import { DevicesService } from '../devices/devices.service';
+import { FingerprintService } from './fingerprint.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private mailService: MailService,
     private configService: ConfigService,
     private devicesService: DevicesService,
+    private fingerprintService: FingerprintService,
   ) {}
 
   async signup(dto: SignupDto) {
@@ -32,7 +34,7 @@ export class AuthService {
     const hashedPassword = await hashPassword(dto.password);
     const memberId = await generateUniqueMemberId(this.prisma as any);
 
-    const { visitorId, ...userData } = dto;
+    const { eventId, ...userData } = dto;
 
     const user = await this.prisma.user.create({
       data: {
@@ -43,9 +45,38 @@ export class AuthService {
       },
     });
 
-    // Register device if fingerprint provided
-    if (visitorId) {
-      await this.devicesService.validateAndRegisterDevice(user.id, visitorId);
+    // Register device if fingerprint eventId provided
+    console.log('Signup received eventId:', eventId);
+    if (eventId) {
+      try {
+        const eventData = await this.fingerprintService.getEventData(eventId);
+        console.log('Fingerprint API response visitorId:', eventData.products?.identification?.data?.visitorId);
+      const fpData = {
+        visitorId: eventData.products?.identification?.data?.visitorId,
+        browserName: eventData.products?.identification?.data?.browserDetails?.browserName,
+        browserVersion: eventData.products?.identification?.data?.browserDetails?.browserFullVersion,
+        os: eventData.products?.identification?.data?.browserDetails?.os,
+        device: eventData.products?.identification?.data?.browserDetails?.device,
+        ipAddress: eventData.products?.ipInfo?.data?.v4?.address,
+        city: eventData.products?.ipInfo?.data?.v4?.geolocation?.city?.name,
+        country: eventData.products?.ipInfo?.data?.v4?.geolocation?.country?.name,
+        vpnDetected: eventData.products?.vpn?.data?.result ?? false,
+        proxyDetected: eventData.products?.proxy?.data?.result ?? false,
+        botDetected: eventData.products?.botd?.data?.bot?.result === 'bad',
+        incognito: eventData.products?.identification?.data?.incognito ?? false,
+        firstSeenAt: eventData.products?.identification?.data?.firstSeenAt?.global ? new Date(eventData.products.identification.data.firstSeenAt.global) : new Date(),
+        lastSeenAt: eventData.products?.identification?.data?.lastSeenAt?.global ? new Date(eventData.products.identification.data.lastSeenAt.global) : new Date(),
+      };
+      
+      if (fpData.visitorId) {
+        console.log('Saving device for new user...');
+        await this.devicesService.validateAndRegisterDevice(user.id, fpData);
+      } else {
+        console.log('No visitorId found in eventData.products.identification.data');
+      }
+      } catch (err: any) {
+        console.error('Error fetching FP data in signup:', err.message);
+      }
     }
 
     const { password, ...result } = user;
@@ -71,8 +102,37 @@ export class AuthService {
     }
 
     // Device fraud check (throws ForbiddenException if banned)
-    if (dto.visitorId) {
-      await this.devicesService.validateAndRegisterDevice(user.id, dto.visitorId);
+    console.log('Login received eventId:', dto.eventId);
+    if (dto.eventId) {
+      try {
+        const eventData = await this.fingerprintService.getEventData(dto.eventId);
+        console.log('Fingerprint API response visitorId:', eventData.products?.identification?.data?.visitorId);
+      const fpData = {
+        visitorId: eventData.products?.identification?.data?.visitorId,
+        browserName: eventData.products?.identification?.data?.browserDetails?.browserName,
+        browserVersion: eventData.products?.identification?.data?.browserDetails?.browserFullVersion,
+        os: eventData.products?.identification?.data?.browserDetails?.os,
+        device: eventData.products?.identification?.data?.browserDetails?.device,
+        ipAddress: eventData.products?.ipInfo?.data?.v4?.address,
+        city: eventData.products?.ipInfo?.data?.v4?.geolocation?.city?.name,
+        country: eventData.products?.ipInfo?.data?.v4?.geolocation?.country?.name,
+        vpnDetected: eventData.products?.vpn?.data?.result ?? false,
+        proxyDetected: eventData.products?.proxy?.data?.result ?? false,
+        botDetected: eventData.products?.botd?.data?.bot?.result === 'bad',
+        incognito: eventData.products?.identification?.data?.incognito ?? false,
+        firstSeenAt: eventData.products?.identification?.data?.firstSeenAt?.global ? new Date(eventData.products.identification.data.firstSeenAt.global) : new Date(),
+        lastSeenAt: eventData.products?.identification?.data?.lastSeenAt?.global ? new Date(eventData.products.identification.data.lastSeenAt.global) : new Date(),
+      };
+      
+      if (fpData.visitorId) {
+        console.log('Saving device for logging in user...');
+        await this.devicesService.validateAndRegisterDevice(user.id, fpData);
+      } else {
+        console.log('No visitorId found in eventData.products.identification.data');
+      }
+      } catch (err: any) {
+        console.error('Error fetching FP data in login:', err.message);
+      }
     }
 
     // Store userId in session

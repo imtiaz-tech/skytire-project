@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { signupUser } from '@/redux/slices/authSlice';
 import { getRoleRedirectPath } from '@/lib/roleRedirect';
 import { Mail, Lock, User as UserIcon, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
-import { getVisitorId } from '@/lib/getVisitorId';
+import { useVisitorData } from '@fingerprint/react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,8 +20,16 @@ export default function SignupPage() {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [visitorId, setVisitorId] = useState<string | null>(null);
-  console.log("🚀 ~ SignupPage ~ visitorId:", visitorId)
+  
+  const { data: visitorData } = useVisitorData({ immediate: true });
+  
+  useEffect(() => {
+    if (visitorData) {
+      console.log('Fingerprint Visitor Data:', visitorData);
+      console.log('Fingerprint Visitor ID:', (visitorData as any).visitor_id || (visitorData as any).visitorId);
+    }
+  }, [visitorData]);
+
   const isLengthValid = formData.password.length >= 12;
   const isUppercaseValid = /[A-Z]/.test(formData.password);
   const isNumOrSpecialValid = /[0-9!@#$%^&*_=+\-\\]/.test(formData.password);
@@ -31,17 +39,16 @@ export default function SignupPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-    useEffect(() => {
-    getVisitorId().then((id) => {
-      setVisitorId(id);
-    });
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPasswordValid) return;
     try {
-      const payload = visitorId ? { ...formData, visitorId } : formData;
+      const eventId = (visitorData as any)?.event_id || (visitorData as any)?.requestId;
+      if (!eventId) {
+        console.warn('Fingerprint visitor data not available yet');
+      }
+      
+      const payload = eventId ? { ...formData, eventId } : formData;
       const result = await dispatch(signupUser(payload)).unwrap();
       const redirectPath = getRoleRedirectPath(result.user);
       router.push(redirectPath);
