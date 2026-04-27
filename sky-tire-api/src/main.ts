@@ -7,6 +7,10 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { PrismaService } from './prisma/prisma.service';
+import fastifyMultipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import * as path from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -18,6 +22,23 @@ async function bootstrap() {
 
   // Register cookie plugin
   await app.register(fastifyCookie);
+
+  // Register multipart for file uploads
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+    },
+  });
+
+  // Serve static files from /uploads
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+  }
+  await app.register(fastifyStatic, {
+    root: uploadsDir,
+    prefix: '/uploads/',
+  });
 
   // Register session plugin
   await app.register(fastifySession, {

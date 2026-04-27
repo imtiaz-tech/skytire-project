@@ -70,6 +70,26 @@ model Device {
   @@index([userId])
 }
 
+enum BrandCategory {
+  tire
+  wheel
+  wire_wheel
+  accessory
+  bolt_on_wheels
+}
+
+model Brand {
+  id          String        @id @default(uuid())
+  brandName   String
+  brandLogo   String
+  category    BrandCategory
+  isFeatured  Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([brandName])
+}
+
 model Tire {
   id          Int                     @id @default(autoincrement())
   name        String
