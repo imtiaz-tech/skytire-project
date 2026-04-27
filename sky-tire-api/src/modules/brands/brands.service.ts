@@ -18,16 +18,18 @@ export class BrandsService {
     });
   }
 
-  async findAll(page: number = 1, limit: number = 10, search?: string) {
+  async findAll(page: number = 1, limit: number = 10, category: string, search?: string) {
     const skip = (page - 1) * limit;
-    const where = search
-      ? {
-          brandName: {
-            contains: search,
-            mode: 'insensitive' as const,
-          },
-        }
-      : {};
+    const where: any = {
+      category: category as any,
+    };
+
+    if (search) {
+      where.brandName = {
+        contains: search,
+        mode: 'insensitive' as const,
+      };
+    }
 
     const [brands, total] = await Promise.all([
       this.prisma.brand.findMany({

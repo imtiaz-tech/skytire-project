@@ -13,9 +13,9 @@ const initialState: BrandsState = {
 
 export const fetchBrands = createAsyncThunk(
   'brands/fetchBrands',
-  async ({ page, limit, search }: { page: number; limit: number; search: string }, { rejectWithValue }) => {
+  async ({ page, limit, category, search }: { page: number; limit: number; category: string; search: string }, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/brands?page=${page}&limit=${limit}&search=${search}`);
+      const response = await api.get(`/brands?page=${page}&limit=${limit}&category=${category}&search=${search}`);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch brands');

@@ -15,14 +15,14 @@ import {
 import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
-import { FastifyRequest } from 'fastify';
+import * as fastify from 'fastify';
 
 @Controller('brands')
 export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 
   @Post()
-  async create(@Req() req: FastifyRequest, @Body() dto: CreateBrandDto) {
+  async create(@Req() req: fastify.FastifyRequest, @Body() dto: CreateBrandDto) {
     // In Fastify with @fastify/multipart, we handle file upload differently
     // However, to keep it simple and follow requirements, 
     // we assume the file is already processed or we use the 'file' from multipart
@@ -54,9 +54,13 @@ export class BrandsController {
   async findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('category') category: string,
     @Query('search') search?: string,
   ) {
-    return this.brandsService.findAll(Number(page), Number(limit), search);
+    if (!category) {
+      throw new BadRequestException('Category is required');
+    }
+    return this.brandsService.findAll(Number(page), Number(limit), category, search);
   }
 
   @Get(':id')
@@ -67,7 +71,7 @@ export class BrandsController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Req() req: FastifyRequest,
+    @Req() req: fastify.FastifyRequest,
     @Body() dto: UpdateBrandDto,
   ) {
     const data = await req.file();
