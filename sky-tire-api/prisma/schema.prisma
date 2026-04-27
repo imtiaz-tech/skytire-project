@@ -56,7 +56,8 @@ model Device {
   proxyDetected  Boolean   @default(false)
   botDetected    Boolean   @default(false)
   incognito      Boolean   @default(false)
-
+  suspectScore   Float     @default(0)
+  
   firstSeenAt    DateTime?
   lastSeenAt     DateTime?
 

@@ -110,6 +110,9 @@ export default function DeviceHistoryModal({ user, onClose }: DeviceHistoryModal
                       Flags (VPN/Proxy/Bot)
                     </th>
                     <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      Suspect Score
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                       First Seen
                     </th>
                     <th className="px-4 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider rounded-tr-xl whitespace-nowrap">
@@ -170,6 +173,21 @@ export default function DeviceHistoryModal({ user, onClose }: DeviceHistoryModal
                             Bot
                           </span>
                         </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {(() => {
+                          const score = device.suspectScore ?? 0;
+                          let config = { label: 'Low Risk', color: 'bg-green-50 text-green-600 border-green-200' };
+                          if (score > 60) config = { label: 'High Risk', color: 'bg-red-50 text-red-600 border-red-200' };
+                          else if (score > 20) config = { label: 'Medium Risk', color: 'bg-orange-50 text-orange-600 border-orange-200' };
+                          
+                          return (
+                            <div className={`inline-flex flex-col px-2.5 py-1 rounded-lg border ${config.color}`}>
+                              <span className="text-[11px] font-bold leading-tight">{score.toFixed(1)}</span>
+                              <span className="text-[9px] font-medium uppercase tracking-tight opacity-80">{config.label}</span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">
                         {formatDate(device.firstSeenAt || device.createdAt)}

@@ -14,6 +14,7 @@ export interface Device {
   proxyDetected?: boolean;
   botDetected?: boolean;
   incognito?: boolean;
+  suspectScore?: number;
   firstSeenAt?: string | null;
   lastSeenAt?: string | null;
   createdAt: string;

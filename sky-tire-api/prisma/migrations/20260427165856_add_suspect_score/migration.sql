@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Device" ADD COLUMN     "suspectScore" DOUBLE PRECISION NOT NULL DEFAULT 0;

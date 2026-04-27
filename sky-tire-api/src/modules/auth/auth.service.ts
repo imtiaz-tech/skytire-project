@@ -61,6 +61,7 @@ export class AuthService {
         proxyDetected: eventData.products?.proxy?.data?.result ?? false,
         botDetected: eventData.products?.botd?.data?.bot?.result === 'bad',
         incognito: eventData.products?.identification?.data?.incognito ?? false,
+        suspectScore: eventData.products?.suspectScore?.data?.result ?? 0,
         firstSeenAt: eventData.products?.identification?.data?.firstSeenAt?.global ? new Date(eventData.products.identification.data.firstSeenAt.global) : new Date(),
         lastSeenAt: eventData.products?.identification?.data?.lastSeenAt?.global ? new Date(eventData.products.identification.data.lastSeenAt.global) : new Date(),
       };
@@ -113,6 +114,7 @@ export class AuthService {
         proxyDetected: eventData.products?.proxy?.data?.result ?? false,
         botDetected: eventData.products?.botd?.data?.bot?.result === 'bad',
         incognito: eventData.products?.identification?.data?.incognito ?? false,
+        suspectScore: eventData.products?.suspectScore?.data?.result ?? 0,
         firstSeenAt: eventData.products?.identification?.data?.firstSeenAt?.global ? new Date(eventData.products.identification.data.firstSeenAt.global) : new Date(),
         lastSeenAt: eventData.products?.identification?.data?.lastSeenAt?.global ? new Date(eventData.products.identification.data.lastSeenAt.global) : new Date(),
       };
