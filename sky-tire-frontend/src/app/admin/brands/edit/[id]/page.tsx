@@ -32,5 +32,9 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
     </div>
   );
 
-  return brand ? <BrandForm editBrand={brand} /> : <div>Brand not found</div>;
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {brand ? <BrandForm editBrand={brand} /> : <div>Brand not found</div>}
+    </div>
+  );
 }

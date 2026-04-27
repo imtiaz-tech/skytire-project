@@ -92,7 +92,7 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-10 px-4">
+    <div className="space-y-8 py-8">
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
@@ -140,9 +140,9 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
               </button>
             )}
           </div>
-          <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest">
+          {/* <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest">
             JPEG, PNG, WEBP · MAX 10MB
-          </p>
+          </p> */}
         </div>
 
         {/* Form Fields */}
@@ -153,7 +153,7 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
               <input
                 type="text"
                 placeholder="Enter brand name"
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-gray-300 font-medium"
+                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
                 value={formData.brandName}
                 onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
                 required
