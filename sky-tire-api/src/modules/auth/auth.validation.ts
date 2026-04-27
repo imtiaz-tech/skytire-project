@@ -21,8 +21,8 @@ export class SignupDto {
   role?: Role;
 
   @IsString()
-  @IsOptional()
-  eventId?: string;
+  @IsNotEmpty()
+  eventId: string;
 }
 
 export class LoginDto {
@@ -35,8 +35,8 @@ export class LoginDto {
   password: string;
 
   @IsString()
-  @IsOptional()
-  eventId?: string;
+  @IsNotEmpty()
+  eventId: string;
 }
 
 export class ForgotPasswordDto {

@@ -22,7 +22,7 @@ export class DevicesService {
       // Device exists — check if it's banned
       if (existingDevice.isBanned) {
         throw new ForbiddenException(
-          'This device has been banned. Please contact support.',
+          'This device is banned. Contact support.',
         );
       }
       

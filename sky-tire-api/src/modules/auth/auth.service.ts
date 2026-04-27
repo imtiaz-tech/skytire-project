@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { hashPassword, comparePassword } from '../../lib/bcrypt';
 import { generateUniqueMemberId } from '../../utils/generateMemberId';
@@ -46,11 +46,8 @@ export class AuthService {
     });
 
     // Register device if fingerprint eventId provided
-    console.log('Signup received eventId:', eventId);
-    if (eventId) {
-      try {
-        const eventData = await this.fingerprintService.getEventData(eventId);
-        console.log('Fingerprint API response visitorId:', eventData.products?.identification?.data?.visitorId);
+    try {
+      const eventData = await this.fingerprintService.getEventData(eventId);
       const fpData = {
         visitorId: eventData.products?.identification?.data?.visitorId,
         browserName: eventData.products?.identification?.data?.browserDetails?.browserName,
@@ -69,14 +66,13 @@ export class AuthService {
       };
       
       if (fpData.visitorId) {
-        console.log('Saving device for new user...');
         await this.devicesService.validateAndRegisterDevice(user.id, fpData);
-      } else {
-        console.log('No visitorId found in eventData.products.identification.data');
       }
-      } catch (err: any) {
-        console.error('Error fetching FP data in signup:', err.message);
+    } catch (err: any) {
+      if (err instanceof ForbiddenException) {
+        throw err;
       }
+      console.error('Error fetching FP data in signup:', err.message);
     }
 
     const { password, ...result } = user;
@@ -102,11 +98,8 @@ export class AuthService {
     }
 
     // Device fraud check (throws ForbiddenException if banned)
-    console.log('Login received eventId:', dto.eventId);
-    if (dto.eventId) {
-      try {
-        const eventData = await this.fingerprintService.getEventData(dto.eventId);
-        console.log('Fingerprint API response visitorId:', eventData.products?.identification?.data?.visitorId);
+    try {
+      const eventData = await this.fingerprintService.getEventData(dto.eventId);
       const fpData = {
         visitorId: eventData.products?.identification?.data?.visitorId,
         browserName: eventData.products?.identification?.data?.browserDetails?.browserName,
@@ -125,14 +118,13 @@ export class AuthService {
       };
       
       if (fpData.visitorId) {
-        console.log('Saving device for logging in user...');
         await this.devicesService.validateAndRegisterDevice(user.id, fpData);
-      } else {
-        console.log('No visitorId found in eventData.products.identification.data');
       }
-      } catch (err: any) {
-        console.error('Error fetching FP data in login:', err.message);
+    } catch (err: any) {
+      if (err instanceof ForbiddenException) {
+        throw err;
       }
+      console.error('Error fetching FP data in login:', err.message);
     }
 
     // Store userId in session
