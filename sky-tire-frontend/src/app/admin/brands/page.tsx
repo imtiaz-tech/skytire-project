@@ -144,14 +144,13 @@ export default function BrandsPage() {
                 <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand Name</th>
                 <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Description</th>
                 <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-center">Cover</th>
-                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-center">Category</th>
                 <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={5} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#3B5998] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Fetching brands...</p>
@@ -160,7 +159,7 @@ export default function BrandsPage() {
                 </tr>
               ) : brands.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={5} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-6 w-6 text-gray-200" />
@@ -195,11 +194,6 @@ export default function BrandsPage() {
                           <ImageIcon className="h-5 w-5" />
                         </div>
                       )}
-                    </td>
-                    <td className="px-8 py-5 text-center whitespace-nowrap">
-                      <span className="px-3 py-1 bg-blue-50 text-[#3B5998] text-[11px] font-bold uppercase rounded-full tracking-wider">
-                        {formatCategory(brand.category)}
-                      </span>
                     </td>
                     <td className="px-8 py-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3">
