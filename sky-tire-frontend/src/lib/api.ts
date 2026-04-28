@@ -7,14 +7,17 @@ async function apiFetch(endpoint: string, options: RequestInit & { next?: NextFe
   const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   
   const headers = new Headers(options.headers);
-  if (!headers.has('Content-Type')) {
+  const isFormData = options.body instanceof FormData;
+
+  if (!headers.has('Content-Type') && !isFormData) {
     headers.set('Content-Type', 'application/json');
   }
 
   const response = await fetch(url, {
     ...options,
+    body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
     headers,
-    credentials: 'include', // Send session cookies with every request
+    credentials: 'include',
   });
 
   const data = await response.json().catch(() => null);
@@ -33,9 +36,9 @@ const apiClient = {
   get: (url: string, options?: RequestInit & { next?: NextFetchRequestConfig }) => 
     apiFetch(url, { ...options, method: 'GET' }),
   post: (url: string, body: any, options?: RequestInit & { next?: NextFetchRequestConfig }) => 
-    apiFetch(url, { ...options, method: 'POST', body: JSON.stringify(body) }),
+    apiFetch(url, { ...options, method: 'POST', body }),
   patch: (url: string, body: any, options?: RequestInit & { next?: NextFetchRequestConfig }) => 
-    apiFetch(url, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
+    apiFetch(url, { ...options, method: 'PATCH', body }),
   delete: (url: string, options?: RequestInit & { next?: NextFetchRequestConfig }) => 
     apiFetch(url, { ...options, method: 'DELETE' }),
 };

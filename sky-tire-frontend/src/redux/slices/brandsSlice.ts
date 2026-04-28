@@ -27,9 +27,7 @@ export const createBrand = createAsyncThunk(
   'brands/createBrand',
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/brands', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/brands', formData);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to create brand');
@@ -41,9 +39,7 @@ export const updateBrand = createAsyncThunk(
   'brands/updateBrand',
   async ({ id, formData }: { id: string; formData: FormData }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/brands/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.patch(`/brands/${id}`, formData);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to update brand');

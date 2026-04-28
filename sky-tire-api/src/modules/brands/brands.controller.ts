@@ -22,8 +22,12 @@ export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 
   @Post()
-  async create(@Req() req: fastify.FastifyRequest, @Body() dto: CreateBrandDto) {
-    const parts = req.files();
+  async create(@Req() req: fastify.FastifyRequest) {
+    if (!req.isMultipart()) {
+      throw new BadRequestException('Request must be multipart/form-data');
+    }
+    const parts = req.parts();
+    const fields: any = {};
     let brandLogo: string | undefined;
     let coverPhoto: string | undefined;
 
@@ -32,25 +36,36 @@ export class BrandsController {
     const pipeline = util.promisify(require('stream').pipeline);
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-    for await (const data of parts) {
-      if (!allowedTypes.includes(data.mimetype)) {
-        throw new BadRequestException(`Invalid file type for ${data.fieldname}. Allowed: jpeg, jpg, png, webp`);
-      }
+    for await (const part of parts) {
+      if (part.type === 'file') {
+        if (!allowedTypes.includes(part.mimetype)) {
+          throw new BadRequestException(`Invalid file type for ${part.fieldname}. Allowed: jpeg, jpg, png, webp`);
+        }
 
-      const filename = `${Date.now()}-${data.filename}`;
-      const uploadPath = `uploads/${filename}`;
-      await pipeline(data.file, fs.createWriteStream(uploadPath));
+        const filename = `${Date.now()}-${part.filename}`;
+        const uploadPath = `uploads/${filename}`;
+        await pipeline(part.file, fs.createWriteStream(uploadPath));
 
-      if (data.fieldname === 'brandLogo' || data.fieldname === 'file') {
-        brandLogo = uploadPath;
-      } else if (data.fieldname === 'coverPhoto') {
-        coverPhoto = uploadPath;
+        if (part.fieldname === 'brandLogo' || part.fieldname === 'file') {
+          brandLogo = uploadPath;
+        } else if (part.fieldname === 'coverPhoto') {
+          coverPhoto = uploadPath;
+        }
+      } else {
+        fields[part.fieldname] = (part as any).value;
       }
     }
 
-    if (!brandLogo) {
-      throw new BadRequestException('Brand logo is required');
-    }
+    if (!fields.brandName) throw new BadRequestException('brandName should not be empty');
+    if (!fields.category) throw new BadRequestException('category should not be empty');
+    if (!brandLogo) throw new BadRequestException('Brand logo is required');
+
+    const dto: CreateBrandDto = {
+      brandName: fields.brandName,
+      category: fields.category,
+      description: fields.description,
+      isFeatured: fields.isFeatured === 'true',
+    };
 
     return this.brandsService.create(dto, brandLogo, coverPhoto);
   }
@@ -77,9 +92,12 @@ export class BrandsController {
   async update(
     @Param('id') id: string,
     @Req() req: fastify.FastifyRequest,
-    @Body() dto: UpdateBrandDto,
   ) {
-    const parts = req.files();
+    if (!req.isMultipart()) {
+      throw new BadRequestException('Request must be multipart/form-data');
+    }
+    const parts = req.parts();
+    const fields: any = {};
     let brandLogo: string | undefined;
     let coverPhoto: string | undefined;
 
@@ -88,21 +106,32 @@ export class BrandsController {
     const pipeline = util.promisify(require('stream').pipeline);
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-    for await (const data of parts) {
-      if (!allowedTypes.includes(data.mimetype)) {
-        throw new BadRequestException(`Invalid file type for ${data.fieldname}. Allowed: jpeg, jpg, png, webp`);
-      }
+    for await (const part of parts) {
+      if (part.type === 'file') {
+        if (!allowedTypes.includes(part.mimetype)) {
+          throw new BadRequestException(`Invalid file type for ${part.fieldname}. Allowed: jpeg, jpg, png, webp`);
+        }
 
-      const filename = `${Date.now()}-${data.filename}`;
-      const uploadPath = `uploads/${filename}`;
-      await pipeline(data.file, fs.createWriteStream(uploadPath));
+        const filename = `${Date.now()}-${part.filename}`;
+        const uploadPath = `uploads/${filename}`;
+        await pipeline(part.file, fs.createWriteStream(uploadPath));
 
-      if (data.fieldname === 'brandLogo' || data.fieldname === 'file') {
-        brandLogo = uploadPath;
-      } else if (data.fieldname === 'coverPhoto') {
-        coverPhoto = uploadPath;
+        if (part.fieldname === 'brandLogo' || part.fieldname === 'file') {
+          brandLogo = uploadPath;
+        } else if (part.fieldname === 'coverPhoto') {
+          coverPhoto = uploadPath;
+        }
+      } else {
+        fields[part.fieldname] = (part as any).value;
       }
     }
+
+    const dto: UpdateBrandDto = {
+      brandName: fields.brandName,
+      category: fields.category,
+      description: fields.description,
+      isFeatured: fields.isFeatured === 'true' ? true : fields.isFeatured === 'false' ? false : undefined,
+    };
 
     return this.brandsService.update(id, dto, brandLogo, coverPhoto);
   }
