@@ -12,8 +12,8 @@ import Link from 'next/link';
 const categories: { label: string; value: BrandCategory }[] = [
   { label: 'Tires', value: 'tire' },
   { label: 'Wheels', value: 'wheel' },
-  { label: 'Wire Wheel', value: 'wire_wheel' },
-  { label: 'Accessory', value: 'accessory' },
+  { label: 'Wire Wheels', value: 'wire_wheel' },
+  { label: 'Accessories', value: 'accessory' },
   { label: 'Bolt On Wheels', value: 'bolt_on_wheels' },
 ];
 
