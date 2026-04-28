@@ -43,13 +43,13 @@ export class BrandsController {
         }
 
         const filename = `${Date.now()}-${part.filename}`;
-        const uploadPath = `uploads/${filename}`;
-        await pipeline(part.file, fs.createWriteStream(uploadPath));
+        const savePath = `uploads/${filename}`;
+        await pipeline(part.file, fs.createWriteStream(savePath));
 
         if (part.fieldname === 'brandLogo' || part.fieldname === 'file') {
-          brandLogo = uploadPath;
+          brandLogo = filename;
         } else if (part.fieldname === 'coverPhoto') {
-          coverPhoto = uploadPath;
+          coverPhoto = filename;
         }
       } else {
         fields[part.fieldname] = (part as any).value;
@@ -113,13 +113,13 @@ export class BrandsController {
         }
 
         const filename = `${Date.now()}-${part.filename}`;
-        const uploadPath = `uploads/${filename}`;
-        await pipeline(part.file, fs.createWriteStream(uploadPath));
+        const savePath = `uploads/${filename}`;
+        await pipeline(part.file, fs.createWriteStream(savePath));
 
         if (part.fieldname === 'brandLogo' || part.fieldname === 'file') {
-          brandLogo = uploadPath;
+          brandLogo = filename;
         } else if (part.fieldname === 'coverPhoto') {
-          coverPhoto = uploadPath;
+          coverPhoto = filename;
         }
       } else {
         fields[part.fieldname] = (part as any).value;

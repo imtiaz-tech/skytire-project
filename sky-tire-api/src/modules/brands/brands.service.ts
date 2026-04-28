@@ -63,7 +63,7 @@ export class BrandsService {
 
     if (newLogo && brand.brandLogo) {
       // Remove old logo
-      const oldPath = path.join(process.cwd(), brand.brandLogo);
+      const oldPath = path.join(process.cwd(), 'uploads', brand.brandLogo);
       if (fs.existsSync(oldPath)) {
         fs.unlinkSync(oldPath);
       }
@@ -71,7 +71,7 @@ export class BrandsService {
 
     if (newCover && brand.coverPhoto) {
       // Remove old cover photo
-      const oldCoverPath = path.join(process.cwd(), brand.coverPhoto);
+      const oldCoverPath = path.join(process.cwd(), 'uploads', brand.coverPhoto);
       if (fs.existsSync(oldCoverPath)) {
         fs.unlinkSync(oldCoverPath);
       }
@@ -92,7 +92,7 @@ export class BrandsService {
     
     // Delete logo
     if (brand.brandLogo) {
-      const filePath = path.join(process.cwd(), brand.brandLogo);
+      const filePath = path.join(process.cwd(), 'uploads', brand.brandLogo);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -100,7 +100,7 @@ export class BrandsService {
 
     // Delete cover photo
     if (brand.coverPhoto) {
-      const coverPath = path.join(process.cwd(), brand.coverPhoto);
+      const coverPath = path.join(process.cwd(), 'uploads', brand.coverPhoto);
       if (fs.existsSync(coverPath)) {
         fs.unlinkSync(coverPath);
       }

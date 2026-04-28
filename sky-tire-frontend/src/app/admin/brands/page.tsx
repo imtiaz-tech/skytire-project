@@ -64,7 +64,9 @@ export default function BrandsPage() {
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
     const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
-    return `${baseUrl}/${path}`;
+    // Strip 'uploads/' prefix if it exists to avoid double prefixing
+    const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
+    return `${baseUrl}/uploads/${cleanPath}`;
   };
 
   const formatCategory = (cat: string) => {
@@ -180,7 +182,7 @@ export default function BrandsPage() {
                       <span className="text-[15px] font-bold text-[#1e2a4a] tracking-tight">{brand.brandName}</span>
                     </td>
                     <td className="px-8 py-5">
-                      <p className="text-[13px] text-gray-500 line-clamp-2 max-w-[250px]">
+                      <p className="text-[14px] text-gray-500 line-clamp-2 max-w-[250px]">
                         {brand.description || '—'}
                       </p>
                     </td>
@@ -204,7 +206,8 @@ export default function BrandsPage() {
                           Delete
                         </button>
                         <Link
-                          href={`/admin/brands/edit/${brand.id}`}
+                          // href={`/admin/brands/edit/${brand.id}`}
+                          href="#"
                           className="px-4 py-2 bg-[#1e2a4a] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100"
                         >
                           Edit

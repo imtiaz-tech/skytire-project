@@ -51,10 +51,12 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
       const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
       
       if (editBrand.brandLogo) {
-        setLogoPreview(`${baseUrl}/${editBrand.brandLogo}`);
+        const cleanPath = editBrand.brandLogo.startsWith('uploads/') ? editBrand.brandLogo.replace('uploads/', '') : editBrand.brandLogo;
+        setLogoPreview(`${baseUrl}/uploads/${cleanPath}`);
       }
       if (editBrand.coverPhoto) {
-        setCoverPreview(`${baseUrl}/${editBrand.coverPhoto}`);
+        const cleanPath = editBrand.coverPhoto.startsWith('uploads/') ? editBrand.coverPhoto.replace('uploads/', '') : editBrand.coverPhoto;
+        setCoverPreview(`${baseUrl}/uploads/${cleanPath}`);
       }
     }
   }, [editBrand]);
