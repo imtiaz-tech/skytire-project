@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBrands, deleteBrand } from '@/redux/slices/brandsSlice';
 import { Brand, BrandCategory } from '@/redux/types/brandTypes';
 import Pagination from '@/components/ui/Pagination';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import Link from 'next/link';
 
 const categories: { label: string; value: BrandCategory }[] = [
@@ -26,6 +27,10 @@ export default function BrandsPage() {
   const [searchInput, setSearchInput] = useState('');
   const limit = 10;
 
+  // Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState<string | null>(null);
+
   useEffect(() => {
     dispatch(fetchBrands({ page, limit, category: activeTab, search }));
   }, [dispatch, page, search, activeTab]);
@@ -43,9 +48,16 @@ export default function BrandsPage() {
     setSearch('');
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this brand?')) {
-      dispatch(deleteBrand(id));
+  const openDeleteModal = (id: string) => {
+    setBrandToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (brandToDelete) {
+      await dispatch(deleteBrand(brandToDelete));
+      setIsDeleteModalOpen(false);
+      setBrandToDelete(null);
     }
   };
 
@@ -77,7 +89,7 @@ export default function BrandsPage() {
         <div className="flex flex-col md:flex-row md:items-center gap-6">
           {/* Search Row */}
           <form onSubmit={handleSearch} className="flex items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1 max-sm:max-w-none max-w-sm">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
               <input
                 type="text"
@@ -192,7 +204,7 @@ export default function BrandsPage() {
                     <td className="px-8 py-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() => handleDelete(brand.id)}
+                          onClick={() => openDeleteModal(brand.id)}
                           className="px-4 py-2 bg-[#FF5A5F] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-red-100"
                         >
                           Delete
@@ -227,6 +239,15 @@ export default function BrandsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={isDeleteModalOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this brand? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 }

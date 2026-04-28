@@ -8,14 +8,16 @@ async function apiFetch(endpoint: string, options: RequestInit & { next?: NextFe
   
   const headers = new Headers(options.headers);
   const isFormData = options.body instanceof FormData;
+  const method = options.method?.toUpperCase() || 'GET';
+  const hasBody = !!options.body;
 
-  if (!headers.has('Content-Type') && !isFormData) {
+  if (!headers.has('Content-Type') && !isFormData && hasBody && method !== 'GET' && method !== 'DELETE') {
     headers.set('Content-Type', 'application/json');
   }
 
   const response = await fetch(url, {
     ...options,
-    body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : undefined),
+    body: isFormData ? options.body : (hasBody ? JSON.stringify(options.body) : undefined),
     headers,
     credentials: 'include',
   });
