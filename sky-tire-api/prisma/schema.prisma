@@ -82,6 +82,8 @@ model Brand {
   id          String        @id @default(uuid())
   brandName   String
   brandLogo   String
+  description String?
+  coverPhoto  String?
   category    BrandCategory
   isFeatured  Boolean       @default(false)
   createdAt   DateTime      @default(now())

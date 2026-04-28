@@ -11,6 +11,10 @@ export class CreateBrandDto {
   @IsNotEmpty()
   category: BrandCategory;
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)

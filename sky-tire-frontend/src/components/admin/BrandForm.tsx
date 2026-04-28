@@ -6,7 +6,6 @@ import { useAppDispatch } from '@/redux/hooks';
 import { createBrand, updateBrand } from '@/redux/slices/brandsSlice';
 import { Brand, BrandCategory } from '@/redux/types/brandTypes';
 import { ArrowLeft, Upload, X, Loader2 } from 'lucide-react';
-import api from '@/lib/api';
 
 interface BrandFormProps {
   editBrand?: Brand;
@@ -24,12 +23,19 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  // Image previews
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  
+  // Selected files
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
+  const [selectedCover, setSelectedCover] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     brandName: '',
     category: 'tire' as BrandCategory,
+    description: '',
     isFeatured: false,
   });
 
@@ -38,30 +44,45 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
       setFormData({
         brandName: editBrand.brandName,
         category: editBrand.category,
+        description: editBrand.description || '',
         isFeatured: editBrand.isFeatured,
       });
+      
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+      
       if (editBrand.brandLogo) {
-        // Assume API_URL or relative path. 
-        // Based on backend config: prefix: '/uploads/'
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-        // Wait, the backend prefix is /uploads/ at root.
-        const staticUrl = baseUrl.replace('/api', '') + '/' + editBrand.brandLogo;
-        setPreviewUrl(staticUrl);
+        setLogoPreview(`${baseUrl}/${editBrand.brandLogo}`);
+      }
+      if (editBrand.coverPhoto) {
+        setCoverPreview(`${baseUrl}/${editBrand.coverPhoto}`);
       }
     }
   }, [editBrand]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setSelectedLogo(file);
+      setLogoPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleRemoveImage = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedCover(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setSelectedLogo(null);
+    setLogoPreview(null);
+  };
+
+  const handleRemoveCover = () => {
+    setSelectedCover(null);
+    setCoverPreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,9 +92,14 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
     const data = new FormData();
     data.append('brandName', formData.brandName);
     data.append('category', formData.category);
+    data.append('description', formData.description);
     data.append('isFeatured', String(formData.isFeatured));
-    if (selectedFile) {
-      data.append('file', selectedFile);
+    
+    if (selectedLogo) {
+      data.append('brandLogo', selectedLogo);
+    }
+    if (selectedCover) {
+      data.append('coverPhoto', selectedCover);
     }
 
     try {
@@ -107,48 +133,81 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Image Upload Area */}
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="relative group">
-            <div className={`w-48 h-48 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all overflow-hidden ${
-              previewUrl ? 'border-transparent' : 'border-gray-200 bg-gray-50/50 group-hover:bg-gray-50 group-hover:border-blue-200'
-            }`}>
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
-              ) : (
-                <div className="flex flex-col items-center text-gray-400 group-hover:text-[#3B5998]">
-                  <Upload className="h-8 w-8 mb-2 opacity-50 group-hover:opacity-100" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Add Image</span>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Brand Logo Upload */}
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider">Brand Logo</label>
+            <div className="relative group">
+              <div className={`w-48 h-48 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all overflow-hidden ${
+                logoPreview ? 'border-transparent' : 'border-gray-200 bg-gray-50/50 group-hover:bg-gray-50 group-hover:border-blue-200'
+              }`}>
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="flex flex-col items-center text-gray-400 group-hover:text-[#3B5998]">
+                    <Upload className="h-8 w-8 mb-2 opacity-50 group-hover:opacity-100" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Add Logo</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleLogoChange}
+                  required={!editBrand}
+                />
+              </div>
+              {logoPreview && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  className="absolute -top-3 -right-3 p-1.5 bg-gray-500 text-white rounded-full hover:bg-red-500 transition-all shadow-lg border-2 border-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               )}
-              
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={handleFileChange}
-                required={!editBrand}
-              />
             </div>
-            
-            {previewUrl && (
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="absolute -top-3 -right-3 p-1.5 bg-gray-500 text-white rounded-full hover:bg-red-500 transition-all shadow-lg border-2 border-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
           </div>
-          {/* <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest">
-            JPEG, PNG, WEBP · MAX 10MB
-          </p> */}
+
+          {/* Cover Photo Upload */}
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider">Cover Photo</label>
+            <div className="relative group w-full max-w-sm">
+              <div className={`w-full aspect-video border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all overflow-hidden ${
+                coverPreview ? 'border-transparent' : 'border-gray-200 bg-gray-50/50 group-hover:bg-gray-50 group-hover:border-blue-200'
+              }`}>
+                {coverPreview ? (
+                  <img src={coverPreview} alt="Cover Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center text-gray-400 group-hover:text-[#3B5998]">
+                    <Upload className="h-8 w-8 mb-2 opacity-50 group-hover:opacity-100" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Add Cover Photo</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleCoverChange}
+                />
+              </div>
+              {coverPreview && (
+                <button
+                  type="button"
+                  onClick={handleRemoveCover}
+                  className="absolute -top-3 -right-3 p-1.5 bg-gray-500 text-white rounded-full hover:bg-red-500 transition-all shadow-lg border-2 border-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Form Fields */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Brand Name</label>
               <input
                 type="text"
@@ -160,7 +219,7 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
               />
             </div>
 
-            <div className="flex-1 space-y-1.5">
+            <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Category</label>
               <select
                 className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium appearance-none"
@@ -174,6 +233,17 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Description</label>
+            <textarea
+              placeholder="Enter brand description..."
+              rows={4}
+              className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium resize-none"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-gray-50">

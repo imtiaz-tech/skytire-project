@@ -23,31 +23,36 @@ export class BrandsController {
 
   @Post()
   async create(@Req() req: fastify.FastifyRequest, @Body() dto: CreateBrandDto) {
-    // In Fastify with @fastify/multipart, we handle file upload differently
-    // However, to keep it simple and follow requirements, 
-    // we assume the file is already processed or we use the 'file' from multipart
-    const data = await req.file();
-    if (!data) {
-      throw new BadRequestException('Brand logo is required');
-    }
+    const parts = req.files();
+    let brandLogo: string | undefined;
+    let coverPhoto: string | undefined;
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(data.mimetype)) {
-      throw new BadRequestException('Invalid file type. Allowed: jpeg, jpg, png, webp');
-    }
-
-    // Generate filename: Date.now() + originalname
-    const filename = `${Date.now()}-${data.filename}`;
-    const uploadPath = `uploads/${filename}`;
-
-    // Save file
     const fs = require('fs');
     const util = require('util');
     const pipeline = util.promisify(require('stream').pipeline);
-    await pipeline(data.file, fs.createWriteStream(uploadPath));
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-    return this.brandsService.create(dto, uploadPath);
+    for await (const data of parts) {
+      if (!allowedTypes.includes(data.mimetype)) {
+        throw new BadRequestException(`Invalid file type for ${data.fieldname}. Allowed: jpeg, jpg, png, webp`);
+      }
+
+      const filename = `${Date.now()}-${data.filename}`;
+      const uploadPath = `uploads/${filename}`;
+      await pipeline(data.file, fs.createWriteStream(uploadPath));
+
+      if (data.fieldname === 'brandLogo' || data.fieldname === 'file') {
+        brandLogo = uploadPath;
+      } else if (data.fieldname === 'coverPhoto') {
+        coverPhoto = uploadPath;
+      }
+    }
+
+    if (!brandLogo) {
+      throw new BadRequestException('Brand logo is required');
+    }
+
+    return this.brandsService.create(dto, brandLogo, coverPhoto);
   }
 
   @Get()
@@ -74,26 +79,32 @@ export class BrandsController {
     @Req() req: fastify.FastifyRequest,
     @Body() dto: UpdateBrandDto,
   ) {
-    const data = await req.file();
-    let uploadPath: string | undefined;
+    const parts = req.files();
+    let brandLogo: string | undefined;
+    let coverPhoto: string | undefined;
 
-    if (data) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const fs = require('fs');
+    const util = require('util');
+    const pipeline = util.promisify(require('stream').pipeline);
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    for await (const data of parts) {
       if (!allowedTypes.includes(data.mimetype)) {
-        throw new BadRequestException('Invalid file type. Allowed: jpeg, jpg, png, webp');
+        throw new BadRequestException(`Invalid file type for ${data.fieldname}. Allowed: jpeg, jpg, png, webp`);
       }
 
       const filename = `${Date.now()}-${data.filename}`;
-      uploadPath = `uploads/${filename}`;
-
-      const fs = require('fs');
-      const util = require('util');
-      const pipeline = util.promisify(require('stream').pipeline);
+      const uploadPath = `uploads/${filename}`;
       await pipeline(data.file, fs.createWriteStream(uploadPath));
+
+      if (data.fieldname === 'brandLogo' || data.fieldname === 'file') {
+        brandLogo = uploadPath;
+      } else if (data.fieldname === 'coverPhoto') {
+        coverPhoto = uploadPath;
+      }
     }
 
-    return this.brandsService.update(id, dto, uploadPath);
+    return this.brandsService.update(id, dto, brandLogo, coverPhoto);
   }
 
   @Delete(':id')

@@ -9,11 +9,12 @@ import * as path from 'path';
 export class BrandsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateBrandDto, brandLogo: string) {
+  async create(dto: CreateBrandDto, brandLogo: string, coverPhoto?: string) {
     return this.prisma.brand.create({
       data: {
         ...dto,
         brandLogo,
+        coverPhoto,
       },
     });
   }
@@ -57,7 +58,7 @@ export class BrandsService {
     return brand;
   }
 
-  async update(id: string, dto: UpdateBrandDto, newLogo?: string) {
+  async update(id: string, dto: UpdateBrandDto, newLogo?: string, newCover?: string) {
     const brand = await this.findOne(id);
 
     if (newLogo && brand.brandLogo) {
@@ -68,23 +69,43 @@ export class BrandsService {
       }
     }
 
+    if (newCover && brand.coverPhoto) {
+      // Remove old cover photo
+      const oldCoverPath = path.join(process.cwd(), brand.coverPhoto);
+      if (fs.existsSync(oldCoverPath)) {
+        fs.unlinkSync(oldCoverPath);
+      }
+    }
+
     return this.prisma.brand.update({
       where: { id },
       data: {
         ...dto,
         brandLogo: newLogo || brand.brandLogo,
+        coverPhoto: newCover || brand.coverPhoto,
       },
     });
   }
 
   async remove(id: string) {
     const brand = await this.findOne(id);
+    
+    // Delete logo
     if (brand.brandLogo) {
       const filePath = path.join(process.cwd(), brand.brandLogo);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     }
+
+    // Delete cover photo
+    if (brand.coverPhoto) {
+      const coverPath = path.join(process.cwd(), brand.coverPhoto);
+      if (fs.existsSync(coverPath)) {
+        fs.unlinkSync(coverPath);
+      }
+    }
+
     return this.prisma.brand.delete({
       where: { id },
     });

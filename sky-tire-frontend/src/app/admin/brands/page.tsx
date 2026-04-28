@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Plus, Edit2, Trash2, Star } from 'lucide-react';
+import { Search, Loader2, Plus, Edit2, Trash2, Star, Image as ImageIcon } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBrands, deleteBrand } from '@/redux/slices/brandsSlice';
 import { Brand, BrandCategory } from '@/redux/types/brandTypes';
@@ -49,10 +49,14 @@ export default function BrandsPage() {
     }
   };
 
-  const getImageUrl = (path: string) => {
+  const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-    return baseUrl.replace('/api', '') + '/' + path;
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+    return `${baseUrl}/${path}`;
+  };
+
+  const formatCategory = (cat: string) => {
+    return cat.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -124,15 +128,18 @@ export default function BrandsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
-                <th className="px-8 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand <span className="ml-1 text-[10px] opacity-60">↑</span></th>
-                <th className="px-8 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.1em] text-center">Featured</th>
-                <th className="px-8 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Logo</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand Name</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">Description</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-center">Cover</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-center">Category</th>
+                <th className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={3} className="px-8 py-20 text-center">
+                  <td colSpan={6} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#3B5998] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Fetching brands...</p>
@@ -141,13 +148,12 @@ export default function BrandsPage() {
                 </tr>
               ) : brands.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-8 py-20 text-center">
+                  <td colSpan={6} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-6 w-6 text-gray-200" />
                       </div>
                       <p className="text-gray-400 font-semibold">No brands found</p>
-                      <p className="text-gray-300 text-xs">Try searching for something else or add a new brand.</p>
                     </div>
                   </td>
                 </tr>
@@ -155,34 +161,45 @@ export default function BrandsPage() {
                 brands.map((brand) => (
                   <tr key={brand.id} className="hover:bg-gray-50/50 transition-all group">
                     <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="flex items-center gap-5">
-                        <div className="w-20 h-14 bg-white rounded-xl p-1.5 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm group-hover:border-blue-100 group-hover:shadow-md transition-all">
-                          <img src={getImageUrl(brand.brandLogo)} alt={brand.brandName} className="max-w-full max-h-full object-contain" />
-                        </div>
-                        <span className="text-[16px] font-bold text-[#1e2a4a] tracking-tight">{brand.brandName}</span>
+                      <div className="w-16 h-12 bg-white rounded-lg p-1 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm group-hover:border-blue-100 transition-all">
+                        <img src={getImageUrl(brand.brandLogo)} alt={brand.brandName} className="max-w-full max-h-full object-contain" />
                       </div>
                     </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <span className="text-[15px] font-bold text-[#1e2a4a] tracking-tight">{brand.brandName}</span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-[13px] text-gray-500 line-clamp-2 max-w-[250px]">
+                        {brand.description || '—'}
+                      </p>
+                    </td>
                     <td className="px-8 py-5 text-center whitespace-nowrap">
-                      {brand.isFeatured ? (
-                        <div className="inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-[13px] px-3 py-1 bg-orange-50 rounded-full">
-                          <Star className="h-3.5 w-3.5 fill-orange-500" />
-                          <span>Featured</span>
+                      {brand.coverPhoto ? (
+                        <div className="inline-block w-16 h-12 bg-white rounded-lg p-0.5 border border-gray-100 shadow-sm overflow-hidden">
+                          <img src={getImageUrl(brand.coverPhoto)} alt="Cover" className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <span className="text-gray-300 font-bold text-[13px]">Standard</span>
+                        <div className="inline-flex items-center justify-center w-16 h-12 bg-gray-50 rounded-lg text-gray-300">
+                          <ImageIcon className="h-5 w-5" />
+                        </div>
                       )}
+                    </td>
+                    <td className="px-8 py-5 text-center whitespace-nowrap">
+                      <span className="px-3 py-1 bg-blue-50 text-[#3B5998] text-[11px] font-bold uppercase rounded-full tracking-wider">
+                        {formatCategory(brand.category)}
+                      </span>
                     </td>
                     <td className="px-8 py-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() => handleDelete(brand.id)}
-                          className="px-5 py-2.5 bg-[#FF5A5F] text-white rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-red-100"
+                          className="px-4 py-2 bg-[#FF5A5F] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-red-100"
                         >
                           Delete
                         </button>
                         <Link
                           href={`/admin/brands/edit/${brand.id}`}
-                          className="px-5 py-2.5 bg-[#1e2a4a] text-white rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100"
+                          className="px-4 py-2 bg-[#1e2a4a] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100"
                         >
                           Edit
                         </Link>

@@ -4,6 +4,8 @@ export interface Brand {
   id: string;
   brandName: string;
   brandLogo: string;
+  description?: string;
+  coverPhoto?: string;
   category: BrandCategory;
   isFeatured: boolean;
   createdAt: string;
