@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE "Tire" ADD COLUMN     "brandId" TEXT,
+ADD COLUMN     "image" TEXT,
+ADD COLUMN     "price" DOUBLE PRECISION,
+ADD COLUMN     "sku" TEXT,
+ADD COLUMN     "stock" INTEGER DEFAULT 0,
+ALTER COLUMN "brand" DROP NOT NULL;
+
+-- AddForeignKey
+ALTER TABLE "Tire" ADD CONSTRAINT "Tire_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE SET NULL ON UPDATE CASCADE;

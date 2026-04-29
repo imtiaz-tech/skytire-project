@@ -7,6 +7,7 @@ import { fetchBrands, deleteBrand } from '@/redux/slices/brandsSlice';
 import { Brand, BrandCategory } from '@/redux/types/brandTypes';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import BrandProductsModal from '@/components/brands/BrandProductsModal';
 import Link from 'next/link';
 
 const categories: { label: string; value: BrandCategory }[] = [
@@ -27,9 +28,13 @@ export default function BrandsPage() {
   const [searchInput, setSearchInput] = useState('');
   const limit = 10;
 
-  // Modal State
+  // Modal State - Delete
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<string | null>(null);
+
+  // Modal State - Products
+  const [isProductsModalOpen, setIsProductsModalOpen] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<{ id: string, name: string } | null>(null);
 
   useEffect(() => {
     dispatch(fetchBrands({ page, limit, category: activeTab, search }));
@@ -59,6 +64,11 @@ export default function BrandsPage() {
       setIsDeleteModalOpen(false);
       setBrandToDelete(null);
     }
+  };
+
+  const openProductsModal = (id: string, name: string) => {
+    setSelectedBrand({ id, name });
+    setIsProductsModalOpen(true);
   };
 
   const getImageUrl = (path: string | undefined) => {
@@ -179,7 +189,12 @@ export default function BrandsPage() {
                       </div>
                     </td>
                     <td className="px-8 py-5 whitespace-nowrap">
-                      <span className="text-[15px] font-bold text-[#1e2a4a] tracking-tight">{brand.brandName}</span>
+                      <button 
+                        onClick={() => openProductsModal(brand.id, brand.brandName)}
+                        className="text-[15px] font-bold text-[#1e2a4a] tracking-tight hover:text-[#3B5998] hover:underline transition-all text-left"
+                      >
+                        {brand.brandName}
+                      </button>
                     </td>
                     <td className="px-8 py-5">
                       <p className="text-[14px] text-gray-500 line-clamp-2 max-w-[250px]">
@@ -206,8 +221,7 @@ export default function BrandsPage() {
                           Delete
                         </button>
                         <Link
-                          // href={`/admin/brands/edit/${brand.id}`}
-                          href="#"
+                          href={`/admin/brands/edit/${brand.id}`}
                           className="px-4 py-2 bg-[#1e2a4a] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100"
                         >
                           Edit
@@ -244,6 +258,14 @@ export default function BrandsPage() {
         message="Are you sure you want to delete this brand? This action cannot be undone."
         onConfirm={confirmDelete}
         onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      {/* Brand Products Modal */}
+      <BrandProductsModal
+        open={isProductsModalOpen}
+        brandId={selectedBrand?.id || ''}
+        brandName={selectedBrand?.name || ''}
+        onClose={() => setIsProductsModalOpen(false)}
       />
     </div>
   );

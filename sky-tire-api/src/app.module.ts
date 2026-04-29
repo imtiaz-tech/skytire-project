@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { BrandsModule } from './modules/brands/brands.module';
+import { TiresModule } from './modules/tires/tires.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { BrandsModule } from './modules/brands/brands.module';
     AuthModule,
     MailModule,
     BrandsModule,
+    TiresModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -88,6 +88,7 @@ model Brand {
   isFeatured  Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  tires       Tire[]
 
   @@index([brandName])
 }
@@ -95,7 +96,13 @@ model Brand {
 model Tire {
   id          Int                     @id @default(autoincrement())
   name        String
-  brand       String
+  brand       String?
+  brandId     String?
+  brandRel    Brand?                  @relation(fields: [brandId], references: [id])
+  image       String?
+  price       Float?
+  sku         String?
+  stock       Int?                    @default(0)
   description String?
   embedding   Unsupported("vector(1536)")?
   createdAt   DateTime                @default(now())
