@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBlogs, deleteBlog } from '@/redux/slices/blogsSlice';
-import { Plus, Edit2, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Eye, User, ArrowLeft, Search } from 'lucide-react';
 import { BlogStatus, Blog } from '@/redux/types/blogTypes';
 
 export default function BlogsPage() {
@@ -20,7 +20,9 @@ export default function BlogsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchBlogs(statusFilter || undefined));
+    // Default to PUBLISHED if no filter is set
+    const status = statusFilter ? statusFilter.toUpperCase() : 'PUBLISHED';
+    dispatch(fetchBlogs(status));
   }, [dispatch, statusFilter]);
 
   const handleDelete = async () => {
@@ -44,40 +46,48 @@ export default function BlogsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 bg-white min-h-screen">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[#1e2a4a]">Blogs</h1>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/blogs"
-            className={`px-6 py-2.5 rounded-xl transition-all font-medium ${!statusFilter ? 'bg-[#1e2a4a] text-white' : 'bg-gray-100 text-[#1e2a4a] hover:bg-gray-200'}`}
-          >
-            All Posts
-          </Link>
-          <Link
-            href="/admin/blogs?status=draft"
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-medium ${statusFilter === 'draft' ? 'bg-[#1e2a4a] text-white' : 'bg-gray-100 text-[#1e2a4a] hover:bg-gray-200'}`}
-          >
-            <Edit2 className="h-4 w-4" />
-            Drafts
-          </Link>
-          <Link
-            href="/admin/blogs/add"
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            New Post
-          </Link>
-        </div>
+        {statusFilter === 'draft' ? (
+          <div className="flex items-center gap-4">
+            <Link href="/admin/blogs" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft className="h-6 w-6 text-[#1e2a4a]" />
+            </Link>
+            <h1 className="text-[32px] font-bold text-[#1e2a4a]">Drafts</h1>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-[32px] font-bold text-[#1e2a4a]">Blogs</h1>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/admin/blogs?status=draft"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium"
+              >
+                <Edit2 className="h-4 w-4" />
+                Drafts
+              </Link>
+              <Link
+                href="/admin/blogs/add"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium"
+              >
+                <Plus className="h-4 w-4" />
+                New Post
+              </Link>
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="flex items-center gap-4 max-w-sm">
-        <input
-          type="text"
-          placeholder="Search ..."
-          className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20"
-        />
-        <button className="px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl font-medium">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search ..."
+            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500/50 outline-none text-[15px]"
+          />
+        </div>
+        <button className="px-8 py-3 bg-[#1e2a4a] text-white rounded-xl font-bold hover:bg-[#2a3b69] transition-colors">
           Search
         </button>
       </div>
@@ -85,55 +95,63 @@ export default function BlogsPage() {
       {loading && !blogs.length ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
           {blogs.map((blog) => (
-            <div key={blog.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 relative group flex flex-col">
-              <div className="relative aspect-video overflow-hidden bg-gray-100">
-                <img src={getImageUrl(blog.featuredImage)} alt={blog.blogTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                
-                {blog.isFeatured && (
-                  <span className="absolute top-4 left-4 px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
-                    Featured
-                  </span>
-                )}
-
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <Link href={`/admin/blogs/edit/${blog.id}`} className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all">
-                    <Edit2 className="h-4 w-4" />
-                  </Link>
+            <div key={blog.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 relative group aspect-[4/3] flex flex-col">
+              <div className="absolute inset-0 z-0">
+                <img src={getImageUrl(blog.featuredImage)} alt={blog.blogTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
+              </div>
+              
+              <div className="relative z-10 p-6 flex flex-col h-full justify-between">
+                <div className="flex justify-between items-start">
+                  <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a]">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    {/* <Link href={`/admin/blogs/edit/${blog.id}`} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:bg-white transition-colors">
+                      <Edit2 className="h-4 w-4" />
+                    </Link> */}
+                    <Link
+                      href="#"
+                      onClick={(e) => e.preventDefault()}
+                      className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-60 pointer-events-none"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="absolute bottom-4 left-4 right-4 space-y-2">
-                  <div className="flex items-center gap-2 text-white/80 text-xs font-medium">
-                    <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      {blog.blogStatus === BlogStatus.PUBLISHED ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      {blog.blogStatus}
-                    </span>
-                  </div>
-                  <h3 className="text-white font-bold text-lg leading-tight line-clamp-2">
+                <div className="space-y-2">
+                  <p className="text-white/70 text-[13px] font-medium uppercase tracking-wider">
+                    {new Date(blog.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </p>
+                  <h3 className="text-white font-bold text-[18px] leading-snug line-clamp-2">
                     {blog.blogTitle}
                   </h3>
                 </div>
-              </div>
 
-              <div className="p-4 bg-gray-50 flex justify-end">
-                <button
-                  onClick={() => {
-                    setSelectedBlog(blog);
-                    setIsDeleteModalOpen(true);
-                  }}
-                  className="p-2.5 bg-white text-gray-400 hover:text-red-500 rounded-full shadow-sm hover:shadow transition-all"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                <div className="absolute bottom-6 right-6">
+                  <button
+                    onClick={() => {
+                      setSelectedBlog(blog);
+                      setIsDeleteModalOpen(true);
+                    }}
+                    className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
           {blogs.length === 0 && (
-            <div className="col-span-full p-8 text-center text-gray-500">No blogs found.</div>
+            <div className="col-span-full py-20 text-center flex flex-col items-center gap-4">
+              <p className="text-[18px] font-bold text-[#1e2a4a]">No blogs available at the moment.</p>
+            </div>
           )}
         </div>
       )}
