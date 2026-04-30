@@ -192,7 +192,11 @@ export default function BlogsPage() {
 
       {/* Pagination */}
       {!loading && blogs.length > 0 && totalPages > 1 && (
-        <div className="flex justify-center pt-8">
+        <div className="mt-8 px-8 py-6 bg-gray-50/30 border-t border-gray-50 flex items-center justify-between rounded-b-3xl">
+          <div className="text-sm font-medium text-gray-400">
+            Page <span className="text-[#1e2a4a] font-bold">{currentPage}</span> of{' '}
+            <span className="text-[#1e2a4a] font-bold">{totalPages}</span>
+          </div>
           <Pagination 
             currentPage={currentPage} 
             totalPages={totalPages} 
