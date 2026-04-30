@@ -8,7 +8,8 @@ import {
   updateBlogCategory, 
   deleteBlogCategory 
 } from '@/redux/slices/blogCategoriesSlice';
-import { X, Edit2, Trash2, Loader2, Plus } from 'lucide-react';
+import { X, Pencil, Trash, Loader2, Plus } from 'lucide-react';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { BlogCategory } from '@/redux/types/blogTypes';
 
 interface ManageCategoriesModalProps {
@@ -23,6 +24,7 @@ export default function ManageCategoriesModal({ onClose }: ManageCategoriesModal
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchBlogCategories());
@@ -60,11 +62,16 @@ export default function ManageCategoriesModal({ onClose }: ManageCategoriesModal
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     setIsSubmitting(true);
     try {
-      await dispatch(deleteBlogCategory(id)).unwrap();
+      await dispatch(deleteBlogCategory(deleteConfirmId)).unwrap();
+      setDeleteConfirmId(null);
     } catch (error: any) {
       alert(error.message || 'Failed to delete category');
     } finally {
@@ -132,18 +139,18 @@ export default function ManageCategoriesModal({ onClose }: ManageCategoriesModal
                   ) : (
                     <>
                       <span className="text-[16px] text-[#1e2a4a]">{cat.name}</span>
-                      <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-4 transition-opacity">
                         <button 
                           onClick={() => { setEditingId(cat.id); setEditingName(cat.name); }}
-                          className="text-[#64748b] hover:text-[#3B5998]"
+                          className="text-[#3B5998] hover:text-[#2a3b69]"
                         >
-                          <Edit2 className="h-[18px] w-[18px] fill-current" />
+                          <Pencil className="h-[18px] w-[18px]" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(cat.id)}
-                          className="text-[#64748b] hover:text-red-500"
+                          onClick={() => handleDeleteClick(cat.id)}
+                          className="text-[#ff5a5f] hover:text-red-600"
                         >
-                          <Trash2 className="h-[18px] w-[18px] fill-current" />
+                          <Trash className="h-[18px] w-[18px]" />
                         </button>
                       </div>
                     </>
@@ -166,6 +173,14 @@ export default function ManageCategoriesModal({ onClose }: ManageCategoriesModal
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deleteConfirmId}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? This will affect any blogs currently using it."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </div>
   );
 }
