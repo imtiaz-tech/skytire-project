@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBlogs, deleteBlog } from '@/redux/slices/blogsSlice';
 import { Plus, Edit2, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -11,13 +12,16 @@ export default function BlogsPage() {
   const dispatch = useAppDispatch();
   const { blogs, loading } = useAppSelector((state) => state.blogs);
 
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get('status');
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchBlogs());
-  }, [dispatch]);
+    dispatch(fetchBlogs(statusFilter || undefined));
+  }, [dispatch, statusFilter]);
 
   const handleDelete = async () => {
     if (!selectedBlog) return;
@@ -45,15 +49,21 @@ export default function BlogsPage() {
         <h1 className="text-2xl font-bold text-[#1e2a4a]">Blogs</h1>
         <div className="flex items-center gap-4">
           <Link
+            href="/admin/blogs"
+            className={`px-6 py-2.5 rounded-xl transition-all font-medium ${!statusFilter ? 'bg-[#1e2a4a] text-white' : 'bg-gray-100 text-[#1e2a4a] hover:bg-gray-200'}`}
+          >
+            All Posts
+          </Link>
+          <Link
             href="/admin/blogs?status=draft"
-            className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-[#1e2a4a] rounded-xl hover:bg-gray-200 transition-all font-medium"
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-medium ${statusFilter === 'draft' ? 'bg-[#1e2a4a] text-white' : 'bg-gray-100 text-[#1e2a4a] hover:bg-gray-200'}`}
           >
             <Edit2 className="h-4 w-4" />
             Drafts
           </Link>
           <Link
             href="/admin/blogs/add"
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium"
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium shadow-sm"
           >
             <Plus className="h-4 w-4" />
             New Post

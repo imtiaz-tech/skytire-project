@@ -14,8 +14,9 @@ const initialState: BlogsState = {
   error: null,
 };
 
-export const fetchBlogs = createAsyncThunk('blogs/fetchAll', async () => {
-  const response = await apiClient.get('/blogs');
+export const fetchBlogs = createAsyncThunk('blogs/fetchAll', async (status?: string) => {
+  const url = status ? `/blogs?status=${status}` : '/blogs';
+  const response = await apiClient.get(url);
   return response.data;
 });
 

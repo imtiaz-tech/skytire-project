@@ -36,8 +36,14 @@ export class BlogsService {
     });
   }
 
-  findAll() {
+  findAll(status?: string) {
+    const where: any = {};
+    if (status) {
+      where.blogStatus = status.toUpperCase();
+    }
+    
     return this.prisma.blog.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         category: true,

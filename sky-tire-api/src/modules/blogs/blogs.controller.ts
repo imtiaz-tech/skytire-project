@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Delete, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Delete, UseGuards, Req, BadRequestException, Query } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { AuthGuard } from '../../auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -45,8 +45,8 @@ export class BlogsController {
   }
 
   @Get()
-  findAll() {
-    return this.blogsService.findAll();
+  findAll(@Query('status') status?: string) {
+    return this.blogsService.findAll(status);
   }
 
   @Get(':id')
