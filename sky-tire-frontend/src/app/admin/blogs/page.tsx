@@ -76,28 +76,28 @@ export default function BlogsPage() {
 
   return (
     <div className="p-8 space-y-8 bg-white min-h-screen">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-6 sm:flex-row sm:justify-between sm:items-center">
         {statusFilter === 'draft' ? (
           <div className="flex items-center gap-4">
             <Link href="/admin/blogs" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <ArrowLeft className="h-6 w-6 text-[#1e2a4a]" />
             </Link>
-            <h1 className="text-[32px] font-bold text-[#1e2a4a]">Drafts</h1>
+            <h1 className="text-[28px] sm:text-[32px] font-bold text-[#1e2a4a]">Drafts</h1>
           </div>
         ) : (
           <>
-            <h1 className="text-[32px] font-bold text-[#1e2a4a]">Blogs</h1>
-            <div className="flex items-center gap-4">
+            <h1 className="text-[28px] sm:text-[32px] font-bold text-[#1e2a4a]">Blogs</h1>
+            <div className="flex items-center gap-3 sm:gap-4">
               <Link
                 href="/admin/blogs?status=draft"
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium text-sm sm:text-base"
               >
                 <Edit2 className="h-4 w-4" />
                 Drafts
               </Link>
               <Link
                 href="/admin/blogs/add"
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-[#2a3b69] transition-all font-medium text-sm sm:text-base"
               >
                 <Plus className="h-4 w-4" />
                 New Post
@@ -107,8 +107,8 @@ export default function BlogsPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 max-w-none sm:max-w-sm">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -121,7 +121,7 @@ export default function BlogsPage() {
         </div>
         <button 
           onClick={handleSearch}
-          className="px-8 py-3 bg-[#1e2a4a] text-white rounded-xl font-bold hover:bg-[#2a3b69] transition-colors"
+          className="px-8 py-3 bg-[#1e2a4a] text-white rounded-xl font-bold hover:bg-[#2a3b69] transition-colors whitespace-nowrap"
         >
           Search
         </button>
@@ -130,7 +130,7 @@ export default function BlogsPage() {
       {loading && !blogs.length ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
           {blogs.map((blog) => (
             <div key={blog.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 relative group aspect-[4/3] flex flex-col">
               <div className="absolute inset-0 z-0">
@@ -139,22 +139,12 @@ export default function BlogsPage() {
               </div>
               
               <div className="relative z-10 p-6 flex flex-col h-full justify-between">
-                <div className="flex justify-between items-start">
-                  <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400">
-                    <User className="h-6 w-6" />
-                  </div>
+                <div className="flex justify-end items-start">
                   <div className="flex gap-2">
                     <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a]">
                       <Eye className="h-5 w-5" />
                     </div>
-                    {/* <Link href={`/admin/blogs/edit/${blog.id}`} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:bg-white transition-colors">
-                      <Edit2 className="h-4 w-4" />
-                    </Link> */}
-                    <Link
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
-                      className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 cursor-not-allowed opacity-60 pointer-events-none"
-                    >
+                    <Link href={`/admin/blogs/edit/${blog.id}`} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:bg-white transition-colors">
                       <Edit2 className="h-4 w-4" />
                     </Link>
                   </div>
