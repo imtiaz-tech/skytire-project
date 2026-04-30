@@ -73,7 +73,7 @@ export default function ManageCategoriesModal({ onClose }: ManageCategoriesModal
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm lg:pl-[280px]">
       <div className="bg-white rounded-xl w-full max-w-[600px] shadow-2xl flex flex-col max-h-[85vh]">
         <div className="px-6 py-5 border-b border-gray-100">
           <h2 className="text-[22px] font-bold text-[#1e2a4a]">Manage Blog Categories</h2>
