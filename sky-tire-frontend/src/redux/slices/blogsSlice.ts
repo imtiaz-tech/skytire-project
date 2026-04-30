@@ -6,16 +6,28 @@ interface BlogsState {
   blogs: Blog[];
   loading: boolean;
   error: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 const initialState: BlogsState = {
   blogs: [],
   loading: false,
   error: null,
+  total: 0,
+  page: 1,
+  limit: 12,
+  totalPages: 1,
 };
 
-export const fetchBlogs = createAsyncThunk('blogs/fetchAll', async (status?: string) => {
-  const url = status ? `/blogs?status=${status}` : '/blogs';
+export const fetchBlogs = createAsyncThunk('blogs/fetchAll', async (params?: { status?: string; page?: number; limit?: number; search?: string }) => {
+  const { status, page = 1, limit = 12, search } = params || {};
+  let url = `/blogs?page=${page}&limit=${limit}`;
+  if (status) url += `&status=${status}`;
+  if (search) url += `&search=${search}`;
+  
   const response = await apiClient.get(url);
   return response.data;
 });
@@ -47,7 +59,14 @@ const blogsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchBlogs.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchBlogs.fulfilled, (state, action) => { state.loading = false; state.blogs = action.payload; })
+      .addCase(fetchBlogs.fulfilled, (state, action) => { 
+        state.loading = false; 
+        state.blogs = action.payload.blogs;
+        state.total = action.payload.total;
+        state.page = action.payload.page;
+        state.limit = action.payload.limit;
+        state.totalPages = action.payload.totalPages;
+      })
       .addCase(fetchBlogs.rejected, (state, action) => { state.loading = false; state.error = action.error.message || 'Failed'; })
       .addCase(createBlog.fulfilled, (state, action) => { state.blogs.unshift(action.payload); })
       .addCase(updateBlog.fulfilled, (state, action) => {

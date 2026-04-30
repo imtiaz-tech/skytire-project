@@ -45,8 +45,13 @@ export class BlogsController {
   }
 
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.blogsService.findAll(status);
+  findAll(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.blogsService.findAll(status, Number(page) || 1, Number(limit) || 12, search);
   }
 
   @Get(':id')

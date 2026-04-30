@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBlogs, deleteBlog } from '@/redux/slices/blogsSlice';
 import { Plus, Edit2, Trash2, Loader2, Eye, User, ArrowLeft, Search } from 'lucide-react';
+import Pagination from '@/components/ui/Pagination';
 import { BlogStatus, Blog } from '@/redux/types/blogTypes';
 
 export default function BlogsPage() {
@@ -18,12 +19,39 @@ export default function BlogsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { totalPages } = useAppSelector((state) => state.blogs);
 
   useEffect(() => {
-    // Default to PUBLISHED if no filter is set
     const status = statusFilter ? statusFilter.toUpperCase() : 'PUBLISHED';
-    dispatch(fetchBlogs(status));
-  }, [dispatch, statusFilter]);
+    dispatch(fetchBlogs({ 
+      status, 
+      page: currentPage, 
+      search: searchQuery || undefined 
+    }));
+  }, [dispatch, statusFilter, currentPage]);
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    const status = statusFilter ? statusFilter.toUpperCase() : 'PUBLISHED';
+    dispatch(fetchBlogs({ 
+      status, 
+      page: 1, 
+      search: searchQuery || undefined 
+    }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery('');
+  }, [statusFilter]);
 
   const handleDelete = async () => {
     if (!selectedBlog) return;
@@ -84,10 +112,16 @@ export default function BlogsPage() {
           <input
             type="text"
             placeholder="Search ..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500/50 outline-none text-[15px]"
           />
         </div>
-        <button className="px-8 py-3 bg-[#1e2a4a] text-white rounded-xl font-bold hover:bg-[#2a3b69] transition-colors">
+        <button 
+          onClick={handleSearch}
+          className="px-8 py-3 bg-[#1e2a4a] text-white rounded-xl font-bold hover:bg-[#2a3b69] transition-colors"
+        >
           Search
         </button>
       </div>
@@ -153,6 +187,17 @@ export default function BlogsPage() {
               <p className="text-[18px] font-bold text-[#1e2a4a]">No blogs available at the moment.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && blogs.length > 0 && totalPages > 1 && (
+        <div className="flex justify-center pt-8">
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={handlePageChange} 
+          />
         </div>
       )}
 

@@ -36,20 +36,43 @@ export class BlogsService {
     });
   }
 
-  findAll(status?: string) {
+  async findAll(status?: string, page: number = 1, limit: number = 12, search?: string) {
+    const skip = (page - 1) * limit;
     const where: any = {};
+    
     if (status) {
       where.blogStatus = status.toUpperCase();
     }
+
+    if (search) {
+      where.OR = [
+        { blogTitle: { contains: search, mode: 'insensitive' } },
+        { authorName: { contains: search, mode: 'insensitive' } },
+        { author: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
     
-    return this.prisma.blog.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        category: true,
-        author: { select: { id: true, name: true } },
-      },
-    });
+    const [blogs, total] = await Promise.all([
+      this.prisma.blog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+          author: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.blog.count({ where }),
+    ]);
+
+    return {
+      blogs,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string) {
