@@ -15,6 +15,8 @@ import {
   Package,
   Ticket,
   ChevronLeft,
+  FileText,
+  Tags,
 } from 'lucide-react';
 
 const navItems = [
@@ -28,6 +30,8 @@ const navItems = [
   { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { label: 'Blogs', href: '/admin/blogs', icon: FileText },
+  { label: 'Blog Categories', href: '/admin/blog-categories', icon: Tags },
 ];
 
 export default function AdminSidebar() {

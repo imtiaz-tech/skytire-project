@@ -7,6 +7,8 @@ import dashboardReducer from '../features/dashboard/slice';
 import authReducer from './slices/authSlice';
 import usersReducer from './slices/usersSlice';
 import brandsReducer from './slices/brandsSlice';
+import blogsReducer from './slices/blogsSlice';
+import blogCategoriesReducer from './slices/blogCategoriesSlice';
 
 
 export const store = configureStore({
@@ -19,6 +21,8 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     users: usersReducer,
     brands: brandsReducer,
+    blogs: blogsReducer,
+    blogCategories: blogCategoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
