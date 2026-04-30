@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchBlogs, deleteBlog } from '@/redux/slices/blogsSlice';
 import { Plus, Edit2, Trash2, Loader2, Eye, User, ArrowLeft, Search } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { BlogStatus, Blog } from '@/redux/types/blogTypes';
 
 export default function BlogsPage() {
@@ -206,35 +207,13 @@ export default function BlogsPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && selectedBlog && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-6 text-center space-y-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-500">
-              <Trash2 className="h-8 w-8" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#1e2a4a] mb-2">Delete Blog?</h2>
-              <p className="text-gray-500">Are you sure you want to delete this blog? This action cannot be undone.</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="flex-1 px-6 py-4 rounded-2xl font-bold text-gray-500 bg-gray-50 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isSubmitting}
-                className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 flex justify-center items-center gap-2"
-              >
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={isDeleteModalOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this blog? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 }
