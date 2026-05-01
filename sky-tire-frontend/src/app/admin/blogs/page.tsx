@@ -8,6 +8,7 @@ import { fetchBlogs, deleteBlog } from '@/redux/slices/blogsSlice';
 import { Plus, Edit2, Trash2, Loader2, Eye, User, ArrowLeft, Search } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import BlogPreviewModal from '@/components/admin/BlogPreviewModal';
 import { BlogStatus, Blog } from '@/redux/types/blogTypes';
 
 export default function BlogsPage() {
@@ -18,6 +19,7 @@ export default function BlogsPage() {
   const statusFilter = searchParams.get('status');
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -141,9 +143,15 @@ export default function BlogsPage() {
               <div className="relative z-10 p-6 flex flex-col h-full justify-between">
                 <div className="flex justify-end items-start">
                   <div className="flex gap-2">
-                    <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a]">
+                    <button 
+                      onClick={() => {
+                        setSelectedBlog(blog);
+                        setIsPreviewModalOpen(true);
+                      }}
+                      className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:bg-white transition-colors cursor-pointer"
+                    >
                       <Eye className="h-5 w-5" />
-                    </div>
+                    </button>
                     <Link href={`/admin/blogs/edit/${blog.id}`} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#1e2a4a] hover:bg-white transition-colors">
                       <Edit2 className="h-4 w-4" />
                     </Link>
@@ -203,6 +211,12 @@ export default function BlogsPage() {
         message="Are you sure you want to delete this blog? This action cannot be undone."
         onConfirm={handleDelete}
         onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      <BlogPreviewModal
+        open={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        blog={selectedBlog}
       />
     </div>
   );
