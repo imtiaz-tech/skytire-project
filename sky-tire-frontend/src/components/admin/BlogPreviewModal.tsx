@@ -114,6 +114,26 @@ export default function BlogPreviewModal({ open, onClose, blog }: BlogPreviewMod
                 dangerouslySetInnerHTML={{ __html: blog.blogBody }}
               />
             </div>
+            {/* Article Sections */}
+            {blog.sections && Array.isArray(blog.sections) && blog.sections.length > 0 && (
+              <div className="space-y-8">
+                {blog.sections.map((section: any, index: number) => (
+                  <div key={index} className="space-y-6">
+                    {section.title && (
+                      <h2 className="text-[28px] sm:text-[32px] font-black text-[#1e2a4a] leading-tight tracking-tight">
+                        {section.title}
+                      </h2>
+                    )}
+                    <div className="p-8 sm:p-10 bg-white border border-gray-100 rounded-[32px] shadow-sm relative">
+                      <div 
+                        className="prose prose-lg max-w-none text-[#1e2a4a] prose-headings:text-[#1e2a4a] prose-headings:font-black prose-p:leading-relaxed prose-img:rounded-2xl"
+                        dangerouslySetInnerHTML={{ __html: section.content }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Keywords */}
             {blog.keywords && blog.keywords.length > 0 && (
