@@ -130,7 +130,7 @@ export default function BlogsPage() {
       {loading && !blogs.length ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 sm:gap-8">
           {blogs.map((blog) => (
             <div key={blog.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 relative group aspect-[4/3] flex flex-col">
               <div className="absolute inset-0 z-0">
@@ -151,7 +151,7 @@ export default function BlogsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-white/70 text-[13px] font-medium uppercase tracking-wider">
+                  <p className="text-white text-[14px] font-medium uppercase tracking-wider">
                     {new Date(blog.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                   <h3 className="text-white font-bold text-[18px] leading-snug line-clamp-2">
