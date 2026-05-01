@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 import { fetchCurrentUser } from '@/redux/slices/authSlice';
 import { FingerprintProvider } from '@fingerprint/react';
 
+import { Toaster } from 'react-hot-toast';
+
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // On app load, check if there's an active session
@@ -25,6 +27,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
         region="us"
       >
         <AuthInitializer>{children}</AuthInitializer>
+        <Toaster 
+          position="top-center" 
+          reverseOrder={false}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              cursor: 'pointer',
+            },
+          }}
+        />
       </FingerprintProvider>
     </Provider>
   );

@@ -7,6 +7,7 @@ import { createBlog, updateBlog } from '@/redux/slices/blogsSlice';
 import { fetchBlogCategories, createBlogCategory } from '@/redux/slices/blogCategoriesSlice';
 import { Blog, BlogStatus } from '@/redux/types/blogTypes';
 import { ArrowLeft, Upload, X, Loader2, RefreshCw, Plus, Trash2, ChevronDown } from 'lucide-react';
+import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageCategoriesModal from './ManageCategoriesModal';
 
@@ -201,25 +202,79 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
     setKeywordArray(keywordArray.filter((k) => k !== kw));
   };
 
-  const handleSubmit = async (e: React.FormEvent, statusOverride?: BlogStatus) => {
-    e.preventDefault();
-    setLoading(true);
+  const validateForm = (status: BlogStatus) => {
+    const showToast = (message: string) => {
+      toast.error((t) => (
+        <div className="flex items-center justify-between w-full">
+          <span>{message}</span>
+          <button 
+            onClick={() => toast.dismiss(t.id)}
+            className="ml-4 p-1 hover:bg-black/5 rounded-full transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ), {
+        duration: 4000,
+      });
+    };
 
-    const submitStatus = statusOverride || formData.blogStatus;
+    // 1. Featured Image (Required for both)
+    if (!imagePreview) {
+      showToast('Featured Image is required');
+      return false;
+    }
 
-    // Validate Category
+    // Strict validation for Published fields in specific sequence
+    if (status === BlogStatus.PUBLISHED) {
+      // 2. Blog Title
+      if (!formData.blogTitle.trim()) {
+        showToast('Blog Title is required');
+        return false;
+      }
+      // 3. Author Name
+      if (!formData.authorName.trim()) {
+        showToast('Author Name is required');
+        return false;
+      }
+      // 4. Reading Time
+      if (!formData.readingTime) {
+        showToast('Reading Time is required');
+        return false;
+      }
+    }
+
+    // 5. Category (Required for both)
     if (!formData.categoryId) {
-      alert('Please select a category');
-      setLoading(false);
-      return;
+      showToast('Category is required');
+      return false;
     }
 
     const categoryExists = categories.some(c => c.id === formData.categoryId);
     if (!categoryExists) {
-      alert('The selected category is invalid or no longer exists. Please select a different category.');
-      setLoading(false);
-      return;
+      showToast('The selected category is invalid. Please select a different one.');
+      return false;
     }
+
+    // 6. Main Content (Required for Published only)
+    if (status === BlogStatus.PUBLISHED) {
+      if (!formData.blogBody.trim()) {
+        showToast('Main Content (Introduction) is required');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent, statusOverride?: BlogStatus) => {
+    e.preventDefault();
+    
+    const submitStatus = statusOverride || formData.blogStatus;
+
+    if (!validateForm(submitStatus)) return;
+
+    setLoading(true);
 
     const data = new FormData();
     data.append('blogTitle', formData.blogTitle);
@@ -230,16 +285,15 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
     data.append('blogStatus', submitStatus);
     data.append('categoryId', formData.categoryId);
     data.append('isFeatured', String(formData.isFeatured));
-    data.append('ctaHeading', formData.ctaHeading);
-    data.append('ctaDescription', formData.ctaDescription);
-    data.append('ctaButtonUrl', formData.ctaButtonUrl);
-    data.append('ctaButtonText', formData.ctaButtonText);
+    data.append('ctaHeading', formData.ctaHeading || '');
+    data.append('ctaDescription', formData.ctaDescription || '');
+    data.append('ctaButtonUrl', formData.ctaButtonUrl || '');
+    data.append('ctaButtonText', formData.ctaButtonText || '');
     data.append('colors', JSON.stringify(colors));
     data.append('sections', JSON.stringify(sections));
     
-    // Pass reading time explicitly if set by user
     if (formData.readingTime) {
-      data.append('readingTime', formData.readingTime);
+      data.append('readingTime', formData.readingTime.toString());
     }
 
     if (selectedImage) {
@@ -249,14 +303,16 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
     try {
       if (editBlog) {
         await dispatch(updateBlog({ id: editBlog.id, formData: data })).unwrap();
+        toast.success(`Blog updated as ${submitStatus.toLowerCase()} successfully!`);
       } else {
         await dispatch(createBlog(data)).unwrap();
+        toast.success(`Blog created as ${submitStatus.toLowerCase()} successfully!`);
       }
       router.push('/admin/blogs');
       router.refresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save blog:', err);
-      alert('Failed to save blog');
+      toast.error(err.message || 'Failed to save blog');
     } finally {
       setLoading(false);
     }
@@ -602,12 +658,22 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
         </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
-          <button type="button" onClick={(e) => handleSubmit(e, BlogStatus.DRAFT)} disabled={loading} className="px-8 py-3 bg-white border border-blue-500 text-blue-500 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center gap-2">
-            {loading && formData.blogStatus === BlogStatus.DRAFT && <Loader2 className="h-4 w-4 animate-spin" />}
+          <button 
+            type="button" 
+            onClick={(e) => handleSubmit(e, BlogStatus.DRAFT)} 
+            disabled={loading} 
+            className="px-8 py-3 bg-white border border-blue-500 text-blue-500 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center gap-2"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Save as Draft
           </button>
-          <button type="button" onClick={(e) => handleSubmit(e, BlogStatus.PUBLISHED)} disabled={loading} className="px-8 py-3 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition-colors shadow-md flex items-center gap-2">
-            {loading && formData.blogStatus === BlogStatus.PUBLISHED && <Loader2 className="h-4 w-4 animate-spin" />}
+          <button 
+            type="button" 
+            onClick={(e) => handleSubmit(e, BlogStatus.PUBLISHED)} 
+            disabled={loading} 
+            className="px-8 py-3 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition-colors shadow-md flex items-center gap-2"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Publish Blog
           </button>
         </div>
