@@ -262,11 +262,12 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
     }
   };
 
-  const config = useMemo(() => ({
+  const getEditorConfig = (placeholder: string = 'Start writing...') => ({
     readonly: false,
     height: 400,
     uploader: { insertImageAsBase64URI: true },
-  }), []);
+    placeholder: placeholder,
+  });
 
   return (
     <div className="space-y-8 py-8 relative">
@@ -461,7 +462,7 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
         <div className="space-y-4 pt-4">
           <label className="text-[18px] font-bold text-[#1e2a4a]">Main Content (Introduction)</label>
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-             <JoditEditor value={formData.blogBody} config={config} onBlur={(newContent) => setFormData({ ...formData, blogBody: newContent })} />
+             <JoditEditor value={formData.blogBody} config={getEditorConfig((formData.blogBody || editBlog) ? '' : 'Start writing...')} onBlur={(newContent) => setFormData({ ...formData, blogBody: newContent })} />
           </div>
         </div>
 
@@ -483,7 +484,7 @@ export default function BlogForm({ editBlog }: BlogFormProps) {
               </div>
               <input type="text" placeholder="Section Title" className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none" value={section.title} onChange={(e) => updateSection(index, 'title', e.target.value)} />
               <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-                <JoditEditor value={section.content} config={config} onBlur={(newContent) => updateSection(index, 'content', newContent)} />
+                <JoditEditor value={section.content} config={getEditorConfig(section.content ? '' : 'Start writing...')} onBlur={(newContent) => updateSection(index, 'content', newContent)} />
               </div>
             </div>
           ))}
