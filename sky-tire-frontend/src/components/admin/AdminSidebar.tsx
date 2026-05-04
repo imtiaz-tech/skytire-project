@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   FileText,
   Tags,
+  Cpu,
 } from 'lucide-react';
 
 const navItems = [
@@ -31,6 +32,7 @@ const navItems = [
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
+  { label: 'AI Prompts', href: '/admin/dashboard/ai-prompts', icon: Cpu },
 ];
 
 export default function AdminSidebar() {

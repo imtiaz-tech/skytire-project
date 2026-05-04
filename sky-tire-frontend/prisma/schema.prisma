@@ -147,6 +147,15 @@ model Blog {
   @@index([authorId])
 }
 
+model AIPrompt {
+  id            String   @id @default(cuid())
+  aiKey         String   @unique
+  prompt        String
+  defaultPrompt String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 enum Role {
   USER
   ADMIN
@@ -164,13 +173,4 @@ enum BrandCategory {
 enum BlogStatus {
   DRAFT
   PUBLISHED
-}
-
-model AIPrompt {
-  id            String   @id @default(cuid())
-  aiKey         String   @unique
-  prompt        String
-  defaultPrompt String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 }
