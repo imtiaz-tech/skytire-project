@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 const AI_TOOLS = [
   { key: 'chatgpt', name: 'ChatGPT', icon: MessageSquare, url: 'https://chatgpt.com/?prompt=' },
@@ -37,6 +38,7 @@ export default function AIPromptsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const fetchPrompt = useCallback(async (aiKey: string) => {
     setLoading(true);
@@ -79,9 +81,12 @@ export default function AIPromptsPage() {
     toast.success('Changes discarded');
   };
 
-  const handleReset = async () => {
-    if (!confirm('Are you sure you want to reset to default? This cannot be undone.')) return;
-    
+  const handleReset = () => {
+    setIsResetModalOpen(true);
+  };
+
+  const confirmReset = async () => {
+    setIsResetModalOpen(false);
     setResetting(true);
     try {
       const response = await axios.post('/api/admin/ai-prompts/reset', {
@@ -231,6 +236,14 @@ export default function AIPromptsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={isResetModalOpen}
+        title="Reset to Default"
+        message={`Are you sure you want to reset the ${activeTool.name} prompt to its default version? This action cannot be undone.`}
+        onConfirm={confirmReset}
+        onCancel={() => setIsResetModalOpen(false)}
+      />
     </div>
   );
 }
