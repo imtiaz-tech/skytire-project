@@ -12,17 +12,21 @@ import {
   Sparkles,
   Zap,
   Bot,
-  Monitor
+  Monitor,
+  Brain,
+  Search
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const AI_TOOLS = [
   { key: 'chatgpt', name: 'ChatGPT', icon: MessageSquare, url: 'https://chatgpt.com/?prompt=' },
-  { key: 'gemini', name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/?prompt=' },
-  { key: 'grok', name: 'Grok', icon: Zap, url: 'https://grok.x.ai/?prompt=' },
-  { key: 'claude', name: 'Claude', icon: Bot, url: 'https://claude.ai/?prompt=' },
-  { key: 'cursor', name: 'Cursor', icon: Monitor, url: 'https://cursor.sh/?prompt=' },
+  { key: 'gemini', name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/' },
+  { key: 'claude', name: 'Claude', icon: Bot, url: 'https://claude.ai/' },
+  { key: 'grok', name: 'Grok', icon: Zap, url: 'https://grok.com/' },
+  { key: 'cursor', name: 'Cursor', icon: Monitor, url: 'https://cursor.sh/' },
+  { key: 'deepseek', name: 'DeepSeek', icon: Brain, url: 'https://chat.deepseek.com/' },
+  { key: 'perplexity', name: 'Perplexity', icon: Search, url: 'https://www.perplexity.ai/' },
 ];
 
 export default function AIPromptsPage() {
