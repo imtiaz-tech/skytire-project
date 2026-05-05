@@ -14,20 +14,39 @@ import {
   Bot,
   Monitor,
   Brain,
-  Search
+  Search,
+  Compass
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import ConfirmModal from '@/components/common/ConfirmModal';
 
+// const AI_TOOLS = [
+//   { key: 'chatgpt', name: 'ChatGPT', icon: MessageSquare, url: 'https://chatgpt.com/?prompt=' },
+//   { key: 'gemini', name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/' },
+//   { key: 'claude', name: 'Claude', icon: Bot, url: 'https://claude.ai/' },
+//   { key: 'grok', name: 'Grok', icon: Zap, url: 'https://grok.com/' },
+//   { key: 'cursor', name: 'Cursor', icon: Monitor, url: 'https://cursor.sh/' },
+//   { key: 'deepseek', name: 'DeepSeek', icon: Brain, url: 'https://chat.deepseek.com/' },
+//   { key: 'perplexity', name: 'Perplexity', icon: Search, url: 'https://www.perplexity.ai/' },
+//   { key: 'copilot', name: 'Copilot', icon: Compass, url: 'https://copilot.microsoft.com/' },
+// ];
 const AI_TOOLS = [
-  { key: 'chatgpt', name: 'ChatGPT', icon: MessageSquare, url: 'https://chatgpt.com/?prompt=' },
-  { key: 'gemini', name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/' },
-  { key: 'claude', name: 'Claude', icon: Bot, url: 'https://claude.ai/' },
-  { key: 'grok', name: 'Grok', icon: Zap, url: 'https://grok.com/' },
-  { key: 'cursor', name: 'Cursor', icon: Monitor, url: 'https://cursor.sh/' },
-  { key: 'deepseek', name: 'DeepSeek', icon: Brain, url: 'https://chat.deepseek.com/' },
-  { key: 'perplexity', name: 'Perplexity', icon: Search, url: 'https://www.perplexity.ai/' },
+  { key: 'chatgpt', name: 'ChatGPT', icon: MessageSquare, url: 'https://chatgpt.com/?prompt=', mode: 'url' },
+
+  { key: 'claude', name: 'Claude', icon: Bot, url: 'https://claude.ai/new?q=', mode: 'url' },
+
+  { key: 'perplexity', name: 'Perplexity', icon: Search, url: 'https://www.perplexity.ai/search?q=', mode: 'url' },
+
+  { key: 'gemini', name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/', mode: 'copy' },
+
+  { key: 'grok', name: 'Grok', icon: Zap, url: 'https://grok.com/', mode: 'copy' },
+
+  { key: 'cursor', name: 'Cursor', icon: Monitor, url: 'https://cursor.sh/', mode: 'copy' },
+
+  { key: 'deepseek', name: 'DeepSeek', icon: Brain, url: 'https://chat.deepseek.com/', mode: 'copy' },
+
+  { key: 'copilot', name: 'Copilot', icon: Compass, url: 'https://copilot.microsoft.com/', mode: 'copy' },
 ];
 
 export default function AIPromptsPage() {
@@ -103,24 +122,46 @@ export default function AIPromptsPage() {
     }
   };
 
-  const handleTest = async () => {
+//   const handleTest = async () => {
+//   try {
+//     const encodedPrompt = encodeURIComponent(prompt);
+
+//     if (activeTool.key === 'chatgpt') {
+//       window.open(`${activeTool.url}${encodedPrompt}`, '_blank', 'noopener,noreferrer');
+//       toast.success('Opening ChatGPT with autofill...');
+//     } else {
+//       await navigator.clipboard.writeText(prompt);
+//       toast.success(`${activeTool.name} prompt copied! Now paste it.`);
+//       const baseUrl = activeTool.url.split('?')[0];      
+//       setTimeout(() => {
+//         window.open(baseUrl, '_blank', 'noopener,noreferrer');
+//       }, 1000);
+//     }
+//   } catch (err) {
+//     toast.error('Action failed');
+//     console.error('Test error:', err);
+//   }
+// };
+const handleTest = async () => {
   try {
     const encodedPrompt = encodeURIComponent(prompt);
 
-    if (activeTool.key === 'chatgpt') {
+    if (activeTool.mode === 'url') {
       window.open(`${activeTool.url}${encodedPrompt}`, '_blank', 'noopener,noreferrer');
-      toast.success('Opening ChatGPT with autofill...');
-    } else {
-      await navigator.clipboard.writeText(prompt);
-      toast.success(`${activeTool.name} prompt copied! Now paste it.`);
-      const baseUrl = activeTool.url.split('?')[0];      
-      setTimeout(() => {
-        window.open(baseUrl, '_blank', 'noopener,noreferrer');
-      }, 1000);
+      toast.success(`Opening ${activeTool.name} with autofill...`);
+      return;
     }
+
+    // fallback = copy mode
+    await navigator.clipboard.writeText(prompt);
+    toast.success(`${activeTool.name} prompt copied! Now paste it.`);
+    setTimeout(() => {
+      window.open(activeTool.url, '_blank', 'noopener,noreferrer');
+    }, 800);
+
   } catch (err) {
     toast.error('Action failed');
-    console.error('Test error:', err);
+    console.error(err);
   }
 };
 

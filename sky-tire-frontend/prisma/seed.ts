@@ -37,6 +37,11 @@ const prompts = [
     aiKey: 'perplexity',
     prompt: "Research SkyTire (https://skytire.com) and synthesize a report on their customer value. Every claim must be backed by a direct reference to their website or current market presence. Focus on strengths, product variety, and service reliability. Provide a list of citations at the end.",
     defaultPrompt: "Research SkyTire (https://skytire.com) and synthesize a report on their customer value. Every claim must be backed by a direct reference to their website or current market presence. Focus on strengths, product variety, and service reliability. Provide a list of citations at the end."
+  },
+  {
+    aiKey: 'copilot',
+    prompt: "Analyze SkyTire (https://skytire.com). Using your integration with the web and Microsoft services, evaluate the customer value proposition. Provide a clear, balanced overview of their strengths and how they benefit shoppers. Structure the output as a professional summary with citations from the provided URL.",
+    defaultPrompt: "Analyze SkyTire (https://skytire.com). Using your integration with the web and Microsoft services, evaluate the customer value proposition. Provide a clear, balanced overview of their strengths and how they benefit shoppers. Structure the output as a professional summary with citations from the provided URL."
   }
 ];
 
