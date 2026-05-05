@@ -163,15 +163,15 @@ export default function AIPromptsPage() {
         {/* Content Area */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+            <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-[22px] font-bold text-[#1e2a4a]">{activeTool.name} Prompt</h2>
-                <p className="text-[16px] text-gray-400 mt-0.5">Customize how {activeTool.name} behaves for this platform.</p>
+                <h2 className="text-lg sm:text-[22px] font-bold text-[#1e2a4a]">{activeTool.name} Prompt</h2>
+                <p className="text-sm sm:text-[16px] text-gray-400 mt-0.5">Customize how {activeTool.name} behaves for this platform.</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <button
                   onClick={handleTest}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-[#1e2a4a] rounded-xl text-[16px] font-bold hover:bg-gray-100 transition-all border border-gray-100"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-[#1e2a4a] rounded-xl text-sm sm:text-[16px] font-bold hover:bg-gray-100 transition-all border border-gray-100"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Test Prompt
@@ -179,7 +179,7 @@ export default function AIPromptsPage() {
                 <button
                   onClick={handleReset}
                   disabled={resetting || loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-[#FF5A5F] rounded-xl text-[16px] font-bold hover:bg-red-100 transition-all border border-red-50 disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-[#FF5A5F] rounded-xl text-sm sm:text-[16px] font-bold hover:bg-red-100 transition-all border border-red-50 disabled:opacity-50"
                 >
                   {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                   Reset to Default
@@ -208,13 +208,13 @@ export default function AIPromptsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4">
                     <button
                       onClick={handleDiscard}
                       disabled={!hasChanges || saving}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[16px] font-bold transition-all disabled:opacity-30 ${
+                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm sm:text-[16px] font-bold transition-all disabled:opacity-30 ${
                         hasChanges 
-                          ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-100' 
+                          ? 'bg-violet-500 text-white hover:bg-green-600 shadow-lg shadow-green-100'
                           : 'text-gray-400 bg-gray-50 cursor-not-allowed'
                       }`}
                     >
@@ -224,7 +224,7 @@ export default function AIPromptsPage() {
                     <button
                       onClick={handleSave}
                       disabled={!hasChanges || saving}
-                      className="flex items-center gap-2 px-8 py-2.5 bg-[#3B5998] text-white rounded-xl text-[16px] font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 px-8 py-3 bg-[#3B5998] text-white rounded-xl text-sm sm:text-[16px] font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
                     >
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       Save Changes
