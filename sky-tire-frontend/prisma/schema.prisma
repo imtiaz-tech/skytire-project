@@ -163,21 +163,16 @@ model TireModel {
   modelName   String
   images      String[]
   description String?
-  metaDesc    String?
   keywords    String?
   season      String?
   performance String?
 
   // New fields
-  vehicleType String?
   treadDesign String?
   runFlat     Boolean  @default(false)
   threePMS    Boolean  @default(false)
   warranty    String?
-  utqg        String?
   treadLife   String?
-  seoTitle    String?
-  status      String   @default("active")
 
   brand       Brand    @relation(fields: [brandId], references: [id])
 

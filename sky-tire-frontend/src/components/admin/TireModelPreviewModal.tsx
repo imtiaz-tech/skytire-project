@@ -98,11 +98,6 @@ export default function TireModelPreviewModal({ open, onClose, model }: TireMode
                 <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
                   {model.brand?.brandName || 'Unknown Brand'}
                 </span>
-                <span className={`px-3 py-1 text-[13px] font-bold uppercase tracking-wider rounded-lg ${
-                  model.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {model.status || 'active'}
-                </span>
               </div>
               <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
                 {model.modelName}
@@ -151,12 +146,10 @@ export default function TireModelPreviewModal({ open, onClose, model }: TireMode
                 <h3 className="text-[18px] font-bold text-[#1e2a4a]">Technical Specifications</h3>
               </div>
               <div className="px-8 py-2">
-                <InfoRow label="Vehicle Type" value={model.vehicleType} />
                 <InfoRow label="Season" value={model.season} />
                 <InfoRow label="Performance" value={model.performance} />
                 <InfoRow label="Tread Design" value={model.treadDesign} />
                 <InfoRow label="Warranty" value={model.warranty} />
-                <InfoRow label="UTQG" value={model.utqg} />
                 <InfoRow label="Tread Life" value={model.treadLife} />
                 <InfoRow 
                   label="Features" 
@@ -195,8 +188,6 @@ export default function TireModelPreviewModal({ open, onClose, model }: TireMode
                 <h3 className="text-[18px] font-bold text-[#1e2a4a]">SEO Metadata</h3>
               </div>
               <div className="px-8 py-2">
-                <InfoRow label="SEO Title" value={model.seoTitle} />
-                <InfoRow label="Meta Description" value={model.metaDesc} />
                 <InfoRow 
                   label="Keywords" 
                   value={

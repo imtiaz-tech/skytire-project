@@ -60,20 +60,14 @@ export async function POST(request: NextRequest) {
     const brandId = formData.get('brandId') as string;
     const modelName = formData.get('modelName') as string;
     const description = formData.get('description') as string;
-    const metaDesc = formData.get('metaDesc') as string;
     const keywords = formData.get('keywords') as string;
     const season = formData.get('season') as string;
     const performance = formData.get('performance') as string;
-    const vehicleType = formData.get('vehicleType') as string;
     const treadDesign = formData.get('treadDesign') as string;
     const runFlat = formData.get('runFlat') === 'true';
     const threePMS = formData.get('threePMS') === 'true';
     const warranty = formData.get('warranty') as string;
-    const utqg = formData.get('utqg') as string;
     const treadLife = formData.get('treadLife') as string;
-    const seoTitle = formData.get('seoTitle') as string;
-    const status = formData.get('status') as string;
-    
     const imageFiles = formData.getAll('images') as File[];
     
     if (!brandId || !modelName) {
@@ -105,19 +99,14 @@ export async function POST(request: NextRequest) {
         modelName,
         images: savedImageNames,
         description,
-        metaDesc,
         keywords,
         season,
         performance,
-        vehicleType,
         treadDesign,
         runFlat,
         threePMS,
         warranty,
-        utqg,
         treadLife,
-        seoTitle,
-        status,
       },
       include: {
         brand: true,

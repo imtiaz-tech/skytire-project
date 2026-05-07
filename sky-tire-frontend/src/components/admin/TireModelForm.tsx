@@ -15,7 +15,6 @@ interface TireModelFormProps {
   editModel?: TireModel;
 }
 
-const vehicleTypes = ['Commercial', 'Light Truck', 'Passenger', 'Racing', 'Trailer', 'Truck/SUV'];
 const seasons = ['Summer', 'Winter', 'All Season', 'All Weather'];
 const performances = [
   'All Terrain',
@@ -29,7 +28,6 @@ const performances = [
   'Touring',
   'Ultra High Performance'
 ];
-const statuses = ['active', 'inactive'];
 
 export default function TireModelForm({ editModel }: TireModelFormProps) {
   const router = useRouter();
@@ -52,18 +50,13 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     modelName: '',
     brandId: '',
     description: '',
-    metaDesc: '',
     season: 'All Season',
     performance: 'Touring',
-    vehicleType: 'Passenger',
     treadDesign: '',
     runFlat: false,
     threePMS: false,
     warranty: '',
-    utqg: '',
     treadLife: '',
-    seoTitle: '',
-    status: 'active',
   });
 
   const editorConfig = useMemo(() => ({
@@ -105,18 +98,13 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
         modelName: editModel.modelName,
         brandId: editModel.brandId,
         description: editModel.description || '',
-        metaDesc: editModel.metaDesc || '',
         season: editModel.season || 'All Season',
         performance: editModel.performance || 'Touring',
-        vehicleType: editModel.vehicleType || 'Passenger',
         treadDesign: editModel.treadDesign || '',
         runFlat: editModel.runFlat || false,
         threePMS: editModel.threePMS || false,
         warranty: editModel.warranty || '',
-        utqg: editModel.utqg || '',
         treadLife: editModel.treadLife || '',
-        seoTitle: editModel.seoTitle || '',
-        status: editModel.status || 'active',
       });
       setExistingImages(editModel.images || []);
       
@@ -182,19 +170,14 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     data.append('modelName', formData.modelName);
     data.append('brandId', formData.brandId);
     data.append('description', formData.description);
-    data.append('metaDesc', formData.metaDesc);
     data.append('keywords', JSON.stringify(keywordArray));
     data.append('season', formData.season);
     data.append('performance', formData.performance);
-    data.append('vehicleType', formData.vehicleType);
     data.append('treadDesign', formData.treadDesign);
     data.append('runFlat', String(formData.runFlat));
     data.append('threePMS', String(formData.threePMS));
     data.append('warranty', formData.warranty);
-    data.append('utqg', formData.utqg);
     data.append('treadLife', formData.treadLife);
-    data.append('seoTitle', formData.seoTitle);
-    data.append('status', formData.status);
     
     data.append('existingImages', JSON.stringify(existingImages));
     selectedFiles.forEach((file) => {
@@ -355,19 +338,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Vehicle Type</label>
-              <select
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium appearance-none"
-                value={formData.vehicleType}
-                onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
-              >
-                {vehicleTypes.map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Tread Design</label>
               <input
                 type="text"
@@ -411,19 +381,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
                 <span className="text-[15px] font-medium text-[#1e2a4a]">Run Flat</span>
               </label>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Status</label>
-              <select
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium appearance-none"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                {statuses.map((st) => (
-                  <option key={st} value={st}>{st.charAt(0).toUpperCase() + st.slice(1)}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -435,17 +392,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
                 className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
                 value={formData.warranty}
                 onChange={(e) => setFormData({ ...formData, warranty: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">UTQG</label>
-              <input
-                type="text"
-                placeholder="e.g. 500 A A"
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                value={formData.utqg}
-                onChange={(e) => setFormData({ ...formData, utqg: e.target.value })}
               />
             </div>
 
@@ -462,17 +408,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">SEO Title</label>
-            <input
-              type="text"
-              placeholder="Enter SEO title"
-              className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-              value={formData.seoTitle}
-              onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Description</label>
             <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white">
               <JoditEditor 
@@ -484,17 +419,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
           </div>
 
           <div className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Meta Description</label>
-              <textarea
-                placeholder="SEO meta description"
-                rows={2}
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium resize-none"
-                value={formData.metaDesc}
-                onChange={(e) => setFormData({ ...formData, metaDesc: e.target.value })}
-              />
-            </div>
-            
             <div className="space-y-3">
               <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Keywords</label>
               <div className="space-y-3">

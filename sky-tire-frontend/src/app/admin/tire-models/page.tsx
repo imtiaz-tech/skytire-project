@@ -119,14 +119,13 @@ export default function TireModelsPage() {
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Model Name</th>
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Season / Performance</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Vehicle Type</th>
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={5} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Fetching models...</p>
@@ -135,7 +134,7 @@ export default function TireModelsPage() {
                 </tr>
               ) : tireModels.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={5} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-6 w-6 text-gray-200" />
@@ -192,15 +191,6 @@ export default function TireModelsPage() {
                       >
                         <span className="text-[14px] font-semibold text-gray-600">{model.season || 'N/A'}</span>
                         <span className="text-[14px] text-gray-400">{model.performance || 'N/A'}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div 
-                        className="text-[14px] font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-                        onClick={() => openPreview(model)}
-                        title="Click to preview"
-                      >
-                        {model.vehicleType || 'N/A'}
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right whitespace-nowrap">
