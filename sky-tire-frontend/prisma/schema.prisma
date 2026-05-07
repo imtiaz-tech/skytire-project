@@ -69,6 +69,7 @@ model Brand {
   coverPhoto  String?
   description String?
   tires       Tire[]
+  models      TireModel[]
 
   @@index([brandName])
 }
@@ -154,6 +155,37 @@ model AIPrompt {
   defaultPrompt String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model TireModel {
+  id          String   @id @default(cuid())
+  brandId     String
+  modelName   String
+  images      String[]
+  description String?
+  metaDesc    String?
+  keywords    String?
+  season      String?
+  performance String?
+
+  // New fields
+  vehicleType String?
+  treadDesign String?
+  runFlat     Boolean  @default(false)
+  threePMS    Boolean  @default(false)
+  warranty    String?
+  utqg        String?
+  treadLife   String?
+  seoTitle    String?
+  status      String   @default("active")
+
+  brand       Brand    @relation(fields: [brandId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([modelName])
 }
 
 enum Role {

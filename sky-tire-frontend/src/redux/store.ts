@@ -9,6 +9,7 @@ import usersReducer from './slices/usersSlice';
 import brandsReducer from './slices/brandsSlice';
 import blogsReducer from './slices/blogsSlice';
 import blogCategoriesReducer from './slices/blogCategoriesSlice';
+import tireModelsReducer from './slices/tireModelsSlice';
 
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     brands: brandsReducer,
     blogs: blogsReducer,
     blogCategories: blogCategoriesReducer,
+    tireModels: tireModelsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

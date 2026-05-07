@@ -29,6 +29,7 @@ const navItems = [
   { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
   { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
   { label: 'Brands', href: '/admin/brands', icon: Star },
+  { label: 'Tires Models', href: '/admin/tire-models', icon: Tags },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
