@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createBrand, updateBrand } from '@/redux/slices/brandsSlice';
 import { Brand, BrandCategory } from '@/redux/types/brandTypes';
 import { ArrowLeft, Upload, X, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
 interface BrandFormProps {
   editBrand?: Brand;
@@ -38,6 +41,31 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
     description: '',
     isFeatured: false,
   });
+
+  const editorConfig = useMemo(() => ({
+    readonly: false,
+    placeholder: 'Enter brand description...',
+    toolbarButtonSize: 'middle' as const,
+    buttons: [
+      'source', '|',
+      'bold', 'strikethrough', 'underline', 'italic', '|',
+      'ul', 'ol', '|',
+      'outdent', 'indent',  '|',
+      'font', 'fontsize', 'brush', 'paragraph', '|',
+      'image', 'video', 'table', 'link', '|',
+      'align', 'undo', 'redo', '|',
+      'hr', 'eraser', 'copyformat', '|',
+      'symbol', 'fullsize', 'print', 'about'
+    ],
+    height: 400,
+    uploader: { insertImageAsBase64URI: true },
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    defaultActionOnPaste: 'insert_clear_html',
+    width: '100%',
+    spellcheck: true,
+    language: 'en',
+  }), []);
 
   useEffect(() => {
     if (editBrand) {
@@ -239,13 +267,13 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Description</label>
-            <textarea
-              placeholder="Enter brand description..."
-              rows={4}
-              className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium resize-none"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
+            <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white">
+              <JoditEditor 
+                value={formData.description} 
+                config={editorConfig} 
+                onBlur={(newContent) => setFormData({ ...formData, description: newContent })} 
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-gray-50">

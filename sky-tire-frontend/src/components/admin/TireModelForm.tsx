@@ -61,14 +61,18 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
 
   const editorConfig = useMemo(() => ({
     readonly: false,
-    placeholder: (editModel || formData.description) ? '' : 'Enter model description...',
+    placeholder: 'Enter model description...',
     toolbarButtonSize: 'middle' as const,
     buttons: [
-      'bold', 'italic', 'underline', 'strikethrough', '|',
+      'source', '|',
+      'bold', 'strikethrough', 'underline', 'italic', '|',
       'ul', 'ol', '|',
-      'font', 'fontsize', 'paragraph', '|',
+      'outdent', 'indent',  '|',
+      'font', 'fontsize', 'brush', 'paragraph', '|',
+      'image', 'video', 'table', 'link', '|',
       'align', 'undo', 'redo', '|',
-      'hr', 'eraser', 'fullsize'
+      'hr', 'eraser', 'copyformat', '|',
+      'symbol', 'fullsize', 'print', 'about'
     ],
     height: 400,
     uploader: { insertImageAsBase64URI: true },
@@ -78,7 +82,7 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     width: '100%',
     spellcheck: true,
     language: 'en',
-  }), [editModel]);
+  }), []);
 
   useEffect(() => {
     const fetchBrands = async () => {
