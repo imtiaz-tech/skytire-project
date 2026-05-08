@@ -44,7 +44,8 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
 
   const editorConfig = useMemo(() => ({
     readonly: false,
-    placeholder: 'Enter brand description...',
+    placeholder: editBrand ? '' : 'Enter brand description...',
+    showPlaceholder: !editBrand,
     toolbarButtonSize: 'middle' as const,
     buttons: [
       'source', '|',
@@ -65,7 +66,7 @@ export default function BrandForm({ editBrand }: BrandFormProps) {
     width: '100%',
     spellcheck: true,
     language: 'en',
-  }), []);
+  }), [editBrand]);
 
   useEffect(() => {
     if (editBrand) {

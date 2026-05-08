@@ -61,7 +61,8 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
 
   const editorConfig = useMemo(() => ({
     readonly: false,
-    placeholder: 'Enter model description...',
+    placeholder: editModel ? '' : 'Enter model description...',
+    showPlaceholder: !editModel,
     toolbarButtonSize: 'middle' as const,
     buttons: [
       'source', '|',
@@ -82,7 +83,7 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     width: '100%',
     spellcheck: true,
     language: 'en',
-  }), []);
+  }), [editModel]);
 
   useEffect(() => {
     const fetchBrands = async () => {
