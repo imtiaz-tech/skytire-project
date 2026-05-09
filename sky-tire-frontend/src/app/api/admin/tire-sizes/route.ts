@@ -10,16 +10,28 @@ export async function GET(request: NextRequest) {
   const skip = (page - 1) * limit;
 
   try {
-    const where = search
-      ? {
-          OR: [
-            { tireSize: { contains: search, mode: 'insensitive' as const } },
-            { vehicleType: { contains: search, mode: 'insensitive' as const } },
-            { model: { modelName: { contains: search, mode: 'insensitive' as const } } },
-            { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } },
-          ],
-        }
-      : {};
+    const orConditions: any[] = [
+      { tireSize: { contains: search, mode: 'insensitive' as const } },
+      { vehicleType: { contains: search, mode: 'insensitive' as const } },
+      { model: { modelName: { contains: search, mode: 'insensitive' as const } } },
+      { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } },
+    ];
+
+    // Handle tire size patterns without slash (e.g., 19565R15 -> 195/65R15)
+    if (search && !search.includes('/')) {
+      // Case: 19565R15
+      if (/^\d{5}R\d{2,3}$/i.test(search)) {
+        const withSlash = `${search.slice(0, 3)}/${search.slice(3)}`;
+        orConditions.push({ tireSize: { contains: withSlash, mode: 'insensitive' as const } });
+      }
+      // Case: 19565
+      else if (/^\d{5}$/.test(search)) {
+        const withSlash = `${search.slice(0, 3)}/${search.slice(3)}`;
+        orConditions.push({ tireSize: { contains: withSlash, mode: 'insensitive' as const } });
+      }
+    }
+
+    const where = search ? { OR: orConditions } : {};
 
     const [tireSizes, total] = await Promise.all([
       prisma.tireSize.findMany({
