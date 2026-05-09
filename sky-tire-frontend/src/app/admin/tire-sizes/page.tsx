@@ -81,7 +81,7 @@ export default function TireSizesPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
               <input
                 type="text"
-                placeholder="Search sizes or models..."
+                placeholder="Search size, model, brand or vehicle type..."
                 className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-base focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}

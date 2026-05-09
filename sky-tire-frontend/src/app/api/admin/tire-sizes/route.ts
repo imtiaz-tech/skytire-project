@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
       ? {
           OR: [
             { tireSize: { contains: search, mode: 'insensitive' as const } },
+            { vehicleType: { contains: search, mode: 'insensitive' as const } },
             { model: { modelName: { contains: search, mode: 'insensitive' as const } } },
+            { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } },
           ],
         }
       : {};
