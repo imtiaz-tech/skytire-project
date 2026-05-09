@@ -6,7 +6,6 @@ export interface TireModel {
   modelName: string;
   images: string[];
   description?: string;
-  keywords?: string;
   season?: string;
   performance?: string;
   

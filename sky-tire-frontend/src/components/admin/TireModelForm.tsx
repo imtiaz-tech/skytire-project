@@ -42,9 +42,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  // Keywords State
-  const [keywordArray, setKeywordArray] = useState<string[]>([]);
-  const [keywordInput, setKeywordInput] = useState('');
 
   const [formData, setFormData] = useState({
     modelName: '',
@@ -112,18 +109,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
         treadLife: editModel.treadLife || '',
       });
       setExistingImages(editModel.images || []);
-      
-      if (editModel.keywords) {
-        try {
-          if (editModel.keywords.startsWith('[')) {
-            setKeywordArray(JSON.parse(editModel.keywords));
-          } else {
-            setKeywordArray(editModel.keywords.split(',').map(k => k.trim()).filter(Boolean));
-          }
-        } catch (e) {
-          setKeywordArray(editModel.keywords.split(',').map(k => k.trim()).filter(Boolean));
-        }
-      }
     }
   }, [editModel]);
 
@@ -152,20 +137,7 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     setExistingImages(newExisting);
   };
 
-  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      const val = keywordInput.trim().replace(/;$/, '');
-      if (val && !keywordArray.includes(val)) {
-        setKeywordArray([...keywordArray, val]);
-      }
-      setKeywordInput('');
-    }
-  };
 
-  const removeKeyword = (kw: string) => {
-    setKeywordArray(keywordArray.filter((k) => k !== kw));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,7 +147,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     data.append('modelName', formData.modelName);
     data.append('brandId', formData.brandId);
     data.append('description', formData.description);
-    data.append('keywords', JSON.stringify(keywordArray));
     data.append('season', formData.season);
     data.append('performance', formData.performance);
     data.append('treadDesign', formData.treadDesign);
@@ -423,33 +394,6 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Keywords</label>
-              <div className="space-y-3">
-                <input 
-                  type="text"
-                  placeholder="Type keywords and press Enter or semi-colon (;)"
-                  className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium outline-none" 
-                  value={keywordInput} 
-                  onChange={(e) => setKeywordInput(e.target.value)} 
-                  onKeyDown={handleKeywordKeyDown}
-                />
-                {keywordArray.length > 0 && (
-                  <div className="flex flex-wrap gap-2 px-1">
-                    {keywordArray.map((kw, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-[#1e2a4a] text-[13px] font-bold rounded-full border border-blue-100 shadow-sm animate-in zoom-in-95 duration-150">
-                        <span>{kw}</span>
-                        <button type="button" onClick={() => removeKeyword(kw)} className="text-blue-400 hover:text-blue-600 focus:outline-none flex-shrink-0">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
           <div className="flex items-center justify-end pt-4 border-t border-gray-50">
             <button

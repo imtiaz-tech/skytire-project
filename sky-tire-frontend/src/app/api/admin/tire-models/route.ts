@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
     const brandId = formData.get('brandId') as string;
     const modelName = formData.get('modelName') as string;
     const description = formData.get('description') as string;
-    const keywords = formData.get('keywords') as string;
     const season = formData.get('season') as string;
     const performance = formData.get('performance') as string;
     const treadDesign = formData.get('treadDesign') as string;
@@ -99,7 +98,6 @@ export async function POST(request: NextRequest) {
         modelName,
         images: savedImageNames,
         description,
-        keywords,
         season,
         performance,
         treadDesign,

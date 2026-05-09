@@ -163,7 +163,6 @@ model TireModel {
   modelName   String
   images      String[]
   description String?
-  keywords    String?
   season      String?
   performance String?
 
@@ -174,13 +173,44 @@ model TireModel {
   warranty    String?
   treadLife   String?
 
-  brand       Brand    @relation(fields: [brandId], references: [id])
+  brand       Brand      @relation(fields: [brandId], references: [id])
+  tireSizes   TireSize[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([brandId])
   @@index([modelName])
+}
+
+model TireSize {
+  id                  String   @id @default(cuid())
+  modelId             String
+  tireSize            String
+  tireWidth           String?
+  aspectRatio         String?
+  rimDiameter         String?
+  loadIndex           String?
+  speedRating         String?
+  loadRange           String?
+  inflationPressure   String?
+  tireWeight          String?
+  shippingDimensions  String?
+  utqg                String?
+  seoTitle            String?
+  metaDescription     String?
+  status              String?  @default("active")
+  vehicleType         String?
+  keywords            String?
+  sidewall            String?
+
+  model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([modelId])
+  @@index([tireSize])
 }
 
 enum Role {

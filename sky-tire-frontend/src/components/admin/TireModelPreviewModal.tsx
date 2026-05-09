@@ -46,17 +46,6 @@ export default function TireModelPreviewModal({ open, onClose, model }: TireMode
     </div>
   );
 
-  let parsedKeywords: string[] = [];
-  if (model.keywords) {
-    try {
-      parsedKeywords = model.keywords.startsWith('[') 
-        ? JSON.parse(model.keywords) 
-        : model.keywords.split(',').map(k => k.trim()).filter(Boolean);
-    } catch (e) {
-      parsedKeywords = model.keywords.split(',').map(k => k.trim()).filter(Boolean);
-    }
-  }
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]">
       {/* Backdrop */}
@@ -181,32 +170,6 @@ export default function TireModelPreviewModal({ open, onClose, model }: TireMode
                 </div>
               </div>
             )}
-
-            {/* SEO Information */}
-            <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
-              <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
-                <h3 className="text-[18px] font-bold text-[#1e2a4a]">SEO Metadata</h3>
-              </div>
-              <div className="px-8 py-2">
-                <InfoRow 
-                  label="Keywords" 
-                  value={
-                    parsedKeywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {parsedKeywords.map((keyword, index) => (
-                          <span 
-                            key={index}
-                            className="px-3 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-[13px] font-bold rounded-full"
-                          >
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null
-                  } 
-                />
-              </div>
-            </div>
 
           </div>
         </div>
