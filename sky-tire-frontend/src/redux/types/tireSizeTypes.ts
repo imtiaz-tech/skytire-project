@@ -19,7 +19,8 @@ export interface TireSize {
   status?: string;
   vehicleType?: string;
   keywords?: string;
-  sidewall?: string;
+  sidewallCategory?: 'BLACK_WALL' | 'WHITE_WALL';
+  sidewallDetail?: string;
 
   model?: TireModel;
   createdAt: string;

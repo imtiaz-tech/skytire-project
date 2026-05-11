@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createTireSize, updateTireSize } from '@/redux/slices/tireSizesSlice';
 import { TireSize } from '@/redux/types/tireSizeTypes';
-import { ArrowLeft, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Search, ChevronDown, Check } from 'lucide-react';
 import axios from 'axios';
 
 interface TireSizeFormProps {
@@ -27,9 +27,9 @@ const statusOptions = [
   { label: 'Inactive', value: 'inactive' },
 ];
 
-const sidewallOptions = [
-  'Black Wall',
-  'White Wall',
+const sidewallCategoryOptions = [
+  { label: 'Black Wall', value: 'BLACK_WALL' },
+  { label: 'White Wall', value: 'WHITE_WALL' },
 ];
 
 export default function TireSizeForm({ editSize }: TireSizeFormProps) {
@@ -38,6 +38,11 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
 
   const [loading, setLoading] = useState(false);
   const [models, setModels] = useState<{ id: string; modelName: string; brand?: { brandName: string } }[]>([]);
+  
+  // Custom Searchable Dropdown State
+  const [modelSearch, setModelSearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Keywords State
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
@@ -60,7 +65,8 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
     metaDescription: '',
     status: 'active',
     vehicleType: '',
-    sidewall: '',
+    sidewallCategory: '',
+    sidewallDetail: '',
   });
 
   useEffect(() => {
@@ -73,6 +79,25 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
       }
     };
     fetchModels();
+  }, []);
+
+  // Filter models based on search
+  const filteredModels = React.useMemo(() => {
+    return models.filter(model => {
+      const searchStr = `${model.modelName} ${model.brand?.brandName || ''}`.toLowerCase();
+      return searchStr.includes(modelSearch.toLowerCase());
+    });
+  }, [models, modelSearch]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -94,7 +119,8 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
         metaDescription: editSize.metaDescription || '',
         status: editSize.status || 'active',
         vehicleType: editSize.vehicleType || '',
-        sidewall: editSize.sidewall || '',
+        sidewallCategory: editSize.sidewallCategory || '',
+        sidewallDetail: editSize.sidewallDetail || '',
       });
 
       if (editSize.keywords) {
@@ -168,21 +194,65 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
         <div className="space-y-6">
           {/* Row 1: Tire Model & Tire Size */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative w-full">
+            <div className="relative w-full" ref={dropdownRef}>
               {formData.modelId && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Tire Model</label>}
-              <select
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
-                value={formData.modelId}
-                onChange={(e) => setFormData({ ...formData, modelId: e.target.value })}
-                required
+              
+              <div 
+                className={`w-full px-4 py-3.5 bg-white border ${isDropdownOpen ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-gray-200'} rounded-xl text-[#1e2a4a] cursor-pointer flex items-center justify-between transition-all`}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <option value="">Tire Model</option>
-                {models.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.modelName}{model.brand ? ` (${model.brand.brandName})` : ''}
-                  </option>
-                ))}
-              </select>
+                <span className={`text-[16px] ${!formData.modelId ? 'text-gray-500' : 'font-medium'}`}>
+                  {formData.modelId 
+                    ? models.find(m => m.id === formData.modelId)?.modelName + (models.find(m => m.id === formData.modelId)?.brand ? ` (${models.find(m => m.id === formData.modelId)?.brand?.brandName})` : '')
+                    : 'Select Tire Model'}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-3 border-b border-gray-50 bg-gray-50/50">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input 
+                        type="text"
+                        placeholder="Search models..."
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-lg text-sm outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500"
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                    {filteredModels.length > 0 ? (
+                      filteredModels.map((model) => (
+                        <div 
+                          key={model.id}
+                          className={`px-4 py-3 text-[16px] cursor-pointer hover:bg-blue-50 flex items-center justify-between transition-colors ${formData.modelId === model.id ? 'bg-blue-50/50 text-blue-600 font-bold' : 'text-gray-700 font-medium'}`}
+                          onClick={() => {
+                            setFormData({ ...formData, modelId: model.id });
+                            setIsDropdownOpen(false);
+                            setModelSearch('');
+                          }}
+                        >
+                          <span>
+                            {model.modelName}
+                            {model.brand && <span className="text-black-400 font-normal text-sm ml-2">({model.brand.brandName})</span>}
+                          </span>
+                          {formData.modelId === model.id && <Check className="h-4 w-4" />}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-8 text-center text-gray-400 text-sm italic">
+                        No models found matching "{modelSearch}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="relative w-full">
@@ -347,19 +417,32 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
             </div>
           </div>
 
-          {/* Row 6: Sidewall */}
-          <div className="relative w-full">
-            {formData.sidewall && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Sidewall</label>}
-            <select
-              className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
-              value={formData.sidewall}
-              onChange={(e) => setFormData({ ...formData, sidewall: e.target.value })}
-            >
-              <option value="">Sidewall</option>
-              {sidewallOptions.map((sw) => (
-                <option key={sw} value={sw}>{sw}</option>
-              ))}
-            </select>
+          {/* Row 6: Sidewall Category & Sidewall Detail */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative w-full">
+              {formData.sidewallCategory && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Category</label>}
+              <select
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
+                value={formData.sidewallCategory}
+                onChange={(e) => setFormData({ ...formData, sidewallCategory: e.target.value })}
+              >
+                <option value="">Sidewall Category</option>
+                {sidewallCategoryOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative w-full">
+              {formData.sidewallDetail && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Sidewall</label>}
+              <input
+                type="text"
+                placeholder="Sidewall Detail (e.g. OWL: Outlined White Lettering)"
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
+                value={formData.sidewallDetail}
+                onChange={(e) => setFormData({ ...formData, sidewallDetail: e.target.value })}
+              />
+            </div>
           </div>
 
           {/* Row 7: Keywords */}

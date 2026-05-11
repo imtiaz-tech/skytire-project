@@ -57,7 +57,8 @@ export async function PUT(
       status,
       vehicleType,
       keywords,
-      sidewall,
+      sidewallCategory,
+      sidewallDetail,
     } = body;
 
     const updatedSize = await prisma.tireSize.update({
@@ -80,7 +81,8 @@ export async function PUT(
         status: status || 'active',
         vehicleType: vehicleType || null,
         keywords: keywords || null,
-        sidewall: sidewall || null,
+        sidewallCategory: sidewallCategory || null,
+        sidewallDetail: sidewallDetail || null,
       },
       include: {
         model: {

@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
       status,
       vehicleType,
       keywords,
-      sidewall,
+      sidewallCategory,
+      sidewallDetail,
     } = body;
 
     if (!modelId || !tireSize) {
@@ -114,7 +115,8 @@ export async function POST(request: NextRequest) {
         status: status || 'active',
         vehicleType: vehicleType || null,
         keywords: keywords || null,
-        sidewall: sidewall || null,
+        sidewallCategory: sidewallCategory || null,
+        sidewallDetail: sidewallDetail || null,
       },
       include: {
         model: {

@@ -153,6 +153,11 @@ enum Role {
   DEFAULT_USER
 }
 
+enum SidewallCategory {
+  BLACK_WALL
+  WHITE_WALL
+}
+
 enum BrandCategory {
   tire
   wheel
@@ -220,7 +225,8 @@ model TireSize {
   status              String?  @default("active")
   vehicleType         String?
   keywords            String?
-  sidewall            String?
+  sidewallCategory    SidewallCategory?
+  sidewallDetail      String?
 
   model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
 

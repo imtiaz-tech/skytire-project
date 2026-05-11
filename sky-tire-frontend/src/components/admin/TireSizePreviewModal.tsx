@@ -118,7 +118,8 @@ export default function TireSizePreviewModal({ open, onClose, size }: TireSizePr
                 <InfoRow label="Inflation Pressure" value={size.inflationPressure} />
                 <InfoRow label="UTQG" value={size.utqg} />
                 <InfoRow label="Vehicle Type" value={size.vehicleType} />
-                <InfoRow label="Sidewall" value={size.sidewall} />
+                <InfoRow label="Category" value={size.sidewallCategory?.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} />
+                <InfoRow label="Sidewall" value={size.sidewallDetail} />
               </div>
             </div>
 
