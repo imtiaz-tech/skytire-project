@@ -16,8 +16,8 @@ export interface TireSize {
   utqg?: string;
   seoTitle?: string;
   metaDescription?: string;
-  status?: string;
-  vehicleType?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
+  vehicleType?: 'PASSENGER' | 'LIGHT_TRUCK' | 'SUV' | 'TRUCK' | 'COMMERCIAL' | 'PERFORMANCE' | 'OFF_ROAD';
   keywords?: string;
   sidewallCategory?: 'BLACK_WALL' | 'WHITE_WALL';
   sidewallDetail?: string;

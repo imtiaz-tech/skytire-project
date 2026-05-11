@@ -12,19 +12,19 @@ interface TireSizeFormProps {
   editSize?: TireSize;
 }
 
-const vehicleTypes = [
-  'Passenger',
-  'Light Truck',
-  'SUV',
-  'Truck',
-  'Commercial',
-  'Performance',
-  'Off-Road',
+const vehicleTypeOptions = [
+  { label: 'Passenger', value: 'PASSENGER' },
+  { label: 'Light Truck', value: 'LIGHT_TRUCK' },
+  { label: 'SUV', value: 'SUV' },
+  { label: 'Truck', value: 'TRUCK' },
+  { label: 'Commercial', value: 'COMMERCIAL' },
+  { label: 'Performance', value: 'PERFORMANCE' },
+  { label: 'Off-Road', value: 'OFF_ROAD' },
 ];
 
 const statusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' },
+  { label: 'Active', value: 'ACTIVE' },
+  { label: 'Inactive', value: 'INACTIVE' },
 ];
 
 const sidewallCategoryOptions = [
@@ -63,7 +63,7 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
     utqg: '',
     seoTitle: '',
     metaDescription: '',
-    status: 'active',
+    status: 'ACTIVE',
     vehicleType: '',
     sidewallCategory: '',
     sidewallDetail: '',
@@ -117,7 +117,7 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
         utqg: editSize.utqg || '',
         seoTitle: editSize.seoTitle || '',
         metaDescription: editSize.metaDescription || '',
-        status: editSize.status || 'active',
+        status: editSize.status || 'ACTIVE',
         vehicleType: editSize.vehicleType || '',
         sidewallCategory: editSize.sidewallCategory || '',
         sidewallDetail: editSize.sidewallDetail || '',
@@ -397,8 +397,8 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
                 onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
               >
                 <option value="">Vehicle Type</option>
-                {vehicleTypes.map((vt) => (
-                  <option key={vt} value={vt}>{vt}</option>
+                {vehicleTypeOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
@@ -426,7 +426,7 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
                 value={formData.sidewallCategory}
                 onChange={(e) => setFormData({ ...formData, sidewallCategory: e.target.value })}
               >
-                <option value="">Sidewall Category</option>
+                <option value="">Category</option>
                 {sidewallCategoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
@@ -437,7 +437,7 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
               {formData.sidewallDetail && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Sidewall</label>}
               <input
                 type="text"
-                placeholder="Sidewall Detail (e.g. OWL: Outlined White Lettering)"
+                placeholder="Sidewall (e.g. OWL: Outlined White Lettering)"
                 className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
                 value={formData.sidewallDetail}
                 onChange={(e) => setFormData({ ...formData, sidewallDetail: e.target.value })}

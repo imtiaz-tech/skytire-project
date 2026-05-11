@@ -172,16 +172,16 @@ export default function TireSizesPage() {
                         onClick={() => openPreview(size)}
                         title="Click to preview"
                       >
-                        {size.vehicleType || 'N/A'}
+                        {size.vehicleType ? size.vehicleType.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}
                       </div>
                     </td>
                     <td className="px-8 py-5 whitespace-nowrap">
                       <span className={`px-3 py-1 text-[12px] font-bold uppercase tracking-wider rounded-full ${
-                        size.status === 'active' 
+                        size.status === 'ACTIVE' 
                           ? 'bg-green-50 text-green-600 border border-green-100' 
                           : 'bg-red-50 text-red-600 border border-red-100'
                       }`}>
-                        {size.status || 'active'}
+                        {size.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-8 py-5 text-right whitespace-nowrap">

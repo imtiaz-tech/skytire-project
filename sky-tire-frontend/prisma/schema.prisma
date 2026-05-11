@@ -199,8 +199,8 @@ model TireSize {
   utqg                String?
   seoTitle            String?
   metaDescription     String?
-  status              String?  @default("active")
-  vehicleType         String?
+  status              TireStatus @default(ACTIVE)
+  vehicleType         VehicleType?
   keywords            String?
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
@@ -217,6 +217,21 @@ model TireSize {
 enum SidewallCategory {
   BLACK_WALL
   WHITE_WALL
+}
+
+enum VehicleType {
+  PASSENGER
+  LIGHT_TRUCK
+  SUV
+  TRUCK
+  COMMERCIAL
+  PERFORMANCE
+  OFF_ROAD
+}
+
+enum TireStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum Role {

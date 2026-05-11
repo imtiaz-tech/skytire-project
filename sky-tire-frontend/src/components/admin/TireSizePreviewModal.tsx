@@ -81,11 +81,11 @@ export default function TireSizePreviewModal({ open, onClose, size }: TireSizePr
                   {size.model?.modelName || 'Unknown Model'}
                 </span>
                 <span className={`px-3 py-1 text-[13px] font-bold uppercase tracking-wider rounded-lg ${
-                  size.status === 'active' 
+                  size.status === 'ACTIVE' 
                     ? 'bg-green-50 text-green-600' 
                     : 'bg-red-50 text-red-600'
                 }`}>
-                  {size.status || 'active'}
+                  {size.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
@@ -117,7 +117,7 @@ export default function TireSizePreviewModal({ open, onClose, size }: TireSizePr
                 <InfoRow label="Load Range" value={size.loadRange} />
                 <InfoRow label="Inflation Pressure" value={size.inflationPressure} />
                 <InfoRow label="UTQG" value={size.utqg} />
-                <InfoRow label="Vehicle Type" value={size.vehicleType} />
+                <InfoRow label="Vehicle Type" value={size.vehicleType?.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} />
                 <InfoRow label="Category" value={size.sidewallCategory?.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} />
                 <InfoRow label="Sidewall" value={size.sidewallDetail} />
               </div>

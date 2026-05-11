@@ -78,7 +78,7 @@ export async function PUT(
         utqg: utqg || null,
         seoTitle: seoTitle || null,
         metaDescription: metaDescription || null,
-        status: status || 'active',
+        status: status || 'ACTIVE',
         vehicleType: vehicleType || null,
         keywords: keywords || null,
         sidewallCategory: sidewallCategory || null,
