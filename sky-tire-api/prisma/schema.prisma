@@ -67,26 +67,45 @@ model Brand {
   updatedAt   DateTime      @updatedAt
   coverPhoto  String?
   description String?
-  tires       Tire[]
   models      TireModel[]
 
   @@index([brandName])
 }
 
 model Tire {
-  id          Int                    @id @default(autoincrement())
-  name        String
-  brand       String?
-  description String?
-  embedding   Unsupported("vector")?
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  brandId     String?
-  image       String?
-  price       Float?
-  sku         String?
-  stock       Int?                   @default(0)
-  brandRel    Brand?                 @relation(fields: [brandId], references: [id])
+  id              String           @id @default(cuid())
+  tireSizeId      String
+  sku             String           @unique
+  stock           Int              @default(0)
+  cost            Float            @default(0)
+  salePrice       Float            @default(0)
+  regularPrice    Float            @default(0)
+  mapPrice        Float            @default(0)
+  shippingCost    Float            @default(0)
+  handlingFee     Float            @default(0)
+  freightCharges  Float            @default(0)
+  rebateAvailable Boolean          @default(false)
+  mileageScore    Int?             @default(0)
+  tractionScore   Int?             @default(0)
+  stabilityScore  Int?             @default(0)
+  feedbackScore   Int?             @default(0)
+  
+  tireSize        TireSize         @relation(fields: [tireSizeId], references: [id], onDelete: Cascade)
+  sources         InventorySource[]
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([tireSizeId])
+  @@index([sku])
+}
+
+model InventorySource {
+  id        String   @id @default(cuid())
+  source    String   @unique
+  tires     Tire[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Session {
@@ -225,6 +244,7 @@ model TireSize {
   id                  String   @id @default(cuid())
   modelId             String
   tireSize            String
+  tires               Tire[]
   tireWidth           String?
   aspectRatio         String?
   rimDiameter         String?

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import tiresReducer from '../features/tires/slice';
+import tiresReducer from './slices/tiresSlice';
 import wheelsReducer from '../features/wheels/slice';
 import wireWheelsReducer from '../features/wire-wheels/slice';
 import accessoriesReducer from '../features/accessories/slice';
@@ -11,6 +11,7 @@ import blogsReducer from './slices/blogsSlice';
 import blogCategoriesReducer from './slices/blogCategoriesSlice';
 import tireModelsReducer from './slices/tireModelsSlice';
 import tireSizesReducer from './slices/tireSizesSlice';
+import inventorySourcesReducer from './slices/inventorySourcesSlice';
 
 
 export const store = configureStore({
@@ -27,6 +28,7 @@ export const store = configureStore({
     blogCategories: blogCategoriesReducer,
     tireModels: tireModelsReducer,
     tireSizes: tireSizesReducer,
+    inventorySources: inventorySourcesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
