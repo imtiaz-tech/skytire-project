@@ -7,7 +7,13 @@ export class TiresService {
 
   async findByBrand(brandId: string) {
     return this.prisma.tire.findMany({
-      where: { brandId },
+      where: {
+        tireSize: {
+          model: {
+            brandId,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

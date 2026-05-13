@@ -72,7 +72,7 @@ export default function TiresPage() {
           <h1 className="text-2xl font-bold text-[#1e2a4a]">Tires List</h1>
         </div>
         <Link
-          href="/admin/tires/add"
+          href="/admin/tire-sizes/add?mode=combined"
           className="bg-[#1e2a4a] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-blue-100"
         >
           <Plus className="h-4 w-4" />
@@ -204,7 +204,7 @@ export default function TiresPage() {
                     <td className="px-8 py-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={`/admin/tires/edit/${tire.id}`}
+                          href={`/admin/tire-sizes/edit-combined/${tire.id}`}
                           className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
                           title="Edit"
                         >

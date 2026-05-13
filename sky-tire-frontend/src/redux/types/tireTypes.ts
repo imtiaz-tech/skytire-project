@@ -11,6 +11,8 @@ export interface Tire {
   id: string;
   tireSizeId: string;
   sku: string;
+  alternatePartNumber?: string;
+  upcNo?: string;
   stock: number;
   cost: number;
   salePrice: number;

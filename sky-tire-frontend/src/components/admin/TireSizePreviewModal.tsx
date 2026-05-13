@@ -52,7 +52,7 @@ export default function TireSizePreviewModal({ open, onClose, size }: TireSizePr
           <h2 className="text-[22px] font-bold text-[#1e2a4a]">Tire Size Preview</h2>
           <div className="flex items-center gap-3">
             <Link
-              href={`/admin/tire-sizes/edit/${size.id}`}
+              href={`/admin/tire-sizes/edit-combined/${size.id}?source=size`}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
             >
               <Pencil className="h-4 w-4" />

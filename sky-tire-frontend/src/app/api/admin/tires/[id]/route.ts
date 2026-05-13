@@ -44,6 +44,8 @@ export async function PUT(
     const {
       tireSizeId,
       sku,
+      alternatePartNumber,
+      upcNo,
       stock,
       cost,
       salePrice,
@@ -75,6 +77,8 @@ export async function PUT(
       data: {
         tireSizeId,
         sku,
+        alternatePartNumber,
+        upcNo,
         stock: parseInt(stock) || 0,
         cost: parseFloat(cost) || 0,
         salePrice: parseFloat(salePrice) || 0,

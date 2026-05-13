@@ -59,7 +59,7 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
           <h2 className="text-[22px] font-bold text-[#1e2a4a]">Tire Details Preview</h2>
           <div className="flex items-center gap-3">
             <Link
-              href={`/admin/tires/edit/${tire.id}`}
+              href={`/admin/tire-sizes/edit-combined/${tire.id}`}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
             >
               <Pencil className="h-4 w-4" />
@@ -130,6 +130,9 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
                 <h3 className="text-[18px] font-bold text-[#1e2a4a]">Inventory & Logistics</h3>
               </div>
               <div className="px-8 py-2">
+                <InfoRow label="SKU" value={<span className="font-bold">{tire.sku}</span>} />
+                <InfoRow label="Alternate Part #" value={tire.alternatePartNumber} />
+                <InfoRow label="UPC No" value={tire.upcNo} />
                 <InfoRow label="Stock Level" value={<span className="font-bold">{tire.stock} units</span>} />
                 <InfoRow label="Freight Charges" value={`$${tire.freightCharges.toFixed(2)}`} />
                 <InfoRow label="Shipping Cost" value={`$${tire.shippingCost.toFixed(2)}`} />

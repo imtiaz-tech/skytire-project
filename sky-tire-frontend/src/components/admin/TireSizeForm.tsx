@@ -1,15 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/redux/hooks';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createTireSize, updateTireSize } from '@/redux/slices/tireSizesSlice';
+import { createTire, updateTire } from '@/redux/slices/tiresSlice';
+import { fetchInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import { TireSize } from '@/redux/types/tireSizeTypes';
+import { Tire } from '@/redux/types/tireTypes';
 import { ArrowLeft, Loader2, X, Search, ChevronDown, Check } from 'lucide-react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import TireFieldsSection from './TireFieldsSection';
+import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 
 interface TireSizeFormProps {
-  editSize?: TireSize;
+  editSizeId?: string;
+  editTireId?: string;
 }
 
 const vehicleTypeOptions = [
@@ -32,11 +39,16 @@ const sidewallCategoryOptions = [
   { label: 'White Wall', value: 'WHITE_WALL' },
 ];
 
-export default function TireSizeForm({ editSize }: TireSizeFormProps) {
+export default function TireSizeForm({ editSizeId, editTireId }: TireSizeFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const isCombinedMode = searchParams.get('mode') === 'combined' || !!editTireId;
+
+  const { sources } = useAppSelector((state) => state.inventorySources);
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [models, setModels] = useState<{ id: string; modelName: string; brand?: { brandName: string } }[]>([]);
   
   // Custom Searchable Dropdown State
@@ -48,7 +60,12 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
 
-  const [formData, setFormData] = useState({
+  // Tire Details State
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const sourceDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+
+  const [sizeFormData, setSizeFormData] = useState({
     modelId: '',
     tireSize: '',
     tireWidth: '',
@@ -69,73 +86,168 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
     sidewallDetail: '',
   });
 
+  const [tireFormData, setTireFormData] = useState({
+    sku: '',
+    alternatePartNumber: '',
+    upcNo: '',
+    stock: '0',
+    cost: '0',
+    salePrice: '0',
+    regularPrice: '0',
+    mapPrice: '0',
+    shippingCost: '0',
+    handlingFee: '0',
+    freightCharges: '0',
+    rebateAvailable: false,
+    mileageScore: '',
+    tractionScore: '',
+    stabilityScore: '',
+    feedbackScore: '',
+    sourceIds: [] as string[],
+  });
+
+  const processingPercentage = 3.5;
+
   useEffect(() => {
-    const fetchModels = async () => {
+    const fetchData = async () => {
       try {
         const response = await axios.get('/api/admin/tire-models/dropdown');
         setModels(response.data);
+        if (isCombinedMode) {
+          dispatch(fetchInventorySources());
+        }
       } catch (error) {
-        console.error('Error fetching tire models:', error);
+        console.error('Error fetching models:', error);
       }
     };
-    fetchModels();
-  }, []);
+    fetchData();
+  }, [dispatch, isCombinedMode]);
 
-  // Filter models based on search
-  const filteredModels = React.useMemo(() => {
+  // Initial Data Population
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (!editSizeId && !editTireId) return;
+      
+      setFetching(true);
+      try {
+        let sizeData: any = null;
+        let tireData: any = null;
+        const sourceParam = searchParams.get('source');
+
+        if (sourceParam === 'size') {
+          // In this case, editTireId is actually the Size ID
+          const sizeRes = await axios.get(`/api/admin/tire-sizes/${editTireId}`);
+          sizeData = sizeRes.data;
+          
+          // Try to find an associated tire for this size
+          try {
+            const tireRes = await axios.get(`/api/admin/tires/by-size/${editTireId}`);
+            if (tireRes.data) tireData = tireRes.data;
+          } catch (e) {
+            console.log("No associated tire found for this size yet");
+          }
+        } else if (editTireId) {
+          const tireRes = await axios.get(`/api/admin/tires/${editTireId}`);
+          tireData = tireRes.data;
+          sizeData = tireData.tireSize;
+        } else if (editSizeId) {
+          const sizeRes = await axios.get(`/api/admin/tire-sizes/${editSizeId}`);
+          sizeData = sizeRes.data;
+        }
+
+        if (sizeData) {
+          setSizeFormData({
+            modelId: sizeData.modelId,
+            tireSize: sizeData.tireSize || '',
+            tireWidth: sizeData.tireWidth || '',
+            aspectRatio: sizeData.aspectRatio || '',
+            rimDiameter: sizeData.rimDiameter || '',
+            loadIndex: sizeData.loadIndex || '',
+            speedRating: sizeData.speedRating || '',
+            loadRange: sizeData.loadRange || '',
+            inflationPressure: sizeData.inflationPressure || '',
+            tireWeight: sizeData.tireWeight || '',
+            shippingDimensions: sizeData.shippingDimensions || '',
+            utqg: sizeData.utqg || '',
+            seoTitle: sizeData.seoTitle || '',
+            metaDescription: sizeData.metaDescription || '',
+            status: sizeData.status || 'ACTIVE',
+            vehicleType: sizeData.vehicleType || '',
+            sidewallCategory: sizeData.sidewallCategory || '',
+            sidewallDetail: sizeData.sidewallDetail || '',
+          });
+
+          if (sizeData.keywords) {
+            try {
+              const kws = sizeData.keywords.startsWith('[') ? JSON.parse(sizeData.keywords) : sizeData.keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+              setKeywordArray(kws);
+            } catch (e) {
+              setKeywordArray(sizeData.keywords.split(',').map((k: string) => k.trim()).filter(Boolean));
+            }
+          }
+        }
+
+        if (tireData) {
+          setTireFormData({
+            sku: tireData.sku,
+            alternatePartNumber: tireData.alternatePartNumber || '',
+            upcNo: tireData.upcNo || '',
+            stock: tireData.stock.toString(),
+            cost: tireData.cost.toString(),
+            salePrice: tireData.salePrice.toString(),
+            regularPrice: tireData.regularPrice.toString(),
+            mapPrice: tireData.mapPrice.toString(),
+            shippingCost: tireData.shippingCost.toString(),
+            handlingFee: tireData.handlingFee.toString(),
+            freightCharges: tireData.freightCharges.toString(),
+            rebateAvailable: tireData.rebateAvailable,
+            mileageScore: tireData.mileageScore?.toString() || '',
+            tractionScore: tireData.tractionScore?.toString() || '',
+            stabilityScore: tireData.stabilityScore?.toString() || '',
+            feedbackScore: tireData.feedbackScore?.toString() || '',
+            sourceIds: tireData.sources?.map((s: any) => s.id) || [],
+          });
+        }
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        toast.error('Failed to load data');
+      } finally {
+        setFetching(false);
+      }
+    };
+    loadInitialData();
+  }, [editSizeId, editTireId]);
+
+  const filteredModels = useMemo(() => {
     return models.filter(model => {
       const searchStr = `${model.modelName} ${model.brand?.brandName || ''}`.toLowerCase();
       return searchStr.includes(modelSearch.toLowerCase());
     });
   }, [models, modelSearch]);
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
+        setIsSourceDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (editSize) {
-      setFormData({
-        modelId: editSize.modelId,
-        tireSize: editSize.tireSize || '',
-        tireWidth: editSize.tireWidth || '',
-        aspectRatio: editSize.aspectRatio || '',
-        rimDiameter: editSize.rimDiameter || '',
-        loadIndex: editSize.loadIndex || '',
-        speedRating: editSize.speedRating || '',
-        loadRange: editSize.loadRange || '',
-        inflationPressure: editSize.inflationPressure || '',
-        tireWeight: editSize.tireWeight || '',
-        shippingDimensions: editSize.shippingDimensions || '',
-        utqg: editSize.utqg || '',
-        seoTitle: editSize.seoTitle || '',
-        metaDescription: editSize.metaDescription || '',
-        status: editSize.status || 'ACTIVE',
-        vehicleType: editSize.vehicleType || '',
-        sidewallCategory: editSize.sidewallCategory || '',
-        sidewallDetail: editSize.sidewallDetail || '',
-      });
-
-      if (editSize.keywords) {
-        try {
-          if (editSize.keywords.startsWith('[')) {
-            setKeywordArray(JSON.parse(editSize.keywords));
-          } else {
-            setKeywordArray(editSize.keywords.split(',').map(k => k.trim()).filter(Boolean));
-          }
-        } catch (e) {
-          setKeywordArray(editSize.keywords.split(',').map(k => k.trim()).filter(Boolean));
-        }
+  const toggleSource = (sourceId: string) => {
+    setTireFormData(prev => {
+      const isSelected = prev.sourceIds.includes(sourceId);
+      if (isSelected) {
+        return { ...prev, sourceIds: prev.sourceIds.filter(id => id !== sourceId) };
+      } else {
+        return { ...prev, sourceIds: [...prev.sourceIds, sourceId] };
       }
-    }
-  }, [editSize]);
+    });
+  };
 
   const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ';') {
@@ -156,54 +268,100 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
     e.preventDefault();
     setLoading(true);
 
-    const submitData = {
-      ...formData,
+    const sizePayload = {
+      ...sizeFormData,
       keywords: JSON.stringify(keywordArray),
     };
 
     try {
-      if (editSize) {
-        await dispatch(updateTireSize({ id: editSize.id, data: submitData })).unwrap();
+      let tireSizeId = editSizeId;
+      
+      // Step 1: Handle Tire Size
+      if (editSizeId || (editTireId && tireFormData.sku)) {
+        // Find existing size id from tire if editing tire
+        const actualSizeId = editSizeId || (await axios.get(`/api/admin/tires/${editTireId}`)).data.tireSizeId;
+        await dispatch(updateTireSize({ id: actualSizeId, data: sizePayload })).unwrap();
+        tireSizeId = actualSizeId;
       } else {
-        await dispatch(createTireSize(submitData)).unwrap();
+        // Create new size
+        const result = await dispatch(createTireSize(sizePayload)).unwrap();
+        tireSizeId = result.id;
       }
-      router.push('/admin/tire-sizes');
+
+      // Step 2: Handle Tire (if combined mode)
+      if (isCombinedMode) {
+        const tirePayload = {
+          ...tireFormData,
+          tireSizeId,
+          stock: parseInt(tireFormData.stock) || 0,
+          cost: parseFloat(tireFormData.cost) || 0,
+          salePrice: parseFloat(tireFormData.salePrice) || 0,
+          regularPrice: parseFloat(tireFormData.regularPrice) || 0,
+          mapPrice: parseFloat(tireFormData.mapPrice) || 0,
+          shippingCost: parseFloat(tireFormData.shippingCost) || 0,
+          handlingFee: parseFloat(tireFormData.handlingFee) || 0,
+          freightCharges: parseFloat(tireFormData.freightCharges) || 0,
+          mileageScore: parseInt(tireFormData.mileageScore) || 0,
+          tractionScore: parseInt(tireFormData.tractionScore) || 0,
+          stabilityScore: parseInt(tireFormData.stabilityScore) || 0,
+          feedbackScore: parseInt(tireFormData.feedbackScore) || 0,
+        };
+
+        if (editTireId) {
+          await dispatch(updateTire({ id: editTireId, data: tirePayload })).unwrap();
+          toast.success('Tire and Size updated');
+        } else {
+          await dispatch(createTire(tirePayload)).unwrap();
+          toast.success('Tire and Size created');
+        }
+      } else {
+        toast.success(editSizeId ? 'Tire Size updated' : 'Tire Size created');
+      }
+
+      router.push(isCombinedMode ? '/admin/tires' : '/admin/tire-sizes');
       router.refresh();
-    } catch (err) {
-      console.error('Failed to save tire size:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save data');
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-10 w-10 text-[#1e2a4a] animate-spin" />
+        <p className="text-gray-400 font-medium animate-pulse">Loading combined form data...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 py-8">
+    <div className="space-y-8 py-8 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
-          className="p-2.5 bg-white border border-gray-100 rounded-xl text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
-        >
+        <button onClick={() => router.back()} className="p-2.5 bg-white border border-gray-100 rounded-xl text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-2xl font-bold text-[#1e2a4a]">
-          {editSize ? 'Edit Tire Size' : 'Add New Tire Size'}
+          {editTireId ? 'Edit Tire & Size' : (editSizeId ? 'Edit Tire Size' : (isCombinedMode ? 'Add New Tire (Combined)' : 'Add New Tire Size'))}
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-6">
-          {/* Row 1: Tire Model & Tire Size */}
+      <form onSubmit={handleSubmit} className="space-y-12">
+        {/* Section 1: Tire Size Details */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Section 1: Tire Size Details</h3>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full" ref={dropdownRef}>
-              {formData.modelId && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Tire Model</label>}
-              
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[14px] font-medium text-gray-400 z-10">Tire Model</label>
               <div 
-                className={`w-full px-4 py-3.5 bg-white border ${isDropdownOpen ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-gray-200'} rounded-xl text-[#1e2a4a] cursor-pointer flex items-center justify-between transition-all`}
+                className={`w-full px-4 py-3.5 bg-transparent border ${isDropdownOpen ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-gray-200'} rounded-xl text-[#1e2a4a] cursor-pointer flex items-center justify-between transition-all`}
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <span className={`text-[16px] ${!formData.modelId ? 'text-gray-500' : 'font-medium'}`}>
-                  {formData.modelId 
-                    ? models.find(m => m.id === formData.modelId)?.modelName + (models.find(m => m.id === formData.modelId)?.brand ? ` (${models.find(m => m.id === formData.modelId)?.brand?.brandName})` : '')
+                <span className={`text-[16px] ${!sizeFormData.modelId ? 'text-gray-500' : 'font-medium'}`}>
+                  {sizeFormData.modelId 
+                    ? models.find(m => m.id === sizeFormData.modelId)?.modelName + (models.find(m => m.id === sizeFormData.modelId)?.brand ? ` (${models.find(m => m.id === sizeFormData.modelId)?.brand?.brandName})` : '')
                     : 'Select Tire Model'}
                 </span>
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -225,30 +383,24 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
                       />
                     </div>
                   </div>
-                  
-                  <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                  <div className="max-h-64 overflow-y-auto">
                     {filteredModels.length > 0 ? (
                       filteredModels.map((model) => (
                         <div 
                           key={model.id}
-                          className={`px-4 py-3 text-[16px] cursor-pointer hover:bg-blue-50 flex items-center justify-between transition-colors ${formData.modelId === model.id ? 'bg-blue-50/50 text-blue-600 font-bold' : 'text-gray-700 font-medium'}`}
+                          className={`px-4 py-3 text-[16px] cursor-pointer hover:bg-blue-50 flex items-center justify-between transition-colors ${sizeFormData.modelId === model.id ? 'bg-blue-50 text-blue-600 font-bold' : 'text-gray-700 font-medium'}`}
                           onClick={() => {
-                            setFormData({ ...formData, modelId: model.id });
+                            setSizeFormData({ ...sizeFormData, modelId: model.id });
                             setIsDropdownOpen(false);
                             setModelSearch('');
                           }}
                         >
-                          <span>
-                            {model.modelName}
-                            {model.brand && <span className="text-black-400 font-normal text-sm ml-2">({model.brand.brandName})</span>}
-                          </span>
-                          {formData.modelId === model.id && <Check className="h-4 w-4" />}
+                          <span>{model.modelName} {model.brand && <span className="text-gray-400 font-normal text-xs ml-2">({model.brand.brandName})</span>}</span>
+                          {sizeFormData.modelId === model.id && <Check className="h-4 w-4" />}
                         </div>
                       ))
                     ) : (
-                      <div className="px-4 py-8 text-center text-gray-400 text-sm italic">
-                        No models found matching "{modelSearch}"
-                      </div>
+                      <div className="px-4 py-8 text-center text-gray-400 text-sm">No models found</div>
                     )}
                   </div>
                 </div>
@@ -256,259 +408,155 @@ export default function TireSizeForm({ editSize }: TireSizeFormProps) {
             </div>
 
             <div className="relative w-full">
-              {formData.tireSize && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Tire Size</label>}
-              <input
-                type="text"
-                placeholder="Tire Size (e.g. 225/45R17)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.tireSize}
-                onChange={(e) => setFormData({ ...formData, tireSize: e.target.value })}
-                required
+              {sizeFormData.tireSize && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Tire Size</label>}
+              <input 
+                type="text" 
+                placeholder="Tire Size (e.g. 225/45R17)" 
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none" 
+                value={sizeFormData.tireSize} 
+                onChange={(e) => setSizeFormData({ ...sizeFormData, tireSize: e.target.value })} 
+                required 
               />
             </div>
           </div>
 
-          {/* Row 2: Tire Width, Aspect Ratio, Rim Diameter */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.tireWidth && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Tire Width</label>}
-              <input
-                type="text"
-                placeholder="Tire Width (e.g. 225)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.tireWidth}
-                onChange={(e) => setFormData({ ...formData, tireWidth: e.target.value })}
-              />
+              {sizeFormData.tireWidth && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Tire Width</label>}
+              <input type="text" placeholder="Tire Width" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.tireWidth} onChange={(e) => setSizeFormData({ ...sizeFormData, tireWidth: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.aspectRatio && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Aspect Ratio</label>}
-              <input
-                type="text"
-                placeholder="Aspect Ratio (e.g. 45)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.aspectRatio}
-                onChange={(e) => setFormData({ ...formData, aspectRatio: e.target.value })}
-              />
+              {sizeFormData.aspectRatio && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Aspect Ratio</label>}
+              <input type="text" placeholder="Aspect Ratio" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.aspectRatio} onChange={(e) => setSizeFormData({ ...sizeFormData, aspectRatio: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.rimDiameter && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Rim Diameter</label>}
-              <input
-                type="text"
-                placeholder="Rim Diameter (e.g. 17)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.rimDiameter}
-                onChange={(e) => setFormData({ ...formData, rimDiameter: e.target.value })}
-              />
+              {sizeFormData.rimDiameter && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Rim Diameter</label>}
+              <input type="text" placeholder="Rim Diameter" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.rimDiameter} onChange={(e) => setSizeFormData({ ...sizeFormData, rimDiameter: e.target.value })} />
             </div>
           </div>
 
-          {/* Row 3: Load Index, Speed Rating, Load Range */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.loadIndex && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Load Index</label>}
-              <input
-                type="text"
-                placeholder="Load Index (e.g. 91)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.loadIndex}
-                onChange={(e) => setFormData({ ...formData, loadIndex: e.target.value })}
-              />
+              {sizeFormData.loadIndex && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Load Index</label>}
+              <input type="text" placeholder="Load Index" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.loadIndex} onChange={(e) => setSizeFormData({ ...sizeFormData, loadIndex: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.speedRating && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Speed Rating</label>}
-              <input
-                type="text"
-                placeholder="Speed Rating (e.g. W)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.speedRating}
-                onChange={(e) => setFormData({ ...formData, speedRating: e.target.value })}
-              />
+              {sizeFormData.speedRating && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Speed Rating</label>}
+              <input type="text" placeholder="Speed Rating" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.speedRating} onChange={(e) => setSizeFormData({ ...sizeFormData, speedRating: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.loadRange && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Load Range</label>}
-              <input
-                type="text"
-                placeholder="Load Range (e.g. SL)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.loadRange}
-                onChange={(e) => setFormData({ ...formData, loadRange: e.target.value })}
-              />
+              {sizeFormData.loadRange && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Load Range</label>}
+              <input type="text" placeholder="Load Range" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.loadRange} onChange={(e) => setSizeFormData({ ...sizeFormData, loadRange: e.target.value })} />
             </div>
           </div>
 
-          {/* Row 4: Inflation Pressure, Tire Weight, Shipping Dimensions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.inflationPressure && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Inflation Pressure</label>}
-              <input
-                type="text"
-                placeholder="Inflation Pressure (e.g. 36 PSI)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.inflationPressure}
-                onChange={(e) => setFormData({ ...formData, inflationPressure: e.target.value })}
-              />
+              {sizeFormData.inflationPressure && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Inflation Pressure</label>}
+              <input type="text" placeholder="Inflation Pressure" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.inflationPressure} onChange={(e) => setSizeFormData({ ...sizeFormData, inflationPressure: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.tireWeight && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Tire Weight</label>}
-              <input
-                type="text"
-                placeholder="Tire Weight (e.g. 22 lbs)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.tireWeight}
-                onChange={(e) => setFormData({ ...formData, tireWeight: e.target.value })}
-              />
+              {sizeFormData.tireWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Tire Weight</label>}
+              <input type="text" placeholder="Tire Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.tireWeight} onChange={(e) => setSizeFormData({ ...sizeFormData, tireWeight: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
-              <input
-                type="text"
-                placeholder="Shipping Dimensions (e.g. 25x25x10 in)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.shippingDimensions}
-                onChange={(e) => setFormData({ ...formData, shippingDimensions: e.target.value })}
-              />
+              {sizeFormData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
+              <input type="text" placeholder="Shipping Dimensions" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.shippingDimensions} onChange={(e) => setSizeFormData({ ...sizeFormData, shippingDimensions: e.target.value })} />
             </div>
           </div>
 
-          {/* Row 5: UTQG, Vehicle Type, Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.utqg && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">UTQG</label>}
-              <input
-                type="text"
-                placeholder="UTQG (e.g. 500 A A)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.utqg}
-                onChange={(e) => setFormData({ ...formData, utqg: e.target.value })}
-              />
+              {sizeFormData.utqg && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">UTQG</label>}
+              <input type="text" placeholder="UTQG" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.utqg} onChange={(e) => setSizeFormData({ ...sizeFormData, utqg: e.target.value })} />
             </div>
-
             <div className="relative w-full">
-              {formData.vehicleType && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Vehicle Type</label>}
-              <select
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
-                value={formData.vehicleType}
-                onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
-              >
-                <option value="">Vehicle Type</option>
-                {vehicleTypeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Vehicle Type</label>
+              <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={sizeFormData.vehicleType} onChange={(e) => setSizeFormData({ ...sizeFormData, vehicleType: e.target.value })}>
+                <option value="">Select Type</option>
+                {vehicleTypeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
-
             <div className="relative w-full">
-              {formData.status && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Status</label>}
-              <select
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                {statusOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Status</label>
+              <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={sizeFormData.status} onChange={(e) => setSizeFormData({ ...sizeFormData, status: e.target.value })}>
+                {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Row 6: Sidewall Category & Sidewall Detail */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full">
-              {formData.sidewallCategory && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Category</label>}
-              <select
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none appearance-none"
-                value={formData.sidewallCategory}
-                onChange={(e) => setFormData({ ...formData, sidewallCategory: e.target.value })}
-              >
-                <option value="">Category</option>
-                {sidewallCategoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Category</label>
+              <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={sizeFormData.sidewallCategory} onChange={(e) => setSizeFormData({ ...sizeFormData, sidewallCategory: e.target.value })}>
+                <option value="">Select Category</option>
+                {sidewallCategoryOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
-
             <div className="relative w-full">
-              {formData.sidewallDetail && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Sidewall</label>}
-              <input
-                type="text"
-                placeholder="Sidewall (e.g. OWL: Outlined White Lettering)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-                value={formData.sidewallDetail}
-                onChange={(e) => setFormData({ ...formData, sidewallDetail: e.target.value })}
-              />
+              {sizeFormData.sidewallDetail && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sidewall</label>}
+              <input type="text" placeholder="Sidewall Details" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.sidewallDetail} onChange={(e) => setSizeFormData({ ...sizeFormData, sidewallDetail: e.target.value })} />
             </div>
           </div>
 
-          {/* Row 7: Keywords */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="relative w-full">
-              {keywordArray.length > 0 && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
-              <input 
-                type="text"
-                placeholder="Type keywords and press Enter or semi-colon (;)"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none" 
-                value={keywordInput} 
-                onChange={(e) => setKeywordInput(e.target.value)} 
-                onKeyDown={handleKeywordKeyDown}
-              />
+              {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
+              <input type="text" placeholder="Press Enter or ; to add keywords" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} onKeyDown={handleKeywordKeyDown} />
             </div>
-            {keywordArray.length > 0 && (
-              <div className="flex flex-wrap gap-2 px-1">
-                {keywordArray.map((kw, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-[#1e2a4a] text-[13px] font-bold rounded-full border border-blue-100 shadow-sm animate-in zoom-in-95 duration-150">
-                    <span>{kw}</span>
-                    <button type="button" onClick={() => removeKeyword(kw)} className="text-blue-400 hover:text-blue-600 focus:outline-none flex-shrink-0">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {keywordArray.map(kw => (
+                <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
+                  {kw} <X className="h-3 w-3 cursor-pointer" onClick={() => removeKeyword(kw)} />
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* Row 8: SEO Title */}
           <div className="relative w-full">
-            {formData.seoTitle && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">SEO Title</label>}
-            <input
-              type="text"
-              placeholder="SEO Title"
-              className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none"
-              value={formData.seoTitle}
-              onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-            />
+            {sizeFormData.seoTitle && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SEO Title</label>}
+            <input type="text" placeholder="SEO Title" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={sizeFormData.seoTitle} onChange={(e) => setSizeFormData({ ...sizeFormData, seoTitle: e.target.value })} />
           </div>
 
-          {/* Row 9: Meta Description */}
           <div className="relative w-full">
-            {formData.metaDescription && <label className="absolute -top-2.5 left-3 bg-[#f8f9fa] px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
-            <textarea
-              placeholder="Meta Description"
-              rows={3}
-              className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none resize-none"
-              value={formData.metaDescription}
-              onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end pt-6 border-t border-gray-100">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-3 bg-[#1e2a4a] text-white rounded-lg text-base font-bold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading && <Loader2 className="h-5 w-5 animate-spin" />}
-              {editSize ? 'Update Size' : 'Save Size'}
-            </button>
+            {sizeFormData.metaDescription && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
+            <textarea placeholder="Meta Description" rows={3} className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none resize-none" value={sizeFormData.metaDescription} onChange={(e) => setSizeFormData({ ...sizeFormData, metaDescription: e.target.value })} />
           </div>
         </div>
+
+        {/* Section 2: Tire Specifications & Pricing */}
+        {isCombinedMode && (
+          <div className="space-y-8 animate-in slide-in-from-bottom duration-700">
+            <div className="flex items-center gap-4 px-4">
+              <div className="h-px bg-gray-100 flex-1" />
+              <h2 className="text-[18px] font-black text-gray-300 uppercase tracking-[0.2em] whitespace-nowrap">Section 2: Tire Inventory & Pricing</h2>
+              <div className="h-px bg-gray-100 flex-1" />
+            </div>
+            
+            <TireFieldsSection 
+              formData={tireFormData}
+              setFormData={setTireFormData}
+              sources={sources}
+              isSourceDropdownOpen={isSourceDropdownOpen}
+              setIsSourceDropdownOpen={setIsSourceDropdownOpen}
+              sourceDropdownRef={sourceDropdownRef}
+              setIsManageSourcesOpen={setIsManageSourcesOpen}
+              toggleSource={toggleSource}
+              processingPercentage={processingPercentage}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end pt-8">
+          <button type="submit" disabled={loading} className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3">
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editTireId ? 'Update Everything' : (editSizeId ? 'Update Size' : (isCombinedMode ? 'Save Everything' : 'Save Size')))}
+          </button>
+        </div>
       </form>
+
+      {isManageSourcesOpen && (
+        <ManageInventorySourcesModal onClose={() => setIsManageSourcesOpen(false)} />
+      )}
     </div>
   );
 }
