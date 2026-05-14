@@ -88,56 +88,61 @@ export default function TiresPage() {
         </Link>
       </div>
 
-      {/* Filter Bar & Tabs */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <form onSubmit={handleSearch} className="flex items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-sm">
+      {/* Filter Bar & Tabs Combined */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          {/* Search Section */}
+          <form onSubmit={handleSearch} className="flex items-center gap-3">
+            <div className="relative w-72">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
               <input
                 type="text"
-                placeholder={activeTab === 'DRAFT' ? "Search Drafts..." : `Search ${activeTab === 'BLACK_WALL' ? 'Black Wall' : 'White Wall'} Tires...`}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-base focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
+                placeholder={activeTab === 'DRAFT' ? "Search Drafts..." : "Search Tires..."}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-[14px] focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
             <button
               type="submit"
-              className="bg-[#1e2a4a] text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-[#2a3a5a] transition-all shadow-md shadow-blue-50"
+              className="bg-[#1e2a4a] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#2a3a5a] transition-all shadow-md shadow-blue-50"
             >
               Search
             </button>
           </form>
 
-          <div className="ml-auto text-[15px] font-bold text-gray-700 whitespace-nowrap">
-            Total Tires: <span className="text-[#1e2a4a]">({total})</span>
-          </div>
-        </div>
+          {/* Separator & Tabs */}
+          <div className="flex items-center gap-8 flex-1">
+            <div className="h-10 w-px bg-gray-100 hidden md:block ml-2" />
+            
+            <div className="flex items-center gap-8">
+              <button
+                onClick={() => { setActiveTab('BLACK_WALL'); setPage(1); }}
+                className={`py-2 text-[15px] font-bold transition-all relative whitespace-nowrap ${activeTab === 'BLACK_WALL' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                Black Wall Tires
+                {activeTab === 'BLACK_WALL' && <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#1e2a4a] rounded-full" />}
+              </button>
+              <button
+                onClick={() => { setActiveTab('WHITE_WALL'); setPage(1); }}
+                className={`py-2 text-[15px] font-bold transition-all relative whitespace-nowrap ${activeTab === 'WHITE_WALL' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                White Wall Tires
+                {activeTab === 'WHITE_WALL' && <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#1e2a4a] rounded-full" />}
+              </button>
+              <button
+                onClick={() => { setActiveTab('DRAFT'); setPage(1); }}
+                className={`py-2 text-[15px] font-bold transition-all relative whitespace-nowrap ${activeTab === 'DRAFT' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                Drafts
+                {activeTab === 'DRAFT' && <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#1e2a4a] rounded-full" />}
+              </button>
+            </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-8 border-t border-gray-50 pt-4">
-          <button
-            onClick={() => { setActiveTab('BLACK_WALL'); setPage(1); }}
-            className={`pb-4 text-[15px] font-bold transition-all relative ${activeTab === 'BLACK_WALL' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            Black Wall Tires
-            {activeTab === 'BLACK_WALL' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1e2a4a] rounded-full" />}
-          </button>
-          <button
-            onClick={() => { setActiveTab('WHITE_WALL'); setPage(1); }}
-            className={`pb-4 text-[15px] font-bold transition-all relative ${activeTab === 'WHITE_WALL' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            White Wall Tires
-            {activeTab === 'WHITE_WALL' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1e2a4a] rounded-full" />}
-          </button>
-          <button
-            onClick={() => { setActiveTab('DRAFT'); setPage(1); }}
-            className={`pb-4 text-[15px] font-bold transition-all relative ${activeTab === 'DRAFT' ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            Drafts
-            {activeTab === 'DRAFT' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1e2a4a] rounded-full" />}
-          </button>
+            <div className="ml-auto text-[15px] font-bold text-gray-700 whitespace-nowrap">
+              Total Tires: <span className="text-[#1e2a4a]">({total})</span>
+            </div>
+          </div>
         </div>
       </div>
 
