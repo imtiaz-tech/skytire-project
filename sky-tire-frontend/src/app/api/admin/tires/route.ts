@@ -15,9 +15,22 @@ export async function GET(request: NextRequest) {
       { tireSize: { contains: search, mode: 'insensitive' as const } },
       { alternatePartNumber: { contains: search, mode: 'insensitive' as const } },
       { upcNo: { contains: search, mode: 'insensitive' as const } },
+      { speedRating: { contains: search, mode: 'insensitive' as const } },
+      { loadRange: { contains: search, mode: 'insensitive' as const } },
+      { utqg: { contains: search, mode: 'insensitive' as const } },
+      { loadIndex: { contains: search, mode: 'insensitive' as const } },
       { model: { modelName: { contains: search, mode: 'insensitive' as const } } },
       { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } },
     ];
+
+    // Handle VehicleType enum search
+    const vehicleTypes = ['PASSENGER', 'LIGHT_TRUCK', 'SUV', 'TRUCK', 'COMMERCIAL', 'PERFORMANCE', 'OFF_ROAD'];
+    const matchingVehicleTypes = vehicleTypes.filter(type => 
+      type.toLowerCase().includes(search.toLowerCase())
+    );
+    if (matchingVehicleTypes.length > 0) {
+      searchConditions.push({ vehicleType: { in: matchingVehicleTypes } });
+    }
 
     // If search looks like a tire size without a slash (e.g., 23550R18), 
     // try searching with a slash inserted (235/50R18)
