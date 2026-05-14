@@ -76,7 +76,7 @@ model Brand {
 model Tire {
   id                  String           @id @default(cuid())
   modelId             String
-  sku                 String           @unique
+  sku                 String?           @unique
   alternatePartNumber String?
   upcNo               String?
   stock               Int              @default(0)
@@ -94,7 +94,7 @@ model Tire {
   feedbackScore       Int?             @default(0)
   
   // Fields moved from TireSize
-  tireSize            String
+  tireSize            String?
   tireWidth           String?
   aspectRatio         String?
   rimDiameter         String?
@@ -113,6 +113,7 @@ model Tire {
   features            String[]
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
+  publishStatus       PublishStatus @default(PUBLISHED)
 
   model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   sources             InventorySource[]
@@ -263,4 +264,9 @@ enum BrandCategory {
 enum BlogStatus {
   DRAFT
   PUBLISHED
+}
+
+enum PublishStatus {
+  PUBLISHED
+  DRAFT
 }

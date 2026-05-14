@@ -112,6 +112,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     stabilityScore: '',
     feedbackScore: '',
     sourceIds: [] as string[],
+    publishStatus: 'PUBLISHED',
   });
 
   const processingPercentage = 3.5;
@@ -175,6 +176,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           stabilityScore: String(tire.stabilityScore || 0),
           feedbackScore: String(tire.feedbackScore || 0),
           sourceIds: tire.sources?.map((s: any) => s.id) || [],
+          publishStatus: tire.publishStatus || 'PUBLISHED',
         });
 
         if (tire.keywords) {
@@ -262,27 +264,35 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     setIsFeatureFocused(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, statusOverride?: 'PUBLISHED' | 'DRAFT') => {
     e.preventDefault();
     if (!formData.modelId) return toast.error('Please select a tire model');
-    if (!formData.tireSize) return toast.error('Please enter tire size');
-    if (!formData.sku) return toast.error('Please enter SKU');
 
-    const regularNum = parseFloat(formData.regularPrice) || 0;
-    const saleNum = parseFloat(formData.salePrice) || 0;
-    const mapNum = parseFloat(formData.mapPrice) || 0;
+    const finalStatus = statusOverride || formData.publishStatus || 'PUBLISHED';
 
-    if (regularNum > 0 && regularNum <= saleNum) {
-      return toast.error('Regular Price must be greater than Sale Price');
+    if (finalStatus !== 'DRAFT') {
+      if (!formData.tireSize) return toast.error('Please enter tire size');
+      if (!formData.sku) return toast.error('Please enter SKU');
     }
-    if (mapNum > 0 && saleNum < mapNum) {
-      return toast.error('Sale Price must be greater than or equal to MAP Price');
+
+    if (finalStatus !== 'DRAFT') {
+      const regularNum = parseFloat(formData.regularPrice) || 0;
+      const saleNum = parseFloat(formData.salePrice) || 0;
+      const mapNum = parseFloat(formData.mapPrice) || 0;
+
+      if (regularNum > 0 && regularNum <= saleNum) {
+        return toast.error('Regular Price must be greater than Sale Price');
+      }
+      if (mapNum > 0 && saleNum < mapNum) {
+        return toast.error('Sale Price must be greater than or equal to MAP Price');
+      }
     }
 
     setLoading(true);
     try {
       const payload = {
         ...formData,
+        publishStatus: finalStatus,
         keywords: keywordArray.join(';'),
         features: featureArray,
         stock: parseInt(formData.stock) || 0,
@@ -404,7 +414,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                 className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none" 
                 value={formData.tireSize} 
                 onChange={(e) => setFormData({ ...formData, tireSize: e.target.value })} 
-                required 
               />
             </div>
           </div>
@@ -573,8 +582,20 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           />
         </div>
 
-        <div className="flex justify-end pt-8">
-          <button type="submit" disabled={loading} className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3">
+        <div className="flex justify-end items-center gap-4 pt-8">
+          <button 
+            type="button" 
+            disabled={loading} 
+            onClick={(e) => handleSubmit(e, 'DRAFT')}
+            className="px-8 py-4 bg-gray-100 text-[#1e2a4a] rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center gap-3"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save as Draft'}
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3"
+          >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editTireId ? 'Update Tire' : 'Save Tire')}
           </button>
         </div>

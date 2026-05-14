@@ -77,6 +77,7 @@ export async function PUT(
       features,
       sidewallCategory,
       sidewallDetail,
+      publishStatus,
     } = body;
 
     // Get current sources to handle disconnects
@@ -89,22 +90,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Tire not found' }, { status: 404 });
     }
 
-    const regularNum = parseFloat(regularPrice) || 0;
-    const saleNum = parseFloat(salePrice) || 0;
-    const mapNum = parseFloat(mapPrice) || 0;
+    if (publishStatus !== 'DRAFT') {
+      const regularNum = parseFloat(regularPrice) || 0;
+      const saleNum = parseFloat(salePrice) || 0;
+      const mapNum = parseFloat(mapPrice) || 0;
 
-    if (regularNum > 0 && regularNum <= saleNum) {
-      return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
-    }
-    if (mapNum > 0 && saleNum < mapNum) {
-      return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
+      if (regularNum > 0 && regularNum <= saleNum) {
+        return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
+      }
+      if (mapNum > 0 && saleNum < mapNum) {
+        return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
+      }
     }
 
     const updatedTire = await prisma.tire.update({
       where: { id },
       data: {
         modelId,
-        sku,
+        sku: sku || null,
         alternatePartNumber,
         upcNo,
         stock: parseInt(stock) || 0,
@@ -121,7 +124,7 @@ export async function PUT(
         stabilityScore: parseInt(stabilityScore) || 0,
         feedbackScore: parseInt(feedbackScore) || 0,
         
-        tireSize,
+        tireSize: tireSize || null,
         tireWidth,
         aspectRatio,
         rimDiameter,
@@ -135,11 +138,12 @@ export async function PUT(
         seoTitle,
         metaDescription,
         status: status || 'ACTIVE',
-        vehicleType,
+        vehicleType: vehicleType || null,
         keywords,
         features: Array.isArray(features) ? features : [],
-        sidewallCategory,
+        sidewallCategory: sidewallCategory || null,
         sidewallDetail,
+        publishStatus: publishStatus || 'PUBLISHED',
 
         sources: {
           set: sourceIds ? sourceIds.map((id: string) => ({ id })) : [],

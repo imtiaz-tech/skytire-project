@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '10');
   const search = searchParams.get('search') || '';
 
+  const sidewallCategory = searchParams.get('sidewallCategory');
+  const publishStatus = searchParams.get('publishStatus');
+
   const skip = (page - 1) * limit;
 
   try {
@@ -39,11 +42,13 @@ export async function GET(request: NextRequest) {
       searchConditions.push({ tireSize: { contains: sizeWithSlash, mode: 'insensitive' as const } });
     }
 
-    const where = search
-      ? {
-          OR: searchConditions,
-        }
-      : {};
+    const where: any = {};
+    if (sidewallCategory) where.sidewallCategory = sidewallCategory;
+    if (publishStatus) where.publishStatus = publishStatus;
+
+    if (search) {
+      where.OR = searchConditions;
+    }
 
     const [tires, total] = await Promise.all([
       prisma.tire.findMany({
@@ -123,27 +128,36 @@ export async function POST(request: NextRequest) {
       features,
       sidewallCategory,
       sidewallDetail,
+      publishStatus,
     } = body;
 
-    if (!modelId || !sku || !tireSize) {
-      return NextResponse.json({ error: 'modelId, sku, and tireSize are required' }, { status: 400 });
+    if (publishStatus === 'DRAFT') {
+      if (!modelId) {
+        return NextResponse.json({ error: 'modelId is required for drafts' }, { status: 400 });
+      }
+    } else {
+      if (!modelId || !sku || !tireSize) {
+        return NextResponse.json({ error: 'modelId, sku, and tireSize are required' }, { status: 400 });
+      }
     }
 
-    const regularNum = parseFloat(regularPrice) || 0;
-    const saleNum = parseFloat(salePrice) || 0;
-    const mapNum = parseFloat(mapPrice) || 0;
+    if (publishStatus !== 'DRAFT') {
+      const regularNum = parseFloat(regularPrice) || 0;
+      const saleNum = parseFloat(salePrice) || 0;
+      const mapNum = parseFloat(mapPrice) || 0;
 
-    if (regularNum > 0 && regularNum <= saleNum) {
-      return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
-    }
-    if (mapNum > 0 && saleNum < mapNum) {
-      return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
+      if (regularNum > 0 && regularNum <= saleNum) {
+        return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
+      }
+      if (mapNum > 0 && saleNum < mapNum) {
+        return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
+      }
     }
 
     const newTire = await prisma.tire.create({
       data: {
         modelId,
-        sku,
+        sku: sku || null,
         alternatePartNumber,
         upcNo,
         stock: parseInt(stock) || 0,
@@ -160,7 +174,7 @@ export async function POST(request: NextRequest) {
         stabilityScore: parseInt(stabilityScore) || 0,
         feedbackScore: parseInt(feedbackScore) || 0,
         
-        tireSize,
+        tireSize: tireSize || null,
         tireWidth,
         aspectRatio,
         rimDiameter,
@@ -174,11 +188,12 @@ export async function POST(request: NextRequest) {
         seoTitle,
         metaDescription,
         status: status || 'ACTIVE',
-        vehicleType,
+        vehicleType: vehicleType || null,
         keywords,
         features: Array.isArray(features) ? features : [],
-        sidewallCategory,
+        sidewallCategory: sidewallCategory || null,
         sidewallDetail,
+        publishStatus: publishStatus || 'PUBLISHED',
         
         sources: {
           connect: sourceIds ? sourceIds.map((id: string) => ({ id })) : [],
