@@ -90,16 +90,39 @@ export async function PUT(
       return NextResponse.json({ error: 'Tire not found' }, { status: 404 });
     }
 
-    if (publishStatus !== 'DRAFT') {
+    if (publishStatus === 'DRAFT') {
+      if (!modelId) {
+        return NextResponse.json({ error: 'Model must be selected' }, { status: 400 });
+      }
+    } else {
+      // Required Fields Validation
+      if (!modelId) return NextResponse.json({ error: 'Model must be selected' }, { status: 400 });
+      if (!tireSize) return NextResponse.json({ error: 'Tire Size is required' }, { status: 400 });
+      if (!vehicleType) return NextResponse.json({ error: 'Vehicle Type is required' }, { status: 400 });
+      if (!sidewallCategory) return NextResponse.json({ error: 'Sidewall Category is required' }, { status: 400 });
+      if (!sku) return NextResponse.json({ error: 'SKU is required' }, { status: 400 });
+      
+      const costNum = parseFloat(cost) || 0;
       const regularNum = parseFloat(regularPrice) || 0;
       const saleNum = parseFloat(salePrice) || 0;
       const mapNum = parseFloat(mapPrice) || 0;
+      const stockNum = parseInt(stock) || 0;
 
-      if (regularNum > 0 && regularNum <= saleNum) {
-        return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
+      if (stockNum <= 0) return NextResponse.json({ error: 'Stock must be greater than 0' }, { status: 400 });
+      if (costNum <= 0) return NextResponse.json({ error: 'Cost Price is required' }, { status: 400 });
+      if (saleNum <= 0) return NextResponse.json({ error: 'Sale Price is required' }, { status: 400 });
+      if (regularNum <= 0) return NextResponse.json({ error: 'Regular Price is required' }, { status: 400 });
+      if (mapNum <= 0) return NextResponse.json({ error: 'MAP Price is required' }, { status: 400 });
+
+      // Price Logic Validations
+      if (saleNum <= costNum) {
+        return NextResponse.json({ error: 'Sale price must be greater than cost' }, { status: 400 });
       }
-      if (mapNum > 0 && saleNum < mapNum) {
-        return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
+      if (regularNum <= saleNum) {
+        return NextResponse.json({ error: 'Regular price must be greater than sale price' }, { status: 400 });
+      }
+      if (saleNum < mapNum) {
+        return NextResponse.json({ error: 'Sale price must be greater than or equal to MAP price' }, { status: 400 });
       }
     }
 

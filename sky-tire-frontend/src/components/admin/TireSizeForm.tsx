@@ -266,25 +266,38 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
 
   const handleSubmit = async (e: React.FormEvent, statusOverride?: 'PUBLISHED' | 'DRAFT') => {
     e.preventDefault();
-    if (!formData.modelId) return toast.error('Please select a tire model');
+    if (!formData.modelId) return toast.error('Model must be selected');
 
     const finalStatus = statusOverride || formData.publishStatus || 'PUBLISHED';
 
     if (finalStatus !== 'DRAFT') {
-      if (!formData.tireSize) return toast.error('Please enter tire size');
-      if (!formData.sku) return toast.error('Please enter SKU');
-    }
-
-    if (finalStatus !== 'DRAFT') {
-      const regularNum = parseFloat(formData.regularPrice) || 0;
+      // Required Field Validations
+      if (!formData.tireSize) return toast.error('Tire Size is required');
+      if (!formData.vehicleType) return toast.error('Vehicle Type is required');
+      if (!formData.sidewallCategory) return toast.error('Sidewall Category is required');
+      if (!formData.sku) return toast.error('SKU is required');
+      
+      const stockNum = parseInt(formData.stock) || 0;
+      const costNum = parseFloat(formData.cost) || 0;
       const saleNum = parseFloat(formData.salePrice) || 0;
+      const regularNum = parseFloat(formData.regularPrice) || 0;
       const mapNum = parseFloat(formData.mapPrice) || 0;
 
-      if (regularNum > 0 && regularNum <= saleNum) {
-        return toast.error('Regular Price must be greater than Sale Price');
+      if (stockNum <= 0) return toast.error('Stock must be greater than 0');
+      if (costNum <= 0) return toast.error('Cost Price is required');
+      if (saleNum <= 0) return toast.error('Sale Price is required');
+      if (regularNum <= 0) return toast.error('Regular Price is required');
+      if (mapNum <= 0) return toast.error('MAP Price is required');
+
+      // Price Logic Validations
+      if (saleNum <= costNum) {
+        return toast.error('Sale price must be greater than cost');
       }
-      if (mapNum > 0 && saleNum < mapNum) {
-        return toast.error('Sale Price must be greater than or equal to MAP Price');
+      if (regularNum <= saleNum) {
+        return toast.error('Regular price must be greater than sale price');
+      }
+      if (saleNum < mapNum) {
+        return toast.error('Sale price must be greater than or equal to MAP price');
       }
     }
 
