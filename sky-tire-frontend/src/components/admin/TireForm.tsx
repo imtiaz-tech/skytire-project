@@ -327,7 +327,7 @@ export default function TireForm({ editTire }: TireFormProps) {
             </div>
 
             <div className="relative w-full">
-              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[14px] font-medium text-gray-400 z-10">Live Sale Price ($)</label>
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[14px] font-medium text-gray-400 z-10">Sale Price ($)</label>
               <input type="number" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 font-bold text-green-600" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
               {pricing.recommendedSalePrice && Number(formData.salePrice) < parseFloat(pricing.recommendedSalePrice) && (
                 <p className="mt-1 text-[13px] font-medium text-orange-500 italic">

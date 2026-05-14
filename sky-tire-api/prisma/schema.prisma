@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [vector]
 }
 
@@ -74,7 +75,7 @@ model Brand {
 
 model Tire {
   id                  String           @id @default(cuid())
-  tireSizeId          String
+  modelId             String
   sku                 String           @unique
   alternatePartNumber String?
   upcNo               String?
@@ -92,14 +93,36 @@ model Tire {
   stabilityScore      Int?             @default(0)
   feedbackScore       Int?             @default(0)
   
-  tireSize            TireSize         @relation(fields: [tireSizeId], references: [id], onDelete: Cascade)
+  // Fields moved from TireSize
+  tireSize            String
+  tireWidth           String?
+  aspectRatio         String?
+  rimDiameter         String?
+  loadIndex           String?
+  speedRating         String?
+  loadRange           String?
+  inflationPressure   String?
+  tireWeight          String?
+  shippingDimensions  String?
+  utqg                String?
+  seoTitle            String?
+  metaDescription     String?
+  status              TireStatus @default(ACTIVE)
+  vehicleType         VehicleType?
+  keywords            String?
+  features            String[]
+  sidewallCategory    SidewallCategory?
+  sidewallDetail      String?
+
+  model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   sources             InventorySource[]
   
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
-  @@index([tireSizeId])
+  @@index([modelId])
   @@index([sku])
+  @@index([tireSize])
 }
 
 model InventorySource {
@@ -168,45 +191,6 @@ model Blog {
   @@index([authorId])
 }
 
-enum Role {
-  USER
-  ADMIN
-  DEFAULT_USER
-}
-
-enum SidewallCategory {
-  BLACK_WALL
-  WHITE_WALL
-}
-
-enum VehicleType {
-  PASSENGER
-  LIGHT_TRUCK
-  SUV
-  TRUCK
-  COMMERCIAL
-  PERFORMANCE
-  OFF_ROAD
-}
-
-enum TireStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum BrandCategory {
-  tire
-  wheel
-  wire_wheel
-  accessory
-  bolt_on_wheels
-}
-
-enum BlogStatus {
-  DRAFT
-  PUBLISHED
-}
-
 model AIPrompt {
   id            String   @id @default(cuid())
   aiKey         String   @unique
@@ -233,7 +217,7 @@ model TireModel {
   treadLife   String?
 
   brand       Brand      @relation(fields: [brandId], references: [id])
-  tireSizes   TireSize[]
+  tires       Tire[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -242,35 +226,41 @@ model TireModel {
   @@index([modelName])
 }
 
-model TireSize {
-  id                  String   @id @default(cuid())
-  modelId             String
-  tireSize            String
-  tires               Tire[]
-  tireWidth           String?
-  aspectRatio         String?
-  rimDiameter         String?
-  loadIndex           String?
-  speedRating         String?
-  loadRange           String?
-  inflationPressure   String?
-  tireWeight          String?
-  shippingDimensions  String?
-  utqg                String?
-  seoTitle            String?
-  metaDescription     String?
-  status              TireStatus @default(ACTIVE)
-  vehicleType         VehicleType?
-  keywords            String?
-  sidewallCategory    SidewallCategory?
-  sidewallDetail      String?
+enum SidewallCategory {
+  BLACK_WALL
+  WHITE_WALL
+}
 
-  model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+enum VehicleType {
+  PASSENGER
+  LIGHT_TRUCK
+  SUV
+  TRUCK
+  COMMERCIAL
+  PERFORMANCE
+  OFF_ROAD
+}
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+enum TireStatus {
+  ACTIVE
+  INACTIVE
+}
 
-  @@unique([modelId, tireWidth, aspectRatio, rimDiameter])
-  @@index([modelId])
-  @@index([tireSize])
+enum Role {
+  USER
+  ADMIN
+  DEFAULT_USER
+}
+
+enum BrandCategory {
+  tire
+  wheel
+  wire_wheel
+  accessory
+  bolt_on_wheels
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
 }

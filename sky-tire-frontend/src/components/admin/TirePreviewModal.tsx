@@ -59,7 +59,7 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
           <h2 className="text-[22px] font-bold text-[#1e2a4a]">Tire Details Preview</h2>
           <div className="flex items-center gap-3">
             <Link
-              href={`/admin/tire-sizes/edit-combined/${tire.id}`}
+              href={`/admin/tires/edit/${tire.id}`}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
             >
               <Pencil className="h-4 w-4" />
@@ -83,17 +83,17 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    {tire.tireSize?.model?.brand?.brandName || 'Unknown Brand'}
+                    {tire.model?.brand?.brandName || 'Unknown Brand'}
                   </span>
                   <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    {tire.tireSize?.model?.modelName || 'Unknown Model'}
+                    {tire.model?.modelName || 'Unknown Model'}
                   </span>
                   <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[13px] font-bold uppercase tracking-wider rounded-lg">
                     SKU: {tire.sku}
                   </span>
                 </div>
                 <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
-                  {tire.tireSize?.tireSize || 'Tire Size'}
+                  {tire.tireSize || 'Tire Size'}
                 </h1>
               </div>
               <div className="bg-green-50 px-8 py-6 rounded-[32px] border border-green-100 text-center min-w-[200px]">
@@ -104,6 +104,26 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
                     Markup: {pricing.marginPercentage}%
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Technical Specifications Section */}
+            <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+              <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-purple-500" />
+                <h3 className="text-[18px] font-bold text-[#1e2a4a]">Technical Specifications</h3>
+              </div>
+              <div className="px-8 py-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  <InfoRow label="Width" value={tire.tireWidth} />
+                  <InfoRow label="Aspect Ratio" value={tire.aspectRatio} />
+                  <InfoRow label="Rim Diameter" value={tire.rimDiameter} />
+                  <InfoRow label="Load Index" value={tire.loadIndex} />
+                  <InfoRow label="Speed Rating" value={tire.speedRating} />
+                  <InfoRow label="Load Range" value={tire.loadRange} />
+                  <InfoRow label="Vehicle Type" value={tire.vehicleType} />
+                  <InfoRow label="UTQG" value={tire.utqg} />
+                </div>
               </div>
             </div>
 
@@ -146,6 +166,41 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
                     )) : <span className="text-gray-300 italic">No sources assigned</span>}
                   </div>
                 } />
+              </div>
+            </div>
+
+            {/* Features & Marketing Section */}
+            <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+              <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-blue-500" />
+                <h3 className="text-[18px] font-bold text-[#1e2a4a]">Marketing & Content</h3>
+              </div>
+              <div className="px-8 py-2">
+                <InfoRow label="Features" value={
+                  <div className="flex flex-wrap gap-2">
+                    {tire.features && tire.features.length > 0 ? tire.features.map((feat, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-purple-50 border border-purple-100 text-purple-600 text-[13px] font-bold rounded-full">
+                        {feat}
+                      </span>
+                    )) : <span className="text-gray-300 italic">No features listed</span>}
+                  </div>
+                } />
+                <InfoRow label="Keywords" value={
+                  <div className="flex flex-wrap gap-2">
+                    {tire.keywords ? tire.keywords.split(';').filter(Boolean).map((kw, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-50 border border-blue-100 text-blue-600 text-[13px] font-bold rounded-full">
+                        {kw}
+                      </span>
+                    )) : <span className="text-gray-300 italic">No keywords</span>}
+                  </div>
+                } />
+                <InfoRow label="SEO Title" value={tire.seoTitle} />
+                <div className="flex flex-col py-4">
+                  <span className="text-[14px] font-bold text-gray-400 uppercase tracking-wider mb-2">Meta Description</span>
+                  <p className="text-[15px] text-[#1e2a4a] leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    {tire.metaDescription || <span className="text-gray-300 italic">No description provided</span>}
+                  </p>
+                </div>
               </div>
             </div>
 

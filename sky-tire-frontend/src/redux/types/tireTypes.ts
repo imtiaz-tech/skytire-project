@@ -1,5 +1,3 @@
-import { TireSize } from "./tireSizeTypes";
-
 export interface InventorySource {
   id: string;
   source: string;
@@ -9,7 +7,7 @@ export interface InventorySource {
 
 export interface Tire {
   id: string;
-  tireSizeId: string;
+  modelId: string;
   sku: string;
   alternatePartNumber?: string;
   upcNo?: string;
@@ -27,7 +25,28 @@ export interface Tire {
   stabilityScore: number;
   feedbackScore: number;
   
-  tireSize?: TireSize;
+  // Fields moved from TireSize
+  tireSize: string;
+  tireWidth?: string;
+  aspectRatio?: string;
+  rimDiameter?: string;
+  loadIndex?: string;
+  speedRating?: string;
+  loadRange?: string;
+  inflationPressure?: string;
+  tireWeight?: string;
+  shippingDimensions?: string;
+  utqg?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
+  vehicleType?: 'PASSENGER' | 'LIGHT_TRUCK' | 'SUV' | 'TRUCK' | 'COMMERCIAL' | 'PERFORMANCE' | 'OFF_ROAD';
+  keywords?: string;
+  features?: string[];
+  sidewallCategory?: 'BLACK_WALL' | 'WHITE_WALL';
+  sidewallDetail?: string;
+
+  model?: any; // Will be properly typed if needed
   sources?: InventorySource[];
   
   createdAt: string;

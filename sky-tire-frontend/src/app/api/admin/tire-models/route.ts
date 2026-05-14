@@ -8,6 +8,31 @@ const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
+  const isDropdown = searchParams.get('dropdown') === 'true';
+
+  if (isDropdown) {
+    try {
+      const models = await prisma.tireModel.findMany({
+        select: {
+          id: true,
+          modelName: true,
+          brand: {
+            select: {
+              brandName: true,
+            },
+          },
+        },
+        orderBy: {
+          modelName: 'asc',
+        },
+      });
+      return NextResponse.json(models);
+    } catch (error) {
+      console.error('Error fetching tire models dropdown:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }
+
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
   const search = searchParams.get('search') || '';

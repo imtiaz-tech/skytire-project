@@ -30,7 +30,6 @@ const navItems = [
   { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Tires', href: '/admin/tires', icon: CircleDot },
   { label: 'Tires Models', href: '/admin/tire-models', icon: Tags },
-  { label: 'Tire Sizes', href: '/admin/tire-sizes', icon: CircleDot },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },

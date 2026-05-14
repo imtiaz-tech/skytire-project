@@ -10,14 +10,25 @@ export async function GET(request: NextRequest) {
   const skip = (page - 1) * limit;
 
   try {
+    let searchConditions: any[] = [
+      { sku: { contains: search, mode: 'insensitive' as const } },
+      { tireSize: { contains: search, mode: 'insensitive' as const } },
+      { alternatePartNumber: { contains: search, mode: 'insensitive' as const } },
+      { upcNo: { contains: search, mode: 'insensitive' as const } },
+      { model: { modelName: { contains: search, mode: 'insensitive' as const } } },
+      { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } },
+    ];
+
+    // If search looks like a tire size without a slash (e.g., 23550R18), 
+    // try searching with a slash inserted (235/50R18)
+    if (search && !search.includes('/') && /^\d{5}/.test(search)) {
+      const sizeWithSlash = search.replace(/^(\d{3})(\d{2})/, '$1/$2');
+      searchConditions.push({ tireSize: { contains: sizeWithSlash, mode: 'insensitive' as const } });
+    }
+
     const where = search
       ? {
-          OR: [
-            { sku: { contains: search, mode: 'insensitive' as const } },
-            { tireSize: { tireSize: { contains: search, mode: 'insensitive' as const } } },
-            { tireSize: { model: { modelName: { contains: search, mode: 'insensitive' as const } } } },
-            { tireSize: { model: { brand: { brandName: { contains: search, mode: 'insensitive' as const } } } } },
-          ],
+          OR: searchConditions,
         }
       : {};
 
@@ -27,13 +38,9 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         include: {
-          tireSize: {
+          model: {
             include: {
-              model: {
-                include: {
-                  brand: true,
-                },
-              },
+              brand: true,
             },
           },
           sources: true,
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const {
-      tireSizeId,
+      modelId,
       sku,
       alternatePartNumber,
       upcNo,
@@ -81,44 +88,93 @@ export async function POST(request: NextRequest) {
       tractionScore,
       stabilityScore,
       feedbackScore,
-      sourceIds, // Array of InventorySource IDs
+      sourceIds,
+      
+      // Fields from TireSize
+      tireSize,
+      tireWidth,
+      aspectRatio,
+      rimDiameter,
+      loadIndex,
+      speedRating,
+      loadRange,
+      inflationPressure,
+      tireWeight,
+      shippingDimensions,
+      utqg,
+      seoTitle,
+      metaDescription,
+      status,
+      vehicleType,
+      keywords,
+      features,
+      sidewallCategory,
+      sidewallDetail,
     } = body;
 
-    if (!tireSizeId || !sku) {
-      return NextResponse.json({ error: 'tireSizeId and sku are required' }, { status: 400 });
+    if (!modelId || !sku || !tireSize) {
+      return NextResponse.json({ error: 'modelId, sku, and tireSize are required' }, { status: 400 });
+    }
+
+    const regularNum = parseFloat(regularPrice) || 0;
+    const saleNum = parseFloat(salePrice) || 0;
+    const mapNum = parseFloat(mapPrice) || 0;
+
+    if (regularNum > 0 && regularNum <= saleNum) {
+      return NextResponse.json({ error: 'Regular Price must be greater than Sale Price' }, { status: 400 });
+    }
+    if (mapNum > 0 && saleNum < mapNum) {
+      return NextResponse.json({ error: 'Sale Price must be greater than or equal to MAP Price' }, { status: 400 });
     }
 
     const newTire = await prisma.tire.create({
       data: {
-        tireSizeId,
+        modelId,
         sku,
         alternatePartNumber,
         upcNo,
         stock: parseInt(stock) || 0,
-        cost: parseFloat(cost) || 0,
-        salePrice: parseFloat(salePrice) || 0,
-        regularPrice: parseFloat(regularPrice) || 0,
-        mapPrice: parseFloat(mapPrice) || 0,
-        shippingCost: parseFloat(shippingCost) || 0,
-        handlingFee: parseFloat(handlingFee) || 0,
-        freightCharges: parseFloat(freightCharges) || 0,
+        cost: Math.round(parseFloat(cost) * 100) / 100 || 0,
+        salePrice: Math.round(parseFloat(salePrice) * 100) / 100 || 0,
+        regularPrice: Math.round(parseFloat(regularPrice) * 100) / 100 || 0,
+        mapPrice: Math.round(parseFloat(mapPrice) * 100) / 100 || 0,
+        shippingCost: Math.round(parseFloat(shippingCost) * 100) / 100 || 0,
+        handlingFee: Math.round(parseFloat(handlingFee) * 100) / 100 || 0,
+        freightCharges: Math.round(parseFloat(freightCharges) * 100) / 100 || 0,
         rebateAvailable: !!rebateAvailable,
         mileageScore: parseInt(mileageScore) || 0,
         tractionScore: parseInt(tractionScore) || 0,
         stabilityScore: parseInt(stabilityScore) || 0,
         feedbackScore: parseInt(feedbackScore) || 0,
+        
+        tireSize,
+        tireWidth,
+        aspectRatio,
+        rimDiameter,
+        loadIndex,
+        speedRating,
+        loadRange,
+        inflationPressure,
+        tireWeight,
+        shippingDimensions,
+        utqg,
+        seoTitle,
+        metaDescription,
+        status: status || 'ACTIVE',
+        vehicleType,
+        keywords,
+        features: Array.isArray(features) ? features : [],
+        sidewallCategory,
+        sidewallDetail,
+        
         sources: {
           connect: sourceIds ? sourceIds.map((id: string) => ({ id })) : [],
         },
       },
       include: {
-        tireSize: {
+        model: {
           include: {
-            model: {
-              include: {
-                brand: true,
-              },
-            },
+            brand: true,
           },
         },
         sources: true,
