@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Plus, Edit2, Trash2, CircleDot } from 'lucide-react';
+import { Search, Loader2, Plus, Edit2, Trash2, CircleDot, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchTires, deleteTire } from '@/redux/slices/tiresSlice';
 import Pagination from '@/components/ui/Pagination';
@@ -19,6 +19,8 @@ export default function TiresPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'BLACK_WALL' | 'WHITE_WALL' | 'DRAFT'>('BLACK_WALL');
+  const [sortBy, setSortBy] = useState('sku');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const limit = 10;
 
   // Modal State - Delete
@@ -30,7 +32,7 @@ export default function TiresPage() {
   const [previewTire, setPreviewTire] = useState<Tire | null>(null);
 
   useEffect(() => {
-    const params: any = { page, limit, search };
+    const params: any = { page, limit, search, sortBy, sortOrder };
     if (activeTab === 'DRAFT') {
       params.publishStatus = 'DRAFT';
     } else {
@@ -38,11 +40,21 @@ export default function TiresPage() {
       params.sidewallCategory = activeTab;
     }
     dispatch(fetchTires(params));
-  }, [dispatch, page, search, activeTab]);
+  }, [dispatch, page, search, activeTab, sortBy, sortOrder]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
     setPage(1);
   };
 
@@ -98,7 +110,7 @@ export default function TiresPage() {
               <input
                 type="text"
                 placeholder={activeTab === 'DRAFT' ? "Search Drafts..." : "Search Tires..."}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-[14px] focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
+                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-[16px] focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -152,16 +164,106 @@ export default function TiresPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">SKU</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Tire Size</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Alt Part #</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">UPC No</th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('sku')}
+                >
+                  <div className="flex items-center gap-2">
+                    SKU
+                    {sortBy === 'sku' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('tireSize')}
+                >
+                  <div className="flex items-center gap-2">
+                    Tire Size
+                    {sortBy === 'tireSize' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('alternatePartNumber')}
+                >
+                  <div className="flex items-center gap-2">
+                    Alt Part #
+                    {sortBy === 'alternatePartNumber' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('upcNo')}
+                >
+                  <div className="flex items-center gap-2">
+                    UPC No
+                    {sortBy === 'upcNo' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand/Model</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Cost</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Sale</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Regular</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">MAP</th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Stock</th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('cost')}
+                >
+                  <div className="flex items-center gap-2">
+                    Cost
+                    {sortBy === 'cost' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('salePrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    Sale
+                    {sortBy === 'salePrice' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('regularPrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    Regular
+                    {sortBy === 'regularPrice' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('mapPrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    MAP
+                    {sortBy === 'mapPrice' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('stock')}
+                >
+                  <div className="flex items-center gap-2">
+                    Stock
+                    {sortBy === 'stock' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                  </div>
+                </th>
                 <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
               </tr>
             </thead>

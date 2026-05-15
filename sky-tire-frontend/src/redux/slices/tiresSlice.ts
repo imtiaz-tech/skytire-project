@@ -13,10 +13,26 @@ const initialState: TiresState = {
 
 export const fetchTires = createAsyncThunk(
   'tires/fetchTires',
-  async (params: { page?: number; limit?: number; search?: string; sidewallCategory?: string; publishStatus?: string }) => {
-    const { page = 1, limit = 10, search = '', sidewallCategory = '', publishStatus = '' } = params;
+  async (params: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    sidewallCategory?: string; 
+    publishStatus?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }) => {
+    const { 
+      page = 1, 
+      limit = 10, 
+      search = '', 
+      sidewallCategory = '', 
+      publishStatus = '',
+      sortBy = 'sku',
+      sortOrder = 'asc'
+    } = params;
     const response = await axios.get(
-      `/api/admin/tires?page=${page}&limit=${limit}&search=${search}&sidewallCategory=${sidewallCategory}&publishStatus=${publishStatus}`
+      `/api/admin/tires?page=${page}&limit=${limit}&search=${search}&sidewallCategory=${sidewallCategory}&publishStatus=${publishStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}`
     );
     return response.data;
   }

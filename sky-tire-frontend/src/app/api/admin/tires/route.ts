@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
 
   const sidewallCategory = searchParams.get('sidewallCategory');
   const publishStatus = searchParams.get('publishStatus');
+  const sortBy = searchParams.get('sortBy') || 'sku';
+  const sortOrder = (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
 
   const skip = (page - 1) * limit;
 
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
           sources: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
       }),
       prisma.tire.count({ where }),
