@@ -101,6 +101,9 @@ export async function PUT(
       if (!vehicleType) return NextResponse.json({ error: 'Vehicle Type is required' }, { status: 400 });
       if (!sidewallCategory) return NextResponse.json({ error: 'Sidewall Category is required' }, { status: 400 });
       if (!sku) return NextResponse.json({ error: 'SKU is required' }, { status: 400 });
+      if (!sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
+        return NextResponse.json({ error: 'Inventory Source is required' }, { status: 400 });
+      }
       
       const costNum = parseFloat(cost) || 0;
       const regularNum = parseFloat(regularPrice) || 0;

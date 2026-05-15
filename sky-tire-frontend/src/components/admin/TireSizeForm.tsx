@@ -276,6 +276,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
       if (!formData.vehicleType) return toast.error('Vehicle Type is required');
       if (!formData.sidewallCategory) return toast.error('Sidewall Category is required');
       if (!formData.sku) return toast.error('SKU is required');
+      if (!formData.sourceIds || formData.sourceIds.length === 0) return toast.error('Inventory Source is required');
       
       const stockNum = parseInt(formData.stock) || 0;
       const costNum = parseFloat(formData.cost) || 0;
