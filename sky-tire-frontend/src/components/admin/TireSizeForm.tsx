@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createTire, updateTire } from '@/redux/slices/tiresSlice';
-import { fetchInventorySources } from '@/redux/slices/inventorySourcesSlice';
+import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import { Tire } from '@/redux/types/tireTypes';
 import { ArrowLeft, Loader2, X, Search, ChevronDown, Check, PlusCircle } from 'lucide-react';
 import axios from 'axios';
@@ -122,7 +122,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
       try {
         const response = await axios.get('/api/admin/tire-models?dropdown=true');
         setModels(response.data);
-        dispatch(fetchInventorySources());
+        dispatch(fetchAllInventorySources());
       } catch (error) {
         console.error('Error fetching models:', error);
       }

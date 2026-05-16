@@ -21,6 +21,7 @@ export default function TireForm({ editTire }: TireFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { sources } = useAppSelector((state) => state.inventorySources);
+  console.log("🚀 ~ TireForm ~ sources:", sources)
 
   const [loading, setLoading] = useState(false);
   const [tireSizes, setTireSizes] = useState<TireSize[]>([]);

@@ -96,8 +96,8 @@ export default function TireFieldsSection({
             <div className="flex flex-wrap gap-2 text-[16px]">
               {formData.sourceIds.length > 0 ? (
                 formData.sourceIds.map(id => {
-                  const source = sources.find(s => s.id === id);
-                  return (
+                   const source = sources?.find(s => s.id === id);
+                   return (
                     <span key={id} className="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[13px] font-bold flex items-center gap-1">
                       {source?.source}
                       <X className="h-3 w-3 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); toggleSource(id); }} />
@@ -113,7 +113,7 @@ export default function TireFieldsSection({
 
           {isSourceDropdownOpen && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-              {sources.length > 0 ? (
+              {sources && sources.length > 0 ? (
                 sources.map((source) => (
                   <div key={source.id} className={`px-4 py-3 text-[14px] cursor-pointer hover:bg-blue-50 flex items-center justify-between transition-colors ${formData.sourceIds.includes(source.id) ? 'bg-blue-50 text-blue-600 font-bold' : 'text-gray-700 font-medium'}`} onClick={() => toggleSource(source.id)}>
                     <span>{source.source}</span>

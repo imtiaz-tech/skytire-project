@@ -2,8 +2,9 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { InventorySource, InventorySourcesState } from '../types/inventorySourceTypes';
 
-const initialState: InventorySourcesState = {
+const initialState: InventorySourcesState & { sources: InventorySource[] } = {
   inventorySources: [],
+  sources: [],
   loading: false,
   error: null,
   total: 0,
@@ -13,12 +14,27 @@ const initialState: InventorySourcesState = {
 
 export const fetchInventorySources = createAsyncThunk(
   'inventorySources/fetchInventorySources',
-  async ({ page, limit, search }: { page: number; limit: number; search: string }, { rejectWithValue }) => {
+  async (params: { page: number; limit: number; search: string } | undefined, { rejectWithValue }) => {
     try {
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      const search = params?.search || '';
       const response = await axios.get(`/api/admin/inventory-sources?page=${page}&limit=${limit}&search=${search}`);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch inventory sources');
+    }
+  }
+);
+
+export const fetchAllInventorySources = createAsyncThunk(
+  'inventorySources/fetchAllInventorySources',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('/api/admin/inventory-sources?dropdown=true');
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch all inventory sources');
     }
   }
 );
@@ -92,7 +108,19 @@ const inventorySourcesSlice = createSlice({
       })
       .addCase(deleteInventorySource.fulfilled, (state, action: PayloadAction<string>) => {
         state.inventorySources = state.inventorySources.filter((s) => s.id !== action.payload);
+        state.sources = state.sources.filter((s) => s.id !== action.payload);
         state.total -= 1;
+      })
+      .addCase(fetchAllInventorySources.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllInventorySources.fulfilled, (state, action: PayloadAction<InventorySource[]>) => {
+        state.loading = false;
+        state.sources = action.payload;
+      })
+      .addCase(fetchAllInventorySources.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
