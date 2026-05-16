@@ -6,8 +6,10 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchInventorySources, deleteInventorySource } from '@/redux/slices/inventorySourcesSlice';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import InventorySourceTiresModal from '@/components/admin/InventorySourceTiresModal';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { InventorySource } from '@/redux/types/inventorySourceTypes';
 
 export default function InventorySourcesPage() {
   const dispatch = useAppDispatch();
@@ -21,6 +23,10 @@ export default function InventorySourcesPage() {
   // Modal State - Delete
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState<string | null>(null);
+
+  // Modal State - Linked Tires
+  const [isTiresModalOpen, setIsTiresModalOpen] = useState(false);
+  const [selectedSourceForTires, setSelectedSourceForTires] = useState<InventorySource | null>(null);
 
   useEffect(() => {
     dispatch(fetchInventorySources({ page, limit, search }));
@@ -132,7 +138,14 @@ export default function InventorySourcesPage() {
                 inventorySources.map((source) => (
                   <tr key={source.id} className="hover:bg-gray-50/50 transition-all group">
                     <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-[#1e2a4a]">
+                      <div 
+                        className="text-[15px] font-bold text-[#1e2a4a] cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => {
+                          setSelectedSourceForTires(source);
+                          setIsTiresModalOpen(true);
+                        }}
+                        title="Click to view linked tires"
+                      >
                         {source.source}
                       </div>
                     </td>
@@ -183,6 +196,15 @@ export default function InventorySourcesPage() {
         message="Are you sure you want to delete this inventory source? This action cannot be undone."
         onConfirm={confirmDelete}
         onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      <InventorySourceTiresModal
+        open={isTiresModalOpen}
+        onClose={() => {
+          setIsTiresModalOpen(false);
+          setSelectedSourceForTires(null);
+        }}
+        source={selectedSourceForTires}
       />
     </div>
   );
