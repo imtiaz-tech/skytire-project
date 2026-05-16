@@ -18,6 +18,7 @@ import {
   FileText,
   Tags,
   Cpu,
+  Database,
 } from 'lucide-react';
 
 const navItems = [
@@ -30,6 +31,7 @@ const navItems = [
   { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Tires', href: '/admin/tires', icon: CircleDot },
   { label: 'Tires Models', href: '/admin/tire-models', icon: Tags },
+  { label: 'Inventory Sources', href: '/admin/inventory-sources', icon: Database },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
