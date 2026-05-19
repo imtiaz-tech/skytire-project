@@ -69,6 +69,7 @@ model Brand {
   coverPhoto  String?
   description String?
   models      TireModel[]
+  wheels      Wheel[]
 
   @@index([brandName])
 }
@@ -130,6 +131,7 @@ model InventorySource {
   id        String   @id @default(cuid())
   source    String   @unique
   tires     Tire[]
+  wheels    Wheel[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -269,4 +271,63 @@ enum BlogStatus {
 enum PublishStatus {
   PUBLISHED
   DRAFT
+}
+
+model Wheel {
+  id                   String            @id @default(cuid())
+  sku                  String            @unique
+  productName          String
+  brandId              String?
+  brandVariant         String            @default("")
+  displayStyleNo       String?
+  finish               String?
+  slug                 String            @unique
+  oldSlugs             String[]          @default([])
+  wheelSize            String
+  
+  // Model details directly inside Wheel table
+  style                String?           // E.g., Luxury, Off-road, Sport, Mesh
+  
+  // New requested fields
+  alternatePartNumber  String?
+  upcNo                String?
+  lugCount             Int?
+
+  // Split measurement fields
+  boltPatternInches    String?
+  boltPatternMM        String?
+  loadRatingKg         String?
+  loadRatingLbs        String?
+
+  offset               String
+  backSpacing          Float?
+  centerBore           String?
+  shippingWeight       String
+  images               String[]          // Array of paths/URLs uploaded directly to the server
+  description          String?
+  invOrderType         String?
+  stock                Int               @default(0)
+  cost                 Float             @default(0)
+  salePrice            Float             @default(0)
+  regularPrice         Float             @default(0)
+  mapPrice             Float             @default(0)
+  shippingCost         Float             @default(0)
+  handlingFee          Float             @default(0)
+  isFeatured           Boolean           @default(false)
+  keywords             String?
+  metaDescription      String?
+  seoTitle             String?
+  isVisible            Boolean           @default(true)
+  category             String            @default("none")
+  status               String            @default("draft") // draft or published
+
+  // Relations setup
+  brand                Brand?            @relation(fields: [brandId], references: [id])
+  sources              InventorySource[] // Implicit Many-to-Many with your existing table
+
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([brandId])
+  @@index([sku])
 }

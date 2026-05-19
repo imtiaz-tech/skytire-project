@@ -3,9 +3,12 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || 'tire';
+
     const brands = await prisma.brand.findMany({
       where: {
-        category: 'tire',
+        category,
       },
       select: {
         id: true,

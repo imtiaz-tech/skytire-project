@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import tiresReducer from './slices/tiresSlice';
-import wheelsReducer from '../features/wheels/slice';
+import wheelsReducer from './slices/wheelsSlice';
 import wireWheelsReducer from '../features/wire-wheels/slice';
 import accessoriesReducer from '../features/accessories/slice';
 import dashboardReducer from '../features/dashboard/slice';
