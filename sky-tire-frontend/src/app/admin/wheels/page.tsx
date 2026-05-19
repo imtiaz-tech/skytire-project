@@ -281,7 +281,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
                         >
                           {wheel.sku}
                         </button>
@@ -291,7 +291,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
                         >
                           {wheel.wheelSize || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>
@@ -301,7 +301,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-medium text-gray-500 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2 "
                         >
                           {wheel.upcNo || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>
@@ -311,7 +311,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-medium text-gray-500 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
                         >
                           {wheel.alternatePartNumber || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>
@@ -321,7 +321,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
                         >
                           {wheel.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>

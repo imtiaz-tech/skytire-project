@@ -60,6 +60,10 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+  // Keywords tag state
+  const [keywordArray, setKeywordArray] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
+
   const [formData, setFormData] = useState({
     sku: '',
     productName: '',
@@ -156,6 +160,10 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
           sourceIds: wheel.sources?.map((s: any) => s.id) || [],
         });
 
+        if (wheel.keywords) {
+          setKeywordArray(wheel.keywords.split(';').filter(Boolean));
+        }
+
         if (wheel.images && Array.isArray(wheel.images)) {
           setExistingImages(wheel.images);
         }
@@ -238,6 +246,21 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
     return `${baseUrl}/uploads/${cleanPath}`;
   };
 
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ';') {
+      e.preventDefault();
+      const val = keywordInput.trim().replace(/;$/, '');
+      if (val && !keywordArray.includes(val)) {
+        setKeywordArray([...keywordArray, val]);
+      }
+      setKeywordInput('');
+    }
+  };
+
+  const removeKeyword = (kw: string) => {
+    setKeywordArray(keywordArray.filter((k) => k !== kw));
+  };
+
   const handleSubmit = async (e: React.FormEvent, statusOverride?: 'published' | 'draft') => {
     e.preventDefault();
     const finalStatus = statusOverride || formData.status || 'published';
@@ -272,6 +295,8 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'sourceIds') {
           submitData.append(key, JSON.stringify(value));
+        } else if (key === 'keywords') {
+          submitData.append(key, keywordArray.join(';'));
         } else if (typeof value === 'boolean') {
           submitData.append(key, value.toString());
         } else {
@@ -586,9 +611,27 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
         {/* Section 8: SEO */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <div className="space-y-4">
-            <div className="relative w-full">
-              {formData.keywords && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
-              <textarea placeholder="Type keywords and press Enter or semi-colon (;)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y" value={formData.keywords} onChange={(e) => setFormData({ ...formData, keywords: e.target.value })} />
+            <div className="space-y-3">
+              <div className="relative w-full">
+                {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
+                <input
+                  type="text"
+                  placeholder="Press Enter or ; to add keywords"
+                  className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={handleKeywordKeyDown}
+                />
+              </div>
+              {keywordArray.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {keywordArray.map(kw => (
+                    <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
+                      {kw} <X className="h-3 w-3 cursor-pointer hover:text-blue-800" onClick={() => removeKeyword(kw)} />
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="relative w-full mt-4">
               {formData.seoTitle && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SEO Title</label>}
