@@ -6,9 +6,18 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchWheels, deleteWheel } from '@/redux/slices/wheelsSlice';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import WheelPreviewModal from '@/components/admin/WheelPreviewModal';
 import Link from 'next/link';
 import { Wheel } from '@/redux/types/wheelTypes';
 import toast from 'react-hot-toast';
+
+const getImageUrl = (path: string) => {
+  if (!path) return null;
+  if (path.startsWith('http') || path.startsWith('blob:')) return path;
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+  const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
+  return `${baseUrl}/uploads/${cleanPath}`;
+};
 
 export default function WheelsPage() {
   const dispatch = useAppDispatch();
@@ -25,6 +34,10 @@ export default function WheelsPage() {
   // Modal State - Delete
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [wheelToDelete, setWheelToDelete] = useState<string | null>(null);
+
+  // Modal State - Preview
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedWheel, setSelectedWheel] = useState<Wheel | null>(null);
 
   useEffect(() => {
     const params: any = { page, limit, search, sortBy, sortOrder };
@@ -53,6 +66,11 @@ export default function WheelsPage() {
     setIsDeleteModalOpen(true);
   };
 
+  const openPreview = (wheel: Wheel) => {
+    setSelectedWheel(wheel);
+    setIsPreviewOpen(true);
+  };
+
   const confirmDelete = async () => {
     if (wheelToDelete) {
       try {
@@ -65,6 +83,13 @@ export default function WheelsPage() {
         setWheelToDelete(null);
       }
     }
+  };
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortBy === col) {
+      return sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
+    }
+    return <ArrowUpDown className="h-3 w-3 text-gray-200" />;
   };
 
   return (
@@ -138,80 +163,79 @@ export default function WheelsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                {/* Name + Image */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('productName')}
+                >
+                  <div className="flex items-center gap-2">
+                    Name
+                    <SortIcon col="productName" />
+                  </div>
+                </th>
+                {/* SKU */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('sku')}
                 >
                   <div className="flex items-center gap-2">
                     SKU
-                    {sortBy === 'sku' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                    <SortIcon col="sku" />
                   </div>
                 </th>
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
-                  onClick={() => handleSort('productName')}
-                >
-                  <div className="flex items-center gap-2">
-                    Product Name
-                    {sortBy === 'productName' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
-                  </div>
-                </th>
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                {/* Size */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('wheelSize')}
                 >
                   <div className="flex items-center gap-2">
                     Size
-                    {sortBy === 'wheelSize' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                    <SortIcon col="wheelSize" />
                   </div>
                 </th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                {/* UPC No */}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">UPC No</th>
+                {/* Alternate Part No */}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Alt Part #</th>
+                {/* Brand */}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
+                {/* Cost */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('cost')}
                 >
                   <div className="flex items-center gap-2">
                     Cost
-                    {sortBy === 'cost' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                    <SortIcon col="cost" />
                   </div>
                 </th>
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                {/* Sale Price */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('salePrice')}
                 >
                   <div className="flex items-center gap-2">
                     Sale
-                    {sortBy === 'salePrice' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                    <SortIcon col="salePrice" />
                   </div>
                 </th>
-                <th 
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                {/* Stock */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('stock')}
                 >
                   <div className="flex items-center gap-2">
                     Stock
-                    {sortBy === 'stock' ? (
-                      sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : <ArrowUpDown className="h-3 w-3 text-gray-200" />}
+                    <SortIcon col="stock" />
                   </div>
                 </th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-8 py-20 text-center">
+                  <td colSpan={10} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Fetching wheels...</p>
@@ -220,7 +244,7 @@ export default function WheelsPage() {
                 </tr>
               ) : wheels.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-8 py-20 text-center">
+                  <td colSpan={10} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-6 w-6 text-gray-200" />
@@ -230,63 +254,122 @@ export default function WheelsPage() {
                   </td>
                 </tr>
               ) : (
-                wheels.map((wheel) => (
-                  <tr key={wheel.id} className="hover:bg-gray-50/50 transition-all group">
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-[#1e2a4a]">
-                        {wheel.sku}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-[#1e2a4a]">
-                        {wheel.productName}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-gray-600">
-                        {wheel.wheelSize || <span className="text-gray-300 italic">-</span>}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-gray-600">
-                        {wheel.brand?.brandName || <span className="text-gray-300 italic">-</span>}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-[#1e2a4a]">
-                        ${wheel.cost.toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-green-600">
-                        ${wheel.salePrice.toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="text-[15px] font-bold text-[#1e2a4a]">
-                        {wheel.stock}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-3">
-                        <Link
-                          href={`/admin/wheels/edit/${wheel.id}`}
-                          className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
-                          title="Edit"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Link>
+                wheels.map((wheel) => {
+                  const firstImage = wheel.images && wheel.images.length > 0 ? getImageUrl(wheel.images[0]) : null;
+                  return (
+                    <tr key={wheel.id} className="hover:bg-gray-50/50 transition-all group">
+                      {/* Name + Image (clickable) */}
+                      <td className="px-6 py-4">
                         <button
-                          onClick={() => openDeleteModal(wheel.id)}
-                          className="w-10 h-10 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all shadow-sm"
-                          title="Delete"
+                          onClick={() => openPreview(wheel)}
+                          className="flex items-center gap-3 text-left group/name hover:opacity-80 transition-opacity"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shrink-0 flex items-center justify-center">
+                            {firstImage ? (
+                              <img src={firstImage} alt={wheel.productName} className="w-full h-full object-cover" />
+                            ) : (
+                              <CircleDot className="h-5 w-5 text-gray-200" />
+                            )}
+                          </div>
+                          <span className="text-[14px] font-bold text-[#1e2a4a] group-hover/name:text-blue-600 transition-colors max-w-[220px] line-clamp-2 leading-tight">
+                            {wheel.productName}
+                          </span>
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      {/* SKU (clickable) */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                        >
+                          {wheel.sku}
+                        </button>
+                      </td>
+
+                      {/* Size (clickable) */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                        >
+                          {wheel.wheelSize || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
+                      {/* UPC No (clickable) */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-medium text-gray-500 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                        >
+                          {wheel.upcNo || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
+                      {/* Alternate Part No (clickable) */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-medium text-gray-500 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                        >
+                          {wheel.alternatePartNumber || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
+                      {/* Brand (clickable) */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2 hover:underline"
+                        >
+                          {wheel.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
+                      {/* Cost */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-[14px] font-bold text-[#1e2a4a]">
+                          ${wheel.cost.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* Sale Price */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-[14px] font-bold text-green-600">
+                          ${wheel.salePrice.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* Stock */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-[14px] font-bold ${wheel.stock <= 0 ? 'text-red-500' : 'text-[#1e2a4a]'}`}>
+                          {wheel.stock}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/admin/wheels/edit/${wheel.id}`}
+                            className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
+                            title="Edit"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Link>
+                          <button
+                            onClick={() => openDeleteModal(wheel.id)}
+                            className="w-9 h-9 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all shadow-sm"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -313,6 +396,12 @@ export default function WheelsPage() {
         message="Are you sure you want to delete this wheel? This action cannot be undone."
         onConfirm={confirmDelete}
         onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      <WheelPreviewModal
+        open={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        wheel={selectedWheel}
       />
     </div>
   );

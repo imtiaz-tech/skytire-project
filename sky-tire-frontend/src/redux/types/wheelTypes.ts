@@ -9,42 +9,37 @@ export interface Wheel {
   slug: string;
   oldSlugs: string[];
   wheelSize: string;
-  modelName: string | null;
   style: string | null;
   alternatePartNumber: string | null;
   upcNo: string | null;
   lugCount: number | null;
   boltPatternInches: string | null;
   boltPatternMM: string | null;
-  loadRatingInches: string | null;
-  loadRatingMM: string | null;
+  loadRatingKg: string | null;
+  loadRatingLbs: string | null;
   offset: string;
-  backSpacing: number | null;
-  centerBore: string | null;
-  shippingWeight: string;
+  backspacing: string | null;
+  hubBore: string | null;
+  constructionType: string | null;
+  weight: string | null;
   images: string[];
   description: string | null;
-  invOrderType: string | null;
+  features: string[];
   stock: number;
   cost: number;
   salePrice: number;
   regularPrice: number;
   mapPrice: number;
-  shippingCost: number;
-  handlingFee: number;
-  isFeatured: boolean;
   keywords: string | null;
   metaDescription: string | null;
   seoTitle: string | null;
-  isVisible: boolean;
-  category: string;
   status: string;
 
   brand?: {
     id: string;
     brandName: string;
   };
-  sources?: any[]; // Reusing InventorySource structure
+  sources?: any[];
 
   createdAt?: string;
   updatedAt?: string;
