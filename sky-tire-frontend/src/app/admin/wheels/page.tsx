@@ -352,7 +352,7 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/admin/wheels/edit/${wheel.id}`}
+                            href={``}
                             className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
                             title="Edit"
                           >
