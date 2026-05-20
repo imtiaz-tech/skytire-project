@@ -219,6 +219,26 @@ export default function WheelsPage() {
                     <SortIcon col="salePrice" />
                   </div>
                 </th>
+                {/* Map Price */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('mapPrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    Map Price
+                    <SortIcon col="mapPrice" />
+                  </div>
+                </th>
+                {/* Regular Price */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('regularPrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    Regular Price
+                    <SortIcon col="regularPrice" />
+                  </div>
+                </th>
                 {/* Stock */}
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
@@ -235,7 +255,7 @@ export default function WheelsPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="px-8 py-20 text-center">
+                  <td colSpan={12} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Fetching wheels...</p>
@@ -244,7 +264,7 @@ export default function WheelsPage() {
                 </tr>
               ) : wheels.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-8 py-20 text-center">
+                  <td colSpan={12} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
                         <Search className="h-6 w-6 text-gray-200" />
@@ -338,6 +358,20 @@ export default function WheelsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-[14px] font-bold text-green-600">
                           ${wheel.salePrice.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* Map Price */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-[14px] font-bold text-[#1e2a4a]">
+                          ${wheel.mapPrice.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* Regular Price */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-[14px] font-bold text-[#1e2a4a]">
+                          ${wheel.regularPrice.toFixed(2)}
                         </div>
                       </td>
 
