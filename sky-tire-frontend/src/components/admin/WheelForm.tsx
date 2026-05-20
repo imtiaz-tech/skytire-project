@@ -49,7 +49,8 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
 
   const { sources } = useAppSelector((state) => state.inventorySources);
 
-  const [loading, setLoading] = useState(false);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [brands, setBrands] = useState<{ id: string; brandName: string }[]>([]);
   
@@ -299,7 +300,11 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
       }
     }
 
-    setLoading(true);
+    if (finalStatus === 'draft') {
+      setDraftLoading(true);
+    } else {
+      setPublishLoading(true);
+    }
     try {
       const submitData = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -334,7 +339,11 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
     } catch (err: any) {
       toast.error(err.message || 'Failed to save data');
     } finally {
-      setLoading(false);
+      if (finalStatus === 'draft') {
+        setDraftLoading(false);
+      } else {
+        setPublishLoading(false);
+      }
     }
   };
 
@@ -702,18 +711,18 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
         <div className="flex justify-end items-center gap-4 pt-8">
           <button 
             type="button" 
-            disabled={loading} 
+            disabled={draftLoading || publishLoading} 
             onClick={(e) => handleSubmit(e, 'draft')}
-            className="px-8 py-4 bg-gray-100 text-[#1e2a4a] rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center gap-3"
+            className="px-8 py-4 bg-gray-100 text-[#1e2a4a] rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save as Draft'}
+            {draftLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save as Draft'}
           </button>
           <button 
             type="submit" 
-            disabled={loading} 
-            className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3"
+            disabled={draftLoading || publishLoading} 
+            className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editWheelId ? 'Update Wheel' : 'Save Wheel')}
+            {publishLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editWheelId ? 'Update Wheel' : 'Save Wheel')}
           </button>
         </div>
       </form>
