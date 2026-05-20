@@ -90,12 +90,17 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
     handlingFee: '0',
     isFeatured: false,
     isVisible: true,
+    isActive: true,
     category: 'wheel',
     status: 'draft',
     keywords: '',
     metaDescription: '',
     seoTitle: '',
     sourceIds: [] as string[],
+    finishDurabilityScore: '',
+    fitmentPrecisionScore: '',
+    impactResistanceScore: '',
+    feedbackScore: '',
   });
 
   useEffect(() => {
@@ -152,12 +157,17 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
           handlingFee: wheel.handlingFee ? String(wheel.handlingFee) : '0',
           isFeatured: !!wheel.isFeatured,
           isVisible: !!wheel.isVisible,
+          isActive: wheel.isActive !== false,
           category: wheel.category || 'wheel',
           status: wheel.status || 'draft',
           keywords: wheel.keywords || '',
           metaDescription: wheel.metaDescription || '',
           seoTitle: wheel.seoTitle || '',
           sourceIds: wheel.sources?.map((s: any) => s.id) || [],
+          finishDurabilityScore: wheel.finishDurabilityScore != null ? String(wheel.finishDurabilityScore) : '',
+          fitmentPrecisionScore: wheel.fitmentPrecisionScore != null ? String(wheel.fitmentPrecisionScore) : '',
+          impactResistanceScore: wheel.impactResistanceScore != null ? String(wheel.impactResistanceScore) : '',
+          feedbackScore: wheel.feedbackScore != null ? String(wheel.feedbackScore) : '',
         });
 
         if (wheel.keywords) {
@@ -415,6 +425,14 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
               {formData.brandVariant && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand Variant</label>}
               <input type="text" placeholder="Brand Variant" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.brandVariant} onChange={(e) => setFormData({ ...formData, brandVariant: e.target.value })} />
             </div>
+            <div className="relative w-full">
+              {formData.alternatePartNumber && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Alternate Part Number</label>}
+              <input type="text" placeholder="Alternate Part Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.alternatePartNumber} onChange={(e) => setFormData({ ...formData, alternatePartNumber: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.upcNo && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">UPC Number</label>}
+              <input type="text" placeholder="UPC Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.upcNo} onChange={(e) => setFormData({ ...formData, upcNo: e.target.value })} />
+            </div>
           </div>
         </div>
 
@@ -544,6 +562,10 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
               {formData.shippingWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Weight</label>}
               <input type="text" placeholder="Shipping Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingWeight} onChange={(e) => setFormData({ ...formData, shippingWeight: e.target.value })} />
             </div>
+            <div className="relative w-full">
+              {formData.lugCount && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Lug Count</label>}
+              <input type="number" placeholder="Lug Count" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.lugCount} onChange={(e) => setFormData({ ...formData, lugCount: e.target.value })} />
+            </div>
           </div>
         </div>
 
@@ -588,24 +610,6 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
               <input type="text" placeholder="Order Type" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.invOrderType} onChange={(e) => setFormData({ ...formData, invOrderType: e.target.value })} />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative w-full">
-              {formData.alternatePartNumber && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Alternate Part Number</label>}
-              <input type="text" placeholder="Alternate Part Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.alternatePartNumber} onChange={(e) => setFormData({ ...formData, alternatePartNumber: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.upcNo && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">UPC Number</label>}
-              <input type="text" placeholder="UPC Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.upcNo} onChange={(e) => setFormData({ ...formData, upcNo: e.target.value })} />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative w-full">
-              {formData.lugCount && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Lug Count</label>}
-              <input type="number" placeholder="Lug Count" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.lugCount} onChange={(e) => setFormData({ ...formData, lugCount: e.target.value })} />
-            </div>
-          </div>
         </div>
 
         {/* Section 8: SEO */}
@@ -640,6 +644,77 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
             <div className="relative w-full mt-4">
               {formData.metaDescription && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
               <textarea placeholder="Meta Description" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y" value={formData.metaDescription} onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 9: Sky Wheel Score + Status */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Sky Score (0-10)</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="relative w-full">
+              {formData.finishDurabilityScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Finish Durability Score</label>}
+              <input type="number" min="0" max="10" placeholder="Finish Durability Score" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.finishDurabilityScore} onChange={(e) => setFormData({ ...formData, finishDurabilityScore: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.impactResistanceScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Impact Resistance Score</label>}
+              <input type="number" min="0" max="10" placeholder="Impact Resistance Score" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.impactResistanceScore} onChange={(e) => setFormData({ ...formData, impactResistanceScore: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.fitmentPrecisionScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Fitment Precision Score</label>}
+              <input type="number" min="0" max="10" placeholder="Fitment Precision Score" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.fitmentPrecisionScore} onChange={(e) => setFormData({ ...formData, fitmentPrecisionScore: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.feedbackScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Feedback Score</label>}
+              <input type="number" min="0" max="10" placeholder="Feedback Score" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.feedbackScore} onChange={(e) => setFormData({ ...formData, feedbackScore: e.target.value })} />
+            </div>
+          </div>
+
+          {/* Mark as Featured + Status: Active / Inactive */}
+          <div className="pt-4 border-t border-gray-50 flex items-center justify-between flex-wrap gap-6">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <div
+                onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
+                  formData.isFeatured ? 'bg-[#1e2a4a] border-[#1e2a4a]' : 'bg-white border-gray-300'
+                }`}
+              >
+                {formData.isFeatured && (
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-[15px] font-medium text-gray-600">Mark as Featured</span>
+            </label>
+
+            <div>
+              <p className="text-[14px] font-bold text-[#1e2a4a] mb-3">Listing Status</p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isActive: true })}
+                  className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all border ${
+                    formData.isActive
+                      ? 'bg-green-500 text-white border-green-500 shadow-md shadow-green-100'
+                      : 'bg-white text-gray-400 border-gray-200 hover:border-green-300'
+                  }`}
+                >
+                  Active
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isActive: false })}
+                  className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all border ${
+                    !formData.isActive
+                      ? 'bg-red-500 text-white border-red-500 shadow-md shadow-red-100'
+                      : 'bg-white text-gray-400 border-gray-200 hover:border-red-300'
+                  }`}
+                >
+                  Inactive
+                </button>
+              </div>
             </div>
           </div>
         </div>

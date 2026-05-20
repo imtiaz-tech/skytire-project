@@ -100,11 +100,16 @@ export async function POST(request: NextRequest) {
     const handlingFeeStr = formData.get('handlingFee') as string;
     const isFeaturedStr = formData.get('isFeatured') as string;
     const isVisibleStr = formData.get('isVisible') as string;
+    const isActiveStr = formData.get('isActive') as string;
     const category = formData.get('category') as string || 'none';
     const status = formData.get('status') as string || 'draft';
     const keywords = formData.get('keywords') as string;
     const metaDescription = formData.get('metaDescription') as string;
     const seoTitle = formData.get('seoTitle') as string;
+    const finishDurabilityScoreStr = formData.get('finishDurabilityScore') as string;
+    const fitmentPrecisionScoreStr = formData.get('fitmentPrecisionScore') as string;
+    const impactResistanceScoreStr = formData.get('impactResistanceScore') as string;
+    const feedbackScoreStr = formData.get('feedbackScore') as string;
 
     const sourceIdsStr = formData.get('sourceIds') as string;
     let sourceIds: string[] = [];
@@ -211,6 +216,11 @@ export async function POST(request: NextRequest) {
         keywords: keywords || null,
         metaDescription: metaDescription || null,
         seoTitle: seoTitle || null,
+        isActive: isActiveStr !== 'false',
+        finishDurabilityScore: finishDurabilityScoreStr ? parseInt(finishDurabilityScoreStr) : 0,
+        fitmentPrecisionScore: fitmentPrecisionScoreStr ? parseInt(fitmentPrecisionScoreStr) : 0,
+        impactResistanceScore: impactResistanceScoreStr ? parseInt(impactResistanceScoreStr) : 0,
+        feedbackScore: feedbackScoreStr ? parseInt(feedbackScoreStr) : 0,
         sources: {
           connect: sourceIds.map((id: string) => ({ id })),
         },

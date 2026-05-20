@@ -320,6 +320,13 @@ model Wheel {
   isVisible            Boolean           @default(true)
   category             String            @default("none")
   status               String            @default("draft") // draft or published
+  isActive             Boolean           @default(true)  // active or inactive
+
+  // Sky Wheel Score (0-10)
+  finishDurabilityScore   Int?            @default(0)
+  fitmentPrecisionScore   Int?            @default(0)
+  impactResistanceScore   Int?            @default(0)
+  feedbackScore           Int?            @default(0)
 
   // Relations setup
   brand                Brand?            @relation(fields: [brandId], references: [id])
