@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Pencil, Package, DollarSign, Calculator } from 'lucide-react';
+import { X, Pencil, Package, DollarSign, Calculator, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Wheel } from '@/redux/types/wheelTypes';
 
@@ -37,22 +37,66 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
       <div className="relative bg-white w-full max-w-5xl rounded-[32px] shadow-2xl shadow-blue-900/10 overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-white sticky top-0 z-20">
-          <h2 className="text-[22px] font-bold text-[#1e2a4a]">Wheel Details Preview</h2>
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/admin/wheels/edit/${wheel.id}`}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit Wheel
-            </Link>
-            <button 
-              onClick={onClose}
-              className="p-2.5 bg-[#1e2a4a] text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-blue-900/10"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-20">
+          <div className="flex items-center gap-2 flex-wrap">
+            {wheel.brand?.brandName && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide">
+                {wheel.brand.brandName}
+              </span>
+            )}
+            {wheel.wheelSize && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide">
+                {wheel.wheelSize}
+              </span>
+            )}
+            {wheel.style && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide uppercase">
+                {wheel.style}
+              </span>
+            )}
+            {wheel.finish && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide uppercase">
+                {wheel.finish}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2.5">
+            {wheel.sku && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide">
+                {wheel.sku}
+              </span>
+            )}
+            <span className={`px-4 py-1.5 rounded-lg text-[13px] font-bold ${wheel.status?.toLowerCase() === 'published' ? 'bg-[#1e78ff] text-white' : 'bg-orange-500 text-white'}`}>
+              {wheel.status ? wheel.status.charAt(0).toUpperCase() + wheel.status.slice(1).toLowerCase() : 'Draft'}
+            </span>
+            <span className={`px-4 py-1.5 rounded-lg text-[13px] font-bold ${wheel.isActive ? 'bg-[#00a86b] text-white' : 'bg-gray-400 text-white'}`}>
+              {wheel.isActive ? 'Visible' : 'Hidden'}
+            </span>
+
+            <div className="flex items-center gap-2 ml-2">
+              <Link
+                href={`/admin/wheels/edit/${wheel.id}`}
+                className="p-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+
+              <Link
+                href={`/wheel/${wheel.slug}`}
+                target="_blank"
+                className="p-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+
+              <button 
+                onClick={onClose}
+                className="p-1.5 px-3 bg-[#1e1e1e] border border-[#1e1e1e] text-white rounded-lg hover:bg-black transition-all shadow-sm"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
