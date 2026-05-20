@@ -10,6 +10,13 @@ interface WheelPreviewModalProps {
   onClose: () => void;
   wheel: Wheel | null;
 }
+const getImageUrl = (path: string) => {
+  if (!path) return null;
+  if (path.startsWith('http') || path.startsWith('blob:')) return path;
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+  const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
+  return `${baseUrl}/uploads/${cleanPath}`;
+};
 
 export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreviewModalProps) {
   if (!open || !wheel) return null;
@@ -104,30 +111,87 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           <div className="max-w-4xl mx-auto space-y-10">
             
-            {/* Header Info */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    {wheel.brand?.brandName || 'Unknown Brand'}
-                  </span>
-                  {wheel.brandVariant && (
-                    <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                      {wheel.brandVariant}
-                    </span>
+            {/* Main Info with Images */}
+            <div className="flex flex-col lg:flex-row gap-8">
+              {/* Images Left Side */}
+              <div className="w-full lg:w-[45%]">
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center gap-4 h-full min-h-[250px] shadow-sm">
+                  {wheel.images && wheel.images.length > 0 ? (
+                    wheel.images.slice(0, 2).map((img, idx) => {
+                      const imageUrl = getImageUrl(img);
+                      return (
+                        <div key={idx} className="flex-1 rounded-xl overflow-hidden flex items-center justify-center h-[200px]">
+                          <img src={imageUrl || ''} alt={`${wheel.productName} ${idx}`} className="w-full h-full object-contain mix-blend-multiply" />
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-gray-400 font-medium text-sm">No images available</div>
                   )}
-                  <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    SKU: {wheel.sku}
-                  </span>
                 </div>
-                <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
-                  {wheel.productName || 'Wheel Name'}
-                </h1>
               </div>
-              <div className="bg-green-50 px-8 py-6 rounded-[32px] border border-green-100 text-center min-w-[200px]">
-                <div className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Sale Price</div>
-                <div className="text-[32px] font-black text-green-600 leading-none">
-                  ${wheel.salePrice.toFixed(2)}
+
+              {/* Product Info Right Side */}
+              <div className="w-full lg:w-[55%] flex flex-col justify-center space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      {wheel.brand?.brandName || 'Unknown Brand'}
+                    </span>
+                    {wheel.finish ? (
+                      <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                        {wheel.finish}
+                      </span>
+                    ) : wheel.style ? (
+                      <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                        {wheel.style}
+                      </span>
+                    ) : null}
+                    <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      SKU: {wheel.sku}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+                    <h1 className="text-[28px] sm:text-[32px] font-black text-[#1e2a4a] leading-tight tracking-tight flex-1">
+                      {wheel.productName || 'Wheel Name'}
+                    </h1>
+                    
+                    <div className="bg-green-50/80 px-6 py-4 rounded-[24px] text-center min-w-[140px] shrink-0 border border-green-100">
+                      <div className="text-[11px] font-bold text-green-600 uppercase tracking-wider mb-1">Sale Price</div>
+                      <div className="text-[26px] font-black text-green-600 leading-none">
+                        ${wheel.salePrice.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-end justify-between border-t border-gray-50 pt-6">
+                  <div>
+                    <div className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Current Pricing</div>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="text-[24px] font-black text-[#1e2a4a] leading-none">
+                        ${wheel.salePrice.toFixed(2)}
+                      </span>
+                      {wheel.regularPrice > wheel.salePrice && (
+                        <span className="text-[16px] font-medium text-gray-400 line-through">
+                          ${wheel.regularPrice.toFixed(2)}
+                        </span>
+                      )}
+                      {wheel.mapPrice > 0 && (
+                        <span className="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded-full text-[12px] font-bold">
+                          MAP ${wheel.mapPrice.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Stock</div>
+                    <div className="text-[20px] font-bold text-[#1e2a4a] leading-none">
+                      {wheel.stock}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
