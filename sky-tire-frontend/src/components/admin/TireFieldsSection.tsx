@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { X, ChevronDown, Check, Calculator, Settings2 } from 'lucide-react';
 import { calculatePricing } from '@/utils/pricing';
-import { InventorySource } from '@/redux/types/tireTypes';
+import { InventorySource } from '@/redux/types/inventorySourceTypes';
 
 interface TireFieldsSectionProps {
   formData: {
@@ -29,7 +29,7 @@ interface TireFieldsSectionProps {
   sources: InventorySource[];
   isSourceDropdownOpen: boolean;
   setIsSourceDropdownOpen: (open: boolean) => void;
-  sourceDropdownRef: React.RefObject<HTMLDivElement>;
+  sourceDropdownRef: React.RefObject<HTMLDivElement | null>;
   setIsManageSourcesOpen: (open: boolean) => void;
   toggleSource: (id: string) => void;
   processingPercentage: number;
