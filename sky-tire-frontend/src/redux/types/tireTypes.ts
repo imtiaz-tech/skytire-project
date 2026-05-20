@@ -8,6 +8,7 @@ export interface InventorySource {
 export interface Tire {
   id: string;
   modelId: string;
+  tireSizeId?: string;
   sku: string;
   alternatePartNumber?: string;
   upcNo?: string;
