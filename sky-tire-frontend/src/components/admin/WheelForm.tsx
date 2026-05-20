@@ -362,33 +362,37 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
         {/* Section 1: Media Upload */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Images</h3>
-          <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer relative">
-            <input type="file" multiple accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} />
-            <UploadCloud className="h-10 w-10 text-gray-400 mb-3" />
-            <p className="text-[#1e2a4a] font-bold text-[16px]">Drop images here or click to upload</p>
-            <p className="text-gray-400 text-[13px] mt-1 font-medium">JPEG, PNG up to 10MB each</p>
-          </div>
-
-          {(existingImages.length > 0 || imageFiles.length > 0) && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {existingImages.map((img, idx) => (
-                <div key={`existing-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group">
-                  <img src={getImageUrl(img)} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removeExistingImage(img)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {imageFiles.map((file, idx) => (
-                <div key={`new-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group">
-                  <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+          
+          <div className="flex flex-wrap gap-4">
+            {/* Add Images Box */}
+            <div className="w-[140px] h-[140px] border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative flex-shrink-0">
+              <input type="file" multiple accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} />
+              <div className="flex items-center gap-1.5">
+                <UploadCloud className="h-[22px] w-[22px] text-[#8c9bb1]" />
+                <span className="text-[#8c9bb1] font-medium text-[15px]">Add Images</span>
+              </div>
             </div>
-          )}
+
+            {/* Existing Images */}
+            {existingImages.map((img, idx) => (
+              <div key={`existing-${idx}`} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group flex-shrink-0">
+                <img src={getImageUrl(img)} alt="Preview" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => removeExistingImage(img)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            
+            {/* New Images */}
+            {imageFiles.map((file, idx) => (
+              <div key={`new-${idx}`} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group flex-shrink-0">
+                <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Section 2: Basic Information */}
