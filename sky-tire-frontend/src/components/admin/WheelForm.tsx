@@ -393,6 +393,29 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
 
         {/* Section 2: Basic Information */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
+          {/* Active / Featured Checkboxes */}
+          <div className="flex items-center justify-end gap-6 pb-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={formData.isActive}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                className="w-[18px] h-[18px] rounded-[4px] border border-gray-300 text-blue-500 focus:ring-blue-500 cursor-pointer outline-none"
+              />
+              <span className="text-[15px] font-medium text-[#1e2a4a]">Active</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={formData.isFeatured}
+                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                className="w-[18px] h-[18px] rounded-[4px] border border-gray-300 text-blue-500 focus:ring-blue-500 cursor-pointer outline-none"
+              />
+              <span className="text-[15px] font-medium text-[#1e2a4a]">Featured</span>
+            </label>
+          </div>
+
           <div className="relative w-full">
             {formData.productName && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Product Name</label>}
             <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.productName} onChange={(e) => setFormData({ ...formData, productName: e.target.value })} required />
@@ -668,53 +691,6 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
             <div className="relative w-full">
               {formData.feedbackScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Feedback Score</label>}
               <input type="number" min="0" max="10" placeholder="Feedback Score" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.feedbackScore} onChange={(e) => setFormData({ ...formData, feedbackScore: e.target.value })} />
-            </div>
-          </div>
-
-          {/* Mark as Featured + Status: Active / Inactive */}
-          <div className="pt-4 border-t border-gray-50 flex items-center justify-between flex-wrap gap-6">
-            <label className="flex items-center gap-2.5 cursor-pointer select-none">
-              <div
-                onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
-                  formData.isFeatured ? 'bg-[#1e2a4a] border-[#1e2a4a]' : 'bg-white border-gray-300'
-                }`}
-              >
-                {formData.isFeatured && (
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <span className="text-[15px] font-medium text-gray-600">Mark as Featured</span>
-            </label>
-
-            <div>
-              <p className="text-[14px] font-bold text-[#1e2a4a] mb-3">Listing Status</p>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, isActive: true })}
-                  className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all border ${
-                    formData.isActive
-                      ? 'bg-green-500 text-white border-green-500 shadow-md shadow-green-100'
-                      : 'bg-white text-gray-400 border-gray-200 hover:border-green-300'
-                  }`}
-                >
-                  Active
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, isActive: false })}
-                  className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all border ${
-                    !formData.isActive
-                      ? 'bg-red-500 text-white border-red-500 shadow-md shadow-red-100'
-                      : 'bg-white text-gray-400 border-gray-200 hover:border-red-300'
-                  }`}
-                >
-                  Inactive
-                </button>
-              </div>
             </div>
           </div>
         </div>
