@@ -291,7 +291,7 @@ export default function WheelsPage() {
                               <CircleDot className="h-5 w-5 text-gray-200" />
                             )}
                           </div>
-                          <span className="text-[14px] font-bold text-[#1e2a4a] group-hover/name:text-blue-600 transition-colors max-w-[220px] line-clamp-2 leading-tight">
+                          <span className="text-[14px] font-bold text-[#1e2a4a] group-hover/name:text-blue-600 transition-colors max-w-[400px] truncate">
                             {wheel.productName}
                           </span>
                         </button>
