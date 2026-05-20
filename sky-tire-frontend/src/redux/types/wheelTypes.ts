@@ -18,10 +18,10 @@ export interface Wheel {
   loadRatingKg: string | null;
   loadRatingLbs: string | null;
   offset: string;
-  backspacing: string | null;
+  backSpacing: number | string | null;
   hubBore: string | null;
   constructionType: string | null;
-  weight: string | null;
+  shippingWeight: string | null;
   images: string[];
   description: string | null;
   features: string[];
@@ -34,6 +34,14 @@ export interface Wheel {
   metaDescription: string | null;
   seoTitle: string | null;
   status: string;
+  
+  finishDurabilityScore?: number | null;
+  fitmentPrecisionScore?: number | null;
+  impactResistanceScore?: number | null;
+  feedbackScore?: number | null;
+  isActive?: boolean;
+  isVisible?: boolean;
+  isFeatured?: boolean;
 
   brand?: {
     id: string;
