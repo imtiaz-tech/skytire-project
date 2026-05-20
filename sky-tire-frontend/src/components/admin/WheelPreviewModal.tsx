@@ -103,9 +103,7 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
                   <InfoRow label="Load Rating" value={wheel.loadRatingLbs ? `${wheel.loadRatingLbs} lbs (${wheel.loadRatingKg} kg)` : wheel.loadRatingKg} />
                   <InfoRow label="Finish" value={wheel.finish} />
                   <InfoRow label="Style" value={wheel.style} />
-                  <InfoRow label="Hub Bore" value={wheel.hubBore} />
                   <InfoRow label="Backspacing" value={wheel.backspacing} />
-                  <InfoRow label="Construction" value={wheel.constructionType} />
                   <InfoRow label="Weight" value={wheel.weight ? `${wheel.weight} lbs` : null} />
                 </div>
               </div>
@@ -154,15 +152,6 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
                 <h3 className="text-[18px] font-bold text-[#1e2a4a]">Marketing & Content</h3>
               </div>
               <div className="px-8 py-2">
-                <InfoRow label="Features" value={
-                  <div className="flex flex-wrap gap-2">
-                    {wheel.features && wheel.features.length > 0 ? wheel.features.map((feat, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-purple-50 border border-purple-100 text-purple-600 text-[13px] font-bold rounded-full">
-                        {feat}
-                      </span>
-                    )) : <span className="text-gray-300 italic">No features listed</span>}
-                  </div>
-                } />
                 <InfoRow label="Keywords" value={
                   <div className="flex flex-wrap gap-2">
                     {wheel.keywords ? wheel.keywords.split(';').filter(Boolean).map((kw, idx) => (
