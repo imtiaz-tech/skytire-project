@@ -103,8 +103,8 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
                   <InfoRow label="Load Rating" value={wheel.loadRatingLbs ? `${wheel.loadRatingLbs} lbs (${wheel.loadRatingKg} kg)` : wheel.loadRatingKg} />
                   <InfoRow label="Finish" value={wheel.finish} />
                   <InfoRow label="Style" value={wheel.style} />
-                  <InfoRow label="Backspacing" value={wheel.backspacing} />
-                  <InfoRow label="Weight" value={wheel.weight ? `${wheel.weight} lbs` : null} />
+                  <InfoRow label="Backspacing" value={wheel.backSpacing} />
+                  <InfoRow label="Weight" value={wheel.shippingWeight ? `${wheel.shippingWeight} lbs` : null} />
                 </div>
               </div>
             </div>
