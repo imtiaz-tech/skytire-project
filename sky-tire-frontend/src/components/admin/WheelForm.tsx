@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWheel, updateWheel } from '@/redux/slices/wheelsSlice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
-import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator } from 'lucide-react';
+import { calculatePricing } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
@@ -211,6 +212,15 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const pricing = useMemo(() => {
+    return calculatePricing(
+      Number(formData.cost),
+      Number(formData.shippingCost),
+      Number(formData.salePrice),
+      3.5
+    );
+  }, [formData.cost, formData.shippingCost, formData.salePrice]);
 
   const toggleSource = (sourceId: string) => {
     setFormData(prev => {
@@ -556,6 +566,16 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
             <div className="relative w-full">
               {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price</label>}
               <input type="number" placeholder="Sale Price" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-green-600" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
+              {pricing.recommendedSalePrice && Number(formData.salePrice) < parseFloat(pricing.recommendedSalePrice) && (
+                <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
+                  Recommended sale price is: ${pricing.recommendedSalePrice} (23%)
+                </p>
+              )}
+              {pricing.marginPercentage && (
+                <div className={`mt-1 text-[11px] font-bold uppercase tracking-wider ${parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
+                  Markup: {pricing.marginPercentage}%
+                </div>
+              )}
             </div>
             <div className="relative w-full">
               {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Map Price</label>}
@@ -575,6 +595,26 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
             <div className="relative w-full">
               {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee</label>}
               <input type="number" placeholder="Handling Fee" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} />
+            </div>
+          </div>
+
+          {/* Pricing Summary Box */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+            <div>
+              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <Calculator className="h-3 w-3" /> Processing Amount (3.5%)
+              </p>
+              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.processingAmount.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Cost</p>
+              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.netCost.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Margin (based on Net Cost)</p>
+              <p className={`text-[18px] font-black ${pricing.marginPercentage && parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
+                {pricing.marginPercentage ? `${pricing.marginPercentage}%` : '0.00%'}
+              </p>
             </div>
           </div>
         </div>
