@@ -60,25 +60,41 @@ export async function DELETE(
     const { id } = await params;
 
     await prisma.$transaction(async (tx) => {
-      // 1. Reset stock to 0 for all tires linked to this source
-      await tx.tire.updateMany({
-        where: {
-          sources: {
-            some: { id }
-          }
-        },
-        data: {
-          stock: 0
-        }
+      // 1. Find all tire IDs linked to this source (updateMany doesn't support relation filters)
+      const linkedTires = await tx.tire.findMany({
+        where: { sources: { some: { id } } },
+        select: { id: true },
       });
+      const tireIds = linkedTires.map((t) => t.id);
 
-      // 2. Delete the inventory source
+      if (tireIds.length > 0) {
+        await tx.tire.updateMany({
+          where: { id: { in: tireIds } },
+          data: { stock: 0 },
+        });
+      }
+
+      // 2. Find all wheel IDs linked to this source
+      const linkedWheels = await tx.wheel.findMany({
+        where: { sources: { some: { id } } },
+        select: { id: true },
+      });
+      const wheelIds = linkedWheels.map((w) => w.id);
+
+      if (wheelIds.length > 0) {
+        await tx.wheel.updateMany({
+          where: { id: { in: wheelIds } },
+          data: { stock: 0 },
+        });
+      }
+
+      // 3. Delete the inventory source
       await tx.inventorySource.delete({
         where: { id },
       });
     });
 
-    return NextResponse.json({ message: 'Inventory Source deleted successfully and linked tires stock reset to 0' });
+    return NextResponse.json({ message: 'Inventory Source deleted successfully and linked tires/wheels stock reset to 0' });
   } catch (error) {
     console.error('Error deleting inventory source:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
