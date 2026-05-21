@@ -121,6 +121,14 @@ export async function POST(request: NextRequest) {
       console.error('Error parsing sourceIds', e);
     }
 
+    const existingImagesRaw = formData.get('existingImages') as string;
+    let existingImages: string[] = [];
+    try {
+      existingImages = JSON.parse(existingImagesRaw || '[]');
+    } catch (e) {
+      console.error('Error parsing existing images:', e);
+    }
+
     const imageFiles = formData.getAll('images') as File[];
 
     if (status === 'published') {
@@ -174,6 +182,8 @@ export async function POST(request: NextRequest) {
       await writeFile(path, buffer);
       savedImageNames.push(filename);
     }
+    
+    const allImages = [...existingImages, ...savedImageNames];
 
     const slug = `${productName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
 
@@ -199,7 +209,7 @@ export async function POST(request: NextRequest) {
         backSpacing: backSpacingStr ? parseFloat(backSpacingStr) : null,
         centerBore: centerBore || null,
         shippingWeight: shippingWeight || '',
-        images: savedImageNames,
+        images: allImages,
         description: description || null,
         invOrderType: invOrderType || null,
         stock: parseInt(stockStr) || 0,

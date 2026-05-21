@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Plus, Edit2, Trash2, CircleDot, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Search, Loader2, Plus, Edit2, Trash2, CircleDot, ArrowUp, ArrowDown, ArrowUpDown, Copy } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchWheels, deleteWheel } from '@/redux/slices/wheelsSlice';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import WheelPreviewModal from '@/components/admin/WheelPreviewModal';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Wheel } from '@/redux/types/wheelTypes';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,7 @@ const getImageUrl = (path: string) => {
 };
 
 export default function WheelsPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { wheels, loading, total, pages, currentPage } = useAppSelector((state) => state.wheels);
   
@@ -64,6 +66,11 @@ export default function WheelsPage() {
   const openDeleteModal = (id: string) => {
     setWheelToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleDuplicate = (id: string) => {
+    sessionStorage.setItem('duplicateWheelId', id);
+    router.push('/admin/wheels/add');
   };
 
   const openPreview = (wheel: Wheel) => {
@@ -385,6 +392,13 @@ export default function WheelsPage() {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleDuplicate(wheel.id)}
+                            className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            title="Duplicate"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
                           <Link
                             href={`/admin/wheels/edit/${wheel.id}`}
                             className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"

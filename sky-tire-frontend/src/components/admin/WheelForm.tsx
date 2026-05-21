@@ -15,9 +15,10 @@ const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
 interface WheelFormProps {
   editWheelId?: string;
+  duplicateId?: string;
 }
 
-export default function WheelForm({ editWheelId }: WheelFormProps) {
+export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -45,7 +46,7 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
     width: '100%',
     spellcheck: true,
     language: 'en',
-  }), [editWheelId]);
+  }), [editWheelId, duplicateId]);
 
   const { sources } = useAppSelector((state) => state.inventorySources);
 
@@ -57,6 +58,18 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+
+  const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(duplicateId || null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !duplicateId) {
+      const id = sessionStorage.getItem('duplicateWheelId');
+      if (id) {
+        setActiveDuplicateId(id);
+        sessionStorage.removeItem('duplicateWheelId');
+      }
+    }
+  }, [duplicateId]);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -119,15 +132,16 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      if (!editWheelId) return;
+      const targetId = editWheelId || activeDuplicateId;
+      if (!targetId) return;
       
       setFetching(true);
       try {
-        const wheelRes = await axios.get(`/api/admin/wheels/${editWheelId}`);
+        const wheelRes = await axios.get(`/api/admin/wheels/${targetId}`);
         const wheel = wheelRes.data;
         
         setFormData({
-          sku: wheel.sku || '',
+          sku: activeDuplicateId ? '' : (wheel.sku || ''),
           productName: wheel.productName || '',
           brandId: wheel.brandId || '',
           brandVariant: wheel.brandVariant || '',
@@ -186,7 +200,7 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
       }
     };
     loadInitialData();
-  }, [editWheelId]);
+  }, [editWheelId, activeDuplicateId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -325,8 +339,11 @@ export default function WheelForm({ editWheelId }: WheelFormProps) {
         submitData.append('images', file);
       });
 
-      if (editWheelId) {
+      if (existingImages.length > 0) {
         submitData.append('existingImages', JSON.stringify(existingImages));
+      }
+
+      if (editWheelId) {
         await dispatch(updateWheel({ id: editWheelId, data: submitData })).unwrap();
         toast.success('Wheel updated successfully');
       } else {
