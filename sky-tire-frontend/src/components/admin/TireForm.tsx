@@ -151,11 +151,12 @@ export default function TireForm({ editTire }: TireFormProps) {
     setFormData(prev => {
       const isSelected = prev.sourceIds.includes(sourceId);
       if (isSelected) {
-        return { ...prev, sourceIds: prev.sourceIds.filter(id => id !== sourceId) };
+        return { ...prev, sourceIds: [] };
       } else {
-        return { ...prev, sourceIds: [...prev.sourceIds, sourceId] };
+        return { ...prev, sourceIds: [sourceId] };
       }
     });
+    setIsSourceDropdownOpen(false); // Optionally close dropdown for single-select UX
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
