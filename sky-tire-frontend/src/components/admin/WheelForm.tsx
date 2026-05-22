@@ -226,11 +226,12 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     setFormData(prev => {
       const isSelected = prev.sourceIds.includes(sourceId);
       if (isSelected) {
-        return { ...prev, sourceIds: prev.sourceIds.filter(id => id !== sourceId) };
+        return { ...prev, sourceIds: [] };
       } else {
-        return { ...prev, sourceIds: [...prev.sourceIds, sourceId] };
+        return { ...prev, sourceIds: [sourceId] };
       }
     });
+    setIsSourceDropdownOpen(false);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
