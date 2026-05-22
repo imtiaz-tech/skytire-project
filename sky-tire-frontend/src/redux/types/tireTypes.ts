@@ -47,6 +47,7 @@ export interface Tire {
   sidewallCategory?: 'BLACK_WALL' | 'WHITE_WALL';
   sidewallDetail?: string;
   publishStatus?: 'PUBLISHED' | 'DRAFT';
+  isActive?: boolean;
 
   model?: any; // Will be properly typed if needed
   sources?: InventorySource[];

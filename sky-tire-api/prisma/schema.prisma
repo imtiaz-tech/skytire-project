@@ -113,6 +113,7 @@ model Tire {
   features            String[]
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
+  isActive            Boolean       @default(true)
 
   model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   sources             InventorySource[]

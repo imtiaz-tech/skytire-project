@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { TiresState, Tire } from '../types/tireTypes';
 
@@ -13,27 +13,29 @@ const initialState: TiresState = {
 
 export const fetchTires = createAsyncThunk(
   'tires/fetchTires',
-  async (params: { 
-    page?: number; 
-    limit?: number; 
-    search?: string; 
-    sidewallCategory?: string; 
+  async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sidewallCategory?: string;
     publishStatus?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
+    isActive?: boolean;
   }) => {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search = '', 
-      sidewallCategory = '', 
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      sidewallCategory = '',
       publishStatus = '',
       sortBy = 'sku',
-      sortOrder = 'asc'
+      sortOrder = 'asc',
+      isActive,
     } = params;
-    const response = await axios.get(
-      `/api/admin/tires?page=${page}&limit=${limit}&search=${search}&sidewallCategory=${sidewallCategory}&publishStatus=${publishStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-    );
+    let url = `/api/admin/tires?page=${page}&limit=${limit}&search=${search}&sidewallCategory=${sidewallCategory}&publishStatus=${publishStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+    if (isActive !== undefined) url += `&isActive=${isActive}`;
+    const response = await axios.get(url);
     return response.data;
   }
 );
@@ -62,6 +64,20 @@ export const deleteTire = createAsyncThunk(
   }
 );
 
+export const bulkUpdateTires = createAsyncThunk(
+  'tires/bulkUpdateTires',
+  async ({ ids, isActive }: { ids: string[]; isActive: boolean }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch('/api/admin/tires', { ids, isActive });
+      return { ids, isActive, data: response.data };
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to update tires'
+      );
+    }
+  }
+);
+
 const tiresSlice = createSlice({
   name: 'tires',
   initialState,
@@ -70,6 +86,7 @@ const tiresSlice = createSlice({
     builder
       .addCase(fetchTires.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchTires.fulfilled, (state, action) => {
         state.loading = false;
@@ -93,6 +110,20 @@ const tiresSlice = createSlice({
       })
       .addCase(deleteTire.fulfilled, (state, action) => {
         state.tires = state.tires.filter((t) => t.id !== action.payload);
+      })
+      .addCase(bulkUpdateTires.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(bulkUpdateTires.fulfilled, (state, action) => {
+        state.loading = false;
+        const { ids, isActive } = action.payload;
+        state.tires = state.tires.map((t) =>
+          ids.includes(t.id) ? { ...t, isActive } : t
+        );
+      })
+      .addCase(bulkUpdateTires.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

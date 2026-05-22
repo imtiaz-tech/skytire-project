@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') || '';
 
   const publishStatus = searchParams.get('publishStatus');
+  const isActiveParam = searchParams.get('isActive');
   const sortBy = searchParams.get('sortBy') || 'sku';
   const sortOrder = (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
 
@@ -29,7 +30,10 @@ export async function GET(request: NextRequest) {
     ];
 
     const where: any = {};
-    if (publishStatus) where.status = publishStatus.toLowerCase(); // status is string 'draft' or 'published'
+    if (publishStatus) where.status = publishStatus.toLowerCase();
+    if (isActiveParam !== null && isActiveParam !== '') {
+      where.isActive = isActiveParam === 'true';
+    }
 
     if (search) {
       where.OR = searchConditions;
@@ -247,6 +251,30 @@ export async function POST(request: NextRequest) {
     if ((error as any).code === 'P2002') {
       return NextResponse.json({ error: 'SKU already exists' }, { status: 400 });
     }
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { ids, isActive } = body as { ids: string[]; isActive: boolean };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+    }
+    if (typeof isActive !== 'boolean') {
+      return NextResponse.json({ error: 'isActive must be a boolean' }, { status: 400 });
+    }
+
+    const result = await prisma.wheel.updateMany({
+      where: { id: { in: ids } },
+      data: { isActive },
+    });
+
+    return NextResponse.json({ updated: result.count });
+  } catch (error) {
+    console.error('Error bulk-updating wheels:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

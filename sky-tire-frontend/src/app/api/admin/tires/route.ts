@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
 
   const sidewallCategory = searchParams.get('sidewallCategory');
   const publishStatus = searchParams.get('publishStatus');
+  const isActiveParam = searchParams.get('isActive');
   const sortBy = searchParams.get('sortBy') || 'sku';
   const sortOrder = (searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
 
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
     const where: any = {};
     if (sidewallCategory) where.sidewallCategory = sidewallCategory;
     if (publishStatus) where.publishStatus = publishStatus;
+    if (isActiveParam !== null && isActiveParam !== '') {
+      where.isActive = isActiveParam === 'true';
+    }
 
     if (search) {
       where.OR = searchConditions;
@@ -236,3 +240,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { ids, isActive } = body as { ids: string[]; isActive: boolean };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+    }
+    if (typeof isActive !== 'boolean') {
+      return NextResponse.json({ error: 'isActive must be a boolean' }, { status: 400 });
+    }
+
+    const result = await prisma.tire.updateMany({
+      where: { id: { in: ids } },
+      data: { isActive },
+    });
+
+    return NextResponse.json({ updated: result.count });
+  } catch (error) {
+    console.error('Error bulk-updating tires:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+

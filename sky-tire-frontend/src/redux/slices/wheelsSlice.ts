@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { Wheel, WheelsState } from '../types/wheelTypes';
 
+
 const initialState: WheelsState = {
   wheels: [],
   loading: false,
@@ -13,10 +14,23 @@ const initialState: WheelsState = {
 
 export const fetchWheels = createAsyncThunk(
   'wheels/fetchWheels',
-  async (params: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string } | undefined, { rejectWithValue }) => {
+  async (
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      status?: string;
+      sortBy?: string;
+      sortOrder?: string;
+      isActive?: boolean;
+    } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const { page = 1, limit = 10, search = '', status = '', sortBy = 'sku', sortOrder = 'asc' } = params || {};
-      const response = await axios.get(`/api/admin/wheels?page=${page}&limit=${limit}&search=${search}&publishStatus=${status}&sortBy=${sortBy}&sortOrder=${sortOrder}`);
+      const { page = 1, limit = 10, search = '', status = '', sortBy = 'sku', sortOrder = 'asc', isActive } = params || {};
+      let url = `/api/admin/wheels?page=${page}&limit=${limit}&search=${search}&publishStatus=${status}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+      if (isActive !== undefined) url += `&isActive=${isActive}`;
+      const response = await axios.get(url);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch wheels');
@@ -68,12 +82,30 @@ export const deleteWheel = createAsyncThunk(
   }
 );
 
+export const bulkUpdateWheels = createAsyncThunk(
+  'wheels/bulkUpdateWheels',
+  async ({ ids, isActive }: { ids: string[]; isActive: boolean }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch('/api/admin/wheels', { ids, isActive });
+      return { ids, isActive, data: response.data };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to update wheels');
+    }
+  }
+);
+
 const wheelsSlice = createSlice({
   name: 'wheels',
   initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    bulkUpdateLocal: (state, action: PayloadAction<{ ids: string[]; isActive: boolean }>) => {
+      const { ids, isActive } = action.payload;
+      state.wheels = state.wheels.map((w) =>
+        ids.includes(w.id) ? { ...w, isActive } : w
+      );
     },
   },
   extraReducers: (builder) => {
@@ -116,9 +148,23 @@ const wheelsSlice = createSlice({
       .addCase(deleteWheel.fulfilled, (state, action: PayloadAction<string>) => {
         state.wheels = state.wheels.filter((w) => w.id !== action.payload);
         state.total -= 1;
+      })
+      .addCase(bulkUpdateWheels.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(bulkUpdateWheels.fulfilled, (state, action) => {
+        state.loading = false;
+        const { ids, isActive } = action.payload;
+        state.wheels = state.wheels.map((w) =>
+          ids.includes(w.id) ? { ...w, isActive } : w
+        );
+      })
+      .addCase(bulkUpdateWheels.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { clearError } = wheelsSlice.actions;
+export const { clearError, bulkUpdateLocal } = wheelsSlice.actions;
 export default wheelsSlice.reducer;

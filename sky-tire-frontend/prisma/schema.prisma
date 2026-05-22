@@ -115,6 +115,7 @@ model Tire {
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
   publishStatus       PublishStatus @default(PUBLISHED)
+  isActive            Boolean       @default(true)
 
   model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   sources             InventorySource[]
