@@ -305,10 +305,6 @@ export default function WheelsPage() {
                     <SortIcon col="wheelSize" />
                   </div>
                 </th>
-                {/* UPC No */}
-                {/* <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">UPC No</th> */}
-                {/* Alternate Part No */}
-                {/* <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Alt Part #</th> */}
                 {/* Brand */}
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 {/* Cost */}
@@ -444,27 +440,6 @@ export default function WheelsPage() {
                           {wheel.wheelSize || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>
                       </td>
-
-                      {/* UPC No */}
-                      {/* <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
-                        >
-                          {wheel.upcNo || <span className="text-gray-300 italic font-normal">—</span>}
-                        </button>
-                      </td> */}
-
-                      {/* Alternate Part No */}
-                      {/* <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
-                        >
-                          {wheel.alternatePartNumber || <span className="text-gray-300 italic font-normal">—</span>}
-                        </button>
-                      </td> */}
-
                       {/* Brand */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
