@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Loader2, Plus, Edit2, Trash2, CircleDot, ArrowUp, ArrowDown, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
+import { Search, Loader2, Plus, Edit2, Trash2, CircleDot, ArrowUp, ArrowDown, ArrowUpDown, Eye, EyeOff, Copy } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchTires, deleteTire, bulkUpdateTires } from '@/redux/slices/tiresSlice';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import TirePreviewModal from '@/components/admin/TirePreviewModal';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Tire } from '@/redux/types/tireTypes';
 import toast from 'react-hot-toast';
 
 type TabType = 'BLACK_WALL' | 'WHITE_WALL' | 'DRAFT' | 'VISIBLE' | 'INVISIBLE';
 
 export default function TiresPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { tires, loading, total, pages, currentPage } = useAppSelector((state) => state.tires);
 
@@ -75,6 +77,11 @@ export default function TiresPage() {
     setActiveTab(tab);
     setPage(1);
     setSelectedIds(new Set());
+  };
+
+  const handleDuplicate = (id: string) => {
+    sessionStorage.setItem('duplicateTireId', id);
+    router.push('/admin/tires/add');
   };
 
   const handleSort = (column: string) => {
@@ -203,46 +210,46 @@ export default function TiresPage() {
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           {/* Search Section */}
           <form onSubmit={handleSearch} className="flex items-center gap-3">
-            <div className="relative w-72">
+            <div className="relative w-full max-w-[220px] lg:max-w-[260px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-[16px] focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
+                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-[15px] focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
             <button
               type="submit"
-              className="bg-[#1e2a4a] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#2a3a5a] transition-all shadow-md shadow-blue-50"
+              className="bg-[#1e2a4a] text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-[#2a3a5a] transition-all shadow-md shadow-blue-50"
             >
               Search
             </button>
           </form>
 
           {/* Separator & Tabs */}
-          <div className="flex items-center gap-8 flex-1">
-            <div className="h-10 w-px bg-gray-100 hidden md:block ml-2" />
+          <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
+            <div className="h-10 w-px bg-gray-100 hidden lg:block ml-1 shrink-0" />
 
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4 md:gap-6 overflow-x-auto no-scrollbar flex-1 pt-2 pb-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`py-2 text-[15px] font-bold transition-all relative whitespace-nowrap ${
+                  className={`py-2 text-[14px] md:text-[15px] font-bold transition-all relative whitespace-nowrap shrink-0 ${
                     activeTab === tab.id ? 'text-[#1e2a4a]' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#1e2a4a] rounded-full" />
+                    <div className="absolute bottom-[-10px] left-0 right-0 h-[3px] bg-[#1e2a4a] rounded-full" />
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="ml-auto text-[15px] font-bold text-gray-700 whitespace-nowrap">
+            <div className="ml-auto text-[14px] md:text-[15px] font-bold text-gray-700 whitespace-nowrap shrink-0">
               Total Tires: <span className="text-[#1e2a4a]">({total})</span>
             </div>
           </div>
@@ -457,6 +464,13 @@ export default function TiresPage() {
                       </td>
                       <td className="px-8 py-5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => handleDuplicate(tire.id)}
+                            className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                            title="Duplicate"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
                           <Link
                             href={`/admin/tires/edit/${tire.id}`}
                             className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"

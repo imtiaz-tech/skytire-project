@@ -36,6 +36,8 @@ export default function TireForm({ editTire }: TireFormProps) {
   const sourceDropdownRef = React.useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
 
+  const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     tireSizeId: '',
     sku: '',
@@ -92,6 +94,49 @@ export default function TireForm({ editTire }: TireFormProps) {
       });
     }
   }, [editTire]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !editTire) {
+      const id = sessionStorage.getItem('duplicateTireId');
+      if (id) {
+        setActiveDuplicateId(id);
+        sessionStorage.removeItem('duplicateTireId');
+      }
+    }
+  }, [editTire]);
+
+  useEffect(() => {
+    const loadDuplicateData = async () => {
+      if (!activeDuplicateId || editTire) return;
+      
+      try {
+        const tireRes = await axios.get(`/api/admin/tires/${activeDuplicateId}`);
+        const duplicateTire = tireRes.data;
+        
+        setFormData({
+          tireSizeId: duplicateTire.tireSizeId || '',
+          sku: '', // User must enter a new SKU
+          stock: duplicateTire.stock?.toString() || '0',
+          cost: duplicateTire.cost?.toString() || '0',
+          salePrice: duplicateTire.salePrice?.toString() || '0',
+          regularPrice: duplicateTire.regularPrice?.toString() || '0',
+          mapPrice: duplicateTire.mapPrice?.toString() || '0',
+          shippingCost: duplicateTire.shippingCost?.toString() || '0',
+          handlingFee: duplicateTire.handlingFee?.toString() || '0',
+          freightCharges: duplicateTire.freightCharges?.toString() || '0',
+          rebateAvailable: duplicateTire.rebateAvailable || false,
+          mileageScore: duplicateTire.mileageScore?.toString() || '',
+          tractionScore: duplicateTire.tractionScore?.toString() || '',
+          stabilityScore: duplicateTire.stabilityScore?.toString() || '',
+          feedbackScore: duplicateTire.feedbackScore?.toString() || '',
+          sourceIds: duplicateTire.sources?.map((s: any) => s.id) || [],
+        });
+      } catch (error) {
+        console.error('Error fetching duplicated tire data:', error);
+      }
+    };
+    loadDuplicateData();
+  }, [activeDuplicateId, editTire]);
 
   const pricing = useMemo(() => {
     return calculatePricing(

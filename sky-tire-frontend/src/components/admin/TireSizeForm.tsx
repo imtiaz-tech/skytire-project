@@ -46,6 +46,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [models, setModels] = useState<{ id: string; modelName: string; brand?: { brandName: string } }[]>([]);
+  const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(null);
   
   // Custom Searchable Dropdown State
   const [modelSearch, setModelSearch] = useState('');
@@ -130,14 +131,25 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     fetchData();
   }, [dispatch]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !editTireId) {
+      const id = sessionStorage.getItem('duplicateTireId');
+      if (id) {
+        setActiveDuplicateId(id);
+        sessionStorage.removeItem('duplicateTireId');
+      }
+    }
+  }, [editTireId]);
+
   // Initial Data Population
   useEffect(() => {
     const loadInitialData = async () => {
-      if (!editTireId) return;
+      const targetId = editTireId || activeDuplicateId;
+      if (!targetId) return;
       
       setFetching(true);
       try {
-        const tireRes = await axios.get(`/api/admin/tires/${editTireId}`);
+        const tireRes = await axios.get(`/api/admin/tires/${targetId}`);
         const tire = tireRes.data;
         
         setFormData({
@@ -159,7 +171,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           vehicleType: tire.vehicleType || '',
           sidewallCategory: tire.sidewallCategory || '',
           sidewallDetail: tire.sidewallDetail || '',
-          sku: tire.sku || '',
+          sku: activeDuplicateId ? '' : (tire.sku || ''),
           alternatePartNumber: tire.alternatePartNumber || '',
           upcNo: tire.upcNo || '',
           stock: String(tire.stock || 0),
@@ -193,7 +205,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
       }
     };
     loadInitialData();
-  }, [editTireId]);
+  }, [editTireId, activeDuplicateId]);
 
   const filteredModels = useMemo(() => {
     return models.filter(model => {
