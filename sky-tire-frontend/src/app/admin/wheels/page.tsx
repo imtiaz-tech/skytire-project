@@ -300,7 +300,7 @@ export default function WheelsPage() {
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('wheelSize')}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ">
                     Size
                     <SortIcon col="wheelSize" />
                   </div>
