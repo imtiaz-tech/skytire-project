@@ -923,7 +923,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
           <div className="relative w-full">
             {formData.name && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[14px] font-medium text-gray-400 z-10">Product Name</label>}
-            <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none font-bold" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+            <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
 
           <div className="space-y-4">
@@ -952,6 +952,17 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
             <div className="relative w-full">
               {formData.countryOfOrigin && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Country of Origin</label>}
               <input type="text" placeholder="Country of Origin" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.countryOfOrigin} onChange={(e) => setFormData({ ...formData, countryOfOrigin: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Size</label>
+              <input type="text" placeholder="Size (e.g. 13x7, 20x8)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} required />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Finish</label>
+              <input type="text" placeholder="Finish (e.g. All Chrome, Gold Spoke)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.finish} onChange={(e) => setFormData({ ...formData, finish: e.target.value })} />
             </div>
           </div>
         </div>
@@ -1040,36 +1051,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Technical Specifications</h3>
           
-          {/* Wire Wheel Size & Finish Description */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative w-full">
-              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[12px] text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
-                 Size
-              </label>
-              <input
-                type="text"
-                placeholder="Size (e.g. 13x7, 20x8)"
-                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
-                value={formData.size}
-                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                required
-              />
-            </div>
-            <div className="relative w-full">
-              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[12px] text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
-                Finish
-              </label>
-              <input
-                type="text"
-                placeholder="Finish (e.g. All Chrome, Gold Spoke)"
-                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
-                value={formData.finish}
-                onChange={(e) => setFormData({ ...formData, finish: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Knock Off & Additional Options */}          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Knock Off Options */}
             <div className="relative w-full">
               <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
