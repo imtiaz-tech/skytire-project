@@ -218,26 +218,28 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
             {/* Caps & KnockOffs Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Floating Caps */}
-              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden flex flex-col">
-                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden flex flex-col max-h-[600px]">
+                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2 sticky top-0 z-10">
                   <Package className="h-5 w-5 text-blue-500" />
                   <h3 className="text-[18px] font-bold text-[#1e2a4a]">Floating Caps</h3>
                 </div>
-                <div className="px-8 py-6 flex-1 flex flex-col justify-center">
-                  {wireWheel.floatingCaps && wireWheel.floatingCaps.name ? (
-                    <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-2xl">
-                      {wireWheel.floatingCaps.image ? (
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center shrink-0">
-                          <img src={getImageUrl(wireWheel.floatingCaps.image) || ''} alt="Cap" className="w-full h-full object-contain" />
+                <div className="px-8 py-6 flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+                  {Array.isArray(wireWheel.floatingCaps) && wireWheel.floatingCaps.length > 0 ? (
+                    wireWheel.floatingCaps.map((cap: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-2xl shrink-0">
+                        {cap.image ? (
+                          <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center shrink-0">
+                            <img src={getImageUrl(cap.image) || ''} alt="Cap" className="w-full h-full object-contain mix-blend-multiply" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 font-bold text-xs">Cap</div>
+                        )}
+                        <div>
+                          <div className="text-base font-bold text-[#1e2a4a]">{cap.name}</div>
+                          <div className="text-sm font-black text-green-600">${parseFloat(cap.price || 0).toFixed(2)}</div>
                         </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 font-bold">Cap</div>
-                      )}
-                      <div>
-                        <div className="text-base font-bold text-[#1e2a4a]">{wireWheel.floatingCaps.name}</div>
-                        <div className="text-sm font-black text-green-600">${parseFloat(wireWheel.floatingCaps.price || 0).toFixed(2)}</div>
                       </div>
-                    </div>
+                    ))
                   ) : (
                     <p className="text-gray-400 text-sm italic text-center py-4">No floating caps configured</p>
                   )}
@@ -245,47 +247,49 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
               </div>
 
               {/* Knockoffs & Chips */}
-              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden flex flex-col">
-                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden flex flex-col max-h-[600px]">
+                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2 sticky top-0 z-10">
                   <Package className="h-5 w-5 text-purple-500" />
                   <h3 className="text-[18px] font-bold text-[#1e2a4a]">KnockOffs & Chips</h3>
                 </div>
-                <div className="px-8 py-6 flex-1 space-y-4">
-                  {wireWheel.knockOffs && wireWheel.knockOffs.name ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-2xl">
-                        {wireWheel.knockOffs.image ? (
-                          <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center shrink-0">
-                            <img src={getImageUrl(wireWheel.knockOffs.image) || ''} alt="Knockoff" className="w-full h-full object-contain" />
+                <div className="px-8 py-6 flex-1 space-y-6 overflow-y-auto custom-scrollbar">
+                  {Array.isArray(wireWheel.knockOffs) && wireWheel.knockOffs.length > 0 ? (
+                    wireWheel.knockOffs.map((ko: any, kIdx: number) => (
+                      <div key={kIdx} className="space-y-4 pb-6 border-b border-gray-100 last:border-0 last:pb-0 shrink-0">
+                        <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-2xl">
+                          {ko.image ? (
+                            <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center shrink-0">
+                              <img src={getImageUrl(ko.image) || ''} alt="Knockoff" className="w-full h-full object-contain mix-blend-multiply" />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 font-bold text-xs">Knock</div>
+                          )}
+                          <div>
+                            <div className="text-base font-bold text-[#1e2a4a]">{ko.name}</div>
+                            <div className="text-sm font-black text-green-600">${parseFloat(ko.price || 0).toFixed(2)}</div>
+                            <div className="text-[11px] text-gray-400 mt-0.5">Chip Option: <span className="font-bold uppercase">{ko.chipOption || 'No'}</span></div>
                           </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 font-bold">Knock</div>
-                        )}
-                        <div>
-                          <div className="text-base font-bold text-[#1e2a4a]">{wireWheel.knockOffs.name}</div>
-                          <div className="text-sm font-black text-green-600">${parseFloat(wireWheel.knockOffs.price || 0).toFixed(2)}</div>
-                          <div className="text-[11px] text-gray-400 mt-0.5">Chip Option: <span className="font-bold uppercase">{wireWheel.knockOffs.chipOption}</span></div>
                         </div>
-                      </div>
 
-                      {wireWheel.knockOffs.chips && wireWheel.knockOffs.chips.length > 0 && (
-                        <div>
-                          <div className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Available Chips</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {wireWheel.knockOffs.chips.map((chip: any, idx: number) => (
-                              <div key={idx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm">
-                                {chip.image ? (
-                                  <img src={getImageUrl(chip.image) || ''} alt="Chip" className="w-8 h-8 object-contain bg-white rounded border shrink-0" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded bg-gray-100 shrink-0 flex items-center justify-center text-[10px] font-bold text-gray-400">Chip</div>
-                                )}
-                                <span className="text-xs font-semibold text-[#1e2a4a] truncate">{chip.name}</span>
-                              </div>
-                            ))}
+                        {ko.chips && ko.chips.length > 0 && (
+                          <div className="pl-4">
+                            <div className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Available Chips</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {ko.chips.map((chip: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm">
+                                  {chip.image ? (
+                                    <img src={getImageUrl(chip.image) || ''} alt="Chip" className="w-8 h-8 object-contain bg-white rounded border shrink-0 mix-blend-multiply" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded bg-gray-100 shrink-0 flex items-center justify-center text-[10px] font-bold text-gray-400">Chip</div>
+                                  )}
+                                  <span className="text-xs font-semibold text-[#1e2a4a] truncate" title={chip.name}>{chip.name}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    ))
                   ) : (
                     <p className="text-gray-400 text-sm italic text-center py-4">No knockoffs configured</p>
                   )}

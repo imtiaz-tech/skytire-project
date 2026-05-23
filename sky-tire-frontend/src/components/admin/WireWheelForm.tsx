@@ -922,7 +922,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
           </div>
 
           <div className="relative w-full">
-            {formData.name && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Product Name</label>}
+            {formData.name && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[14px] font-medium text-gray-400 z-10">Product Name</label>}
             <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none font-bold" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
 
@@ -940,7 +940,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
             <div className="relative w-full">
               {formData.sku && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>}
-              <input type="text" placeholder="SKU" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none font-semibold" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} required />
+              <input type="text" placeholder="SKU" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} required />
             </div>
             <div className="relative w-full">
               <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand</label>
@@ -965,10 +965,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
         {/* Pricing, Shipping and Stock details */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Logistics & Profit Margin Calculations</h3>
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Pricing Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.stock && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stock Level</label>}
+              {formData.stock && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stock</label>}
               <input type="number" placeholder="Stock Level" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} required />
             </div>
             <div className="relative w-full">
