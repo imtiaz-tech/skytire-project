@@ -1031,60 +1031,169 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Technical Specifications</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Wire Wheel Size & Finish Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full">
-              {formData.size && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wire Wheel Size</label>}
-              <input type="text" placeholder="Size (e.g. 13x7, 20x8)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} required />
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Wire Wheel Size
+              </label>
+              <input
+                type="text"
+                placeholder="Size (e.g. 13x7, 20x8)"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.size}
+                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                required
+              />
             </div>
             <div className="relative w-full">
-              {formData.offset && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Offset</label>}
-              <input type="text" placeholder="Offset (e.g. Std, Rev, Fwd)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.offset} onChange={(e) => setFormData({ ...formData, offset: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.boltPattern && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Bolt Pattern</label>}
-              <input type="text" placeholder="Bolt Pattern (e.g. 5x4.75 / 5x5.0)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.boltPattern} onChange={(e) => setFormData({ ...formData, boltPattern: e.target.value })} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="relative w-full">
-              {formData.spoke && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Spoke Count</label>}
-              <input type="number" placeholder="Spoke Count (e.g. 72, 100)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.spoke} onChange={(e) => setFormData({ ...formData, spoke: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.spokeStyle && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Spoke Style</label>}
-              <input type="text" placeholder="Spoke Style (e.g. Straight, Cross)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.spokeStyle} onChange={(e) => setFormData({ ...formData, spokeStyle: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.finish && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Finish Description</label>}
-              <input type="text" placeholder="Finish (e.g. All Chrome, Gold Spoke)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.finish} onChange={(e) => setFormData({ ...formData, finish: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.backSpacing && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Back Spacing (inches)</label>}
-              <input type="number" step="0.1" placeholder="Back Spacing" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.backSpacing} onChange={(e) => setFormData({ ...formData, backSpacing: e.target.value })} />
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Finish Description
+              </label>
+              <input
+                type="text"
+                placeholder="Finish (e.g. All Chrome, Gold Spoke)"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.finish}
+                onChange={(e) => setFormData({ ...formData, finish: e.target.value })}
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Knock Off Options */}
             <div className="relative w-full">
-              {formData.accessories && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Accessories</label>}
-              <input type="text" placeholder="Accessories (e.g. Adapters, Lead Hammer)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.accessories} onChange={(e) => setFormData({ ...formData, accessories: e.target.value })} />
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Knock Off Options
+              </label>
+              <input
+                type="text"
+                placeholder="Options"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.knockOffOption}
+                onChange={(e) => setFormData({ ...formData, knockOffOption: e.target.value })}
+              />
             </div>
+
+            {/* Options */}
             <div className="relative w-full">
-              {formData.packageInclude && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Package Includes</label>}
-              <input type="text" placeholder="Package details" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.packageInclude} onChange={(e) => setFormData({ ...formData, packageInclude: e.target.value })} />
+              <input
+                type="text"
+                placeholder="Options"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.options}
+                onChange={(e) => setFormData({ ...formData, options: e.target.value })}
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bolt Pattern */}
             <div className="relative w-full">
-              {formData.knockOffOption && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Knockoff Options</label>}
-              <input type="text" placeholder="Knockoff Options (e.g. Bullet / Hex / 2-Ear / 3-Ear)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.knockOffOption} onChange={(e) => setFormData({ ...formData, knockOffOption: e.target.value })} />
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Bolt Pattern
+              </label>
+              <input
+                type="text"
+                placeholder="Bolt Pattern"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.boltPattern}
+                onChange={(e) => setFormData({ ...formData, boltPattern: e.target.value })}
+              />
             </div>
+
+            {/* Accessories */}
             <div className="relative w-full">
-              {formData.options && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Options</label>}
-              <input type="text" placeholder="Options" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.options} onChange={(e) => setFormData({ ...formData, options: e.target.value })} />
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Accessories
+              </label>
+              <input
+                type="text"
+                placeholder="Accessories"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.accessories}
+                onChange={(e) => setFormData({ ...formData, accessories: e.target.value })}
+              />
             </div>
+          </div>
+
+          {/* Back Spacing */}
+          <div className="relative w-full">
+            <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+              Back Spacing
+            </label>
+            <input
+              type="text"
+              placeholder="Back Spacing"
+              className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+              value={formData.backSpacing}
+              onChange={(e) => setFormData({ ...formData, backSpacing: e.target.value })}
+            />
+          </div>
+
+          {/* Features Section */}
+          <div className="space-y-6 pt-4 border-t border-dashed border-gray-100">
+            <h4 className="text-[16px] font-bold text-[#1e2a4a]">Features</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Spoke */}
+              <div className="relative w-full">
+                <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                  Spoke
+                </label>
+                <input
+                  type="text"
+                  placeholder="Spoke"
+                  className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                  value={formData.spoke}
+                  onChange={(e) => setFormData({ ...formData, spoke: e.target.value })}
+                />
+              </div>
+
+              {/* Spoke Style */}
+              <div className="relative w-full">
+                <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                  Spoke Style
+                </label>
+                <input
+                  type="text"
+                  placeholder="Spoke Style"
+                  className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                  value={formData.spokeStyle}
+                  onChange={(e) => setFormData({ ...formData, spokeStyle: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Offset */}
+            <div className="relative w-full">
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Offset
+              </label>
+              <input
+                type="text"
+                placeholder="Offset"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
+                value={formData.offset}
+                onChange={(e) => setFormData({ ...formData, offset: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Package Details Section */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Package Details</h3>
+          <div className="relative w-full">
+            <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+              Package Include
+            </label>
+            <textarea
+              placeholder="Package Details"
+              className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all min-h-[120px] resize-y"
+              value={formData.packageInclude}
+              onChange={(e) => setFormData({ ...formData, packageInclude: e.target.value })}
+            />
           </div>
         </div>
 
@@ -1092,38 +1201,56 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">SEO & Search Optimization</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="space-y-3">
-              <div className="relative w-full">
-                {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
+              <span className="text-[14px] font-bold text-gray-500">Keywords</span>
+              <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-200 rounded-xl min-h-[100px] focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+                {keywordArray.map(kw => (
+                  <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-blue-100 select-none">
+                    {kw}
+                    <button
+                      type="button"
+                      onClick={() => removeKeyword(kw)}
+                      className="text-blue-400 hover:text-blue-600 transition-colors font-bold text-xs"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
                 <input
                   type="text"
-                  placeholder="Press Enter or ; to add search keywords"
-                  className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
+                  placeholder={keywordArray.length === 0 ? "Type keywords and press Enter or semi-colon (;)" : "Add keyword..."}
+                  className="flex-1 bg-transparent outline-none text-sm text-[#1e2a4a] min-w-[200px]"
                   value={keywordInput}
                   onChange={(e) => setKeywordInput(e.target.value)}
                   onKeyDown={handleKeywordKeyDown}
                 />
               </div>
-              {keywordArray.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {keywordArray.map(kw => (
-                    <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
-                      {kw} <X className="h-3 w-3 cursor-pointer hover:text-blue-800" onClick={() => removeKeyword(kw)} />
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
-            <div className="relative w-full mt-4">
-              {formData.seoTitle && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SEO Title</label>}
-              <input type="text" placeholder="SEO Title" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.seoTitle} onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })} />
+            <div className="relative w-full">
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                SEO Title
+              </label>
+              <input
+                type="text"
+                placeholder="SEO Title"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                value={formData.seoTitle}
+                onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+              />
             </div>
 
-            <div className="relative w-full mt-4">
-              {formData.metaDescription && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
-              <textarea placeholder="Meta Description" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y" value={formData.metaDescription} onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })} />
+            <div className="relative w-full">
+              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] font-bold text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
+                Meta Description
+              </label>
+              <textarea
+                placeholder="Meta Description"
+                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all min-h-[100px] resize-y"
+                value={formData.metaDescription}
+                onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+              />
             </div>
           </div>
         </div>
