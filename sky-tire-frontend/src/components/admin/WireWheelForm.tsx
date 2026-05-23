@@ -238,10 +238,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
     keywords: '',
     seoTitle: '',
     metaDescription: '',
-    platingDepthScore: '0',
-    sealingIntegrityScore: '0',
-    spokeTensionScore: '0',
-    feedbackScore: '0',
+    platingDepthScore: '',
+    sealingIntegrityScore: '',
+    spokeTensionScore: '',
+    feedbackScore: '',
     isVisible: true,
     isActive: true,
     status: 'draft',
@@ -300,10 +300,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
           keywords: wheel.keywords || '',
           seoTitle: wheel.seoTitle || '',
           metaDescription: wheel.metaDescription || '',
-          platingDepthScore: wheel.platingDepthScore != null ? String(wheel.platingDepthScore) : '0',
-          sealingIntegrityScore: wheel.sealingIntegrityScore != null ? String(wheel.sealingIntegrityScore) : '0',
-          spokeTensionScore: wheel.spokeTensionScore != null ? String(wheel.spokeTensionScore) : '0',
-          feedbackScore: wheel.feedbackScore != null ? String(wheel.feedbackScore) : '0',
+          platingDepthScore: wheel.platingDepthScore != null ? String(wheel.platingDepthScore) : '',
+          sealingIntegrityScore: wheel.sealingIntegrityScore != null ? String(wheel.sealingIntegrityScore) : '',
+          spokeTensionScore: wheel.spokeTensionScore != null ? String(wheel.spokeTensionScore) : '',
+          feedbackScore: wheel.feedbackScore != null ? String(wheel.feedbackScore) : '',
           isVisible: wheel.isVisible !== false,
           isActive: wheel.isActive !== false,
           status: wheel.status || 'draft',
@@ -1244,25 +1244,33 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         </div>
 
         {/* Scoring */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Sky Wire Wheel Scores (0-10)</h3>
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a]">Sky Score (0-10)</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="relative w-full">
-              {formData.platingDepthScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Plating Depth</label>}
-              <input type="number" min="0" max="10" placeholder="Plating Depth" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.platingDepthScore} onChange={(e) => setFormData({ ...formData, platingDepthScore: e.target.value })} />
+              <input type="number" min="0" max="10" placeholder="Plating Depth Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.platingDepthScore} onChange={(e) => setFormData({ ...formData, platingDepthScore: e.target.value })} />
+              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.platingDepthScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
+                Plating Depth Score
+              </label>
             </div>
             <div className="relative w-full">
-              {formData.sealingIntegrityScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sealing Integrity</label>}
-              <input type="number" min="0" max="10" placeholder="Sealing Integrity" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.sealingIntegrityScore} onChange={(e) => setFormData({ ...formData, sealingIntegrityScore: e.target.value })} />
+              <input type="number" min="0" max="10" placeholder="Sealing Integrity Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.sealingIntegrityScore} onChange={(e) => setFormData({ ...formData, sealingIntegrityScore: e.target.value })} />
+              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.sealingIntegrityScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
+                Sealing Integrity Score
+              </label>
             </div>
             <div className="relative w-full">
-              {formData.spokeTensionScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Spoke Tension</label>}
-              <input type="number" min="0" max="10" placeholder="Spoke Tension" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.spokeTensionScore} onChange={(e) => setFormData({ ...formData, spokeTensionScore: e.target.value })} />
+              <input type="number" min="0" max="10" placeholder="Spoke Tension Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.spokeTensionScore} onChange={(e) => setFormData({ ...formData, spokeTensionScore: e.target.value })} />
+              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.spokeTensionScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
+                Spoke Tension Score
+              </label>
             </div>
             <div className="relative w-full">
-              {formData.feedbackScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Customer Feedback</label>}
-              <input type="number" min="0" max="10" placeholder="Feedback" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.feedbackScore} onChange={(e) => setFormData({ ...formData, feedbackScore: e.target.value })} />
+              <input type="number" min="0" max="10" placeholder="Feedback Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.feedbackScore} onChange={(e) => setFormData({ ...formData, feedbackScore: e.target.value })} />
+              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.feedbackScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
+                Feedback Score
+              </label>
             </div>
           </div>
         </div>
