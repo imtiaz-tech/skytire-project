@@ -70,6 +70,7 @@ model Brand {
   description String?
   models      TireModel[]
   wheels      Wheel[]
+  wireWheels  WireWheel[]
 
   @@index([brandName])
 }
@@ -133,6 +134,7 @@ model InventorySource {
   source    String   @unique
   tires     Tire[]
   wheels    Wheel[]
+  wireWheels WireWheel[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -338,4 +340,59 @@ model Wheel {
 
   @@index([brandId])
   @@index([sku])
+}
+
+model WireWheel {
+  id                    String            @id @default(cuid())
+  images                String[]
+  knockOffs             Json?             // Structure: image, name, price, chipOption, chips[] (image, name)
+  floatingCaps          Json?             // Structure: image, name, price
+  name                  String
+  description           String?
+  sku                   String            @unique
+  size                  String
+  finish                String?
+  countryOfOrigin       String?
+  brandId               String?
+  sourceId              String?
+  stock                 Int               @default(0)
+  cost                  Float             @default(0)
+  salePrice             Float             @default(0)
+  mapPrice              Float             @default(0)
+  regularPrice          Float             @default(0)
+  shippingCost          Float             @default(0)
+  handlingFee           Float             @default(0)
+  packageInclude        String?
+  knockOffOption        String?
+  options               String?
+  boltPattern           String?
+  accessories           String?
+  backSpacing           Float?
+  spoke                 Int?
+  spokeStyle            String?
+  offset                String?
+  keywords              String?
+  seoTitle              String?
+  metaDescription       String?
+  
+  // Wire Wheel Scores (0-10)
+  platingDepthScore     Int?              @default(0)
+  sealingIntegrityScore Int?              @default(0)
+  spokeTensionScore     Int?              @default(0)
+  feedbackScore         Int?              @default(0)
+
+  status                String            @default("draft") // draft or published
+  isVisible             Boolean           @default(true)
+  isActive              Boolean           @default(true)
+  slug                  String            @unique
+  oldSlugs              String[]          @default([])
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  brand                 Brand?            @relation(fields: [brandId], references: [id])
+  source                InventorySource?  @relation(fields: [sourceId], references: [id])
+
+  @@index([brandId])
+  @@index([sku])
+  @@index([slug])
 }

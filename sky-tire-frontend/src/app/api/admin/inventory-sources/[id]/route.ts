@@ -88,13 +88,19 @@ export async function DELETE(
         });
       }
 
-      // 3. Delete the inventory source
+      // 3. Reset stock to 0 for linked wire wheels
+      await tx.wireWheel.updateMany({
+        where: { sourceId: id },
+        data: { stock: 0 },
+      });
+
+      // 4. Delete the inventory source
       await tx.inventorySource.delete({
         where: { id },
       });
     });
 
-    return NextResponse.json({ message: 'Inventory Source deleted successfully and linked tires/wheels stock reset to 0' });
+    return NextResponse.json({ message: 'Inventory Source deleted successfully and linked tires/wheels/wire-wheels stock reset to 0' });
   } catch (error) {
     console.error('Error deleting inventory source:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
