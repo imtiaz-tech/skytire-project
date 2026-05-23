@@ -1067,7 +1067,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full">
-              {formData.accessories && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Accessories Included</label>}
+              {formData.accessories && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Accessories</label>}
               <input type="text" placeholder="Accessories (e.g. Adapters, Lead Hammer)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.accessories} onChange={(e) => setFormData({ ...formData, accessories: e.target.value })} />
             </div>
             <div className="relative w-full">
@@ -1078,12 +1078,12 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full">
-              {formData.knockOffOption && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Knockoff Style Description</label>}
-              <input type="text" placeholder="Knockoff Style (e.g. Bullet / Hex / 2-Ear / 3-Ear)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.knockOffOption} onChange={(e) => setFormData({ ...formData, knockOffOption: e.target.value })} />
+              {formData.knockOffOption && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Knockoff Options</label>}
+              <input type="text" placeholder="Knockoff Options (e.g. Bullet / Hex / 2-Ear / 3-Ear)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.knockOffOption} onChange={(e) => setFormData({ ...formData, knockOffOption: e.target.value })} />
             </div>
             <div className="relative w-full">
-              {formData.options && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Other Custom Options</label>}
-              <input type="text" placeholder="Additional Options" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.options} onChange={(e) => setFormData({ ...formData, options: e.target.value })} />
+              {formData.options && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Options</label>}
+              <input type="text" placeholder="Options" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.options} onChange={(e) => setFormData({ ...formData, options: e.target.value })} />
             </div>
           </div>
         </div>
