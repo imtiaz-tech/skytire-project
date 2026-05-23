@@ -1203,29 +1203,26 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
           
           <div className="space-y-6">
             <div className="space-y-3">
-              <span className="text-[14px] font-bold text-gray-500">Keywords</span>
-              <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-200 rounded-xl min-h-[100px] focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
-                {keywordArray.map(kw => (
-                  <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-blue-100 select-none">
-                    {kw}
-                    <button
-                      type="button"
-                      onClick={() => removeKeyword(kw)}
-                      className="text-blue-400 hover:text-blue-600 transition-colors font-bold text-xs"
-                    >
-                      &times;
-                    </button>
-                  </span>
-                ))}
+              <div className="relative w-full">
+                {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
                 <input
                   type="text"
-                  placeholder={keywordArray.length === 0 ? "Type keywords and press Enter or semi-colon (;)" : "Add keyword..."}
-                  className="flex-1 bg-transparent outline-none text-sm text-[#1e2a4a] min-w-[200px]"
+                  placeholder="Press Enter or ; to add keywords"
+                  className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
                   value={keywordInput}
                   onChange={(e) => setKeywordInput(e.target.value)}
                   onKeyDown={handleKeywordKeyDown}
                 />
               </div>
+              {keywordArray.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {keywordArray.map(kw => (
+                    <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
+                      {kw} <X className="h-3 w-3 cursor-pointer hover:text-blue-800" onClick={() => removeKeyword(kw)} />
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="relative w-full">
