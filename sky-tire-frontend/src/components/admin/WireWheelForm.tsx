@@ -986,7 +986,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
               </div>
               <div className="relative w-full">
                 {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost</label>}
-                <input type="number" step="0.01" placeholder="Cost" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} required />
+                <input type="number" step="0.01" placeholder="Cost" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onBlur={(e) => setFormData({ ...formData, cost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
               </div>
             </div>
           </div>
@@ -996,7 +996,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="relative w-full">
                 {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price</label>}
-                <input type="number" step="0.01" placeholder="Sale Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} required />
+                <input type="number" step="0.01" placeholder="Sale Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, salePrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
                 {pricing.recommendedSalePrice && Number(formData.salePrice) < parseFloat(pricing.recommendedSalePrice) && (
                   <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
                     Recommended sale price is: ${pricing.recommendedSalePrice} (23% markup)
@@ -1005,22 +1005,22 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
               </div>
               <div className="relative w-full">
                 {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Map Price</label>}
-                <input type="number" step="0.01" placeholder="Map Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} required />
+                <input type="number" step="0.01" placeholder="Map Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, mapPrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
               </div>
               <div className="relative w-full">
                 {formData.regularPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Regular Price</label>}
-                <input type="number" step="0.01" placeholder="Regular Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} required />
+                <input type="number" step="0.01" placeholder="Regular Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, regularPrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
               <div className="relative w-full">
                 {formData.shippingCost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping</label>}
-                <input type="number" step="0.01" placeholder="Shipping" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} />
+                <input type="number" step="0.01" placeholder="Shipping" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} onBlur={(e) => setFormData({ ...formData, shippingCost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
               </div>
               <div className="relative w-full">
                 {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee</label>}
-                <input type="number" step="0.01" placeholder="Handling Fee" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} />
+                <input type="number" step="0.01" placeholder="Handling Fee" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onBlur={(e) => setFormData({ ...formData, handlingFee: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
               </div>
             </div>
           </div>
