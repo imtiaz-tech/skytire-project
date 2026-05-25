@@ -88,10 +88,10 @@ export async function DELETE(
         });
       }
 
-      // 3. Reset stock to 0 for linked wire wheels
+      // 3. Reset stock to 0 and remove source link for wire wheels
       await tx.wireWheel.updateMany({
         where: { sourceId: id },
-        data: { stock: 0 },
+        data: { stock: 0, sourceId: null },
       });
 
       // 4. Delete the inventory source
