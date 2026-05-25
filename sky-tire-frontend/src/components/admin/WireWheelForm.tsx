@@ -917,7 +917,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
                 onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
                 className="w-[18px] h-[18px] rounded-[4px] border border-gray-300 text-blue-500 focus:ring-blue-500 cursor-pointer outline-none"
               />
-              <span className="text-[15px] font-medium text-[#1e2a4a]">Visible</span>
+              <span className="text-[15px] font-medium text-[#1e2a4a]">Featured</span>
             </label>
           </div>
 
