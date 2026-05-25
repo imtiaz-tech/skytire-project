@@ -489,7 +489,7 @@ export default function WireWheelsPage() {
                             <Copy className="h-4 w-4" />
                           </button>
                           <Link
-                            href={``}
+                            href={`/admin/wire-wheels/edit/${wheel.id}`}
                             className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
                             title="Edit"
                           >

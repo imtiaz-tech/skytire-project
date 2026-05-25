@@ -251,7 +251,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wheel');
+        const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wire_wheel');
         setBrands(brandsRes.data || []);
         dispatch(fetchAllInventorySources());
       } catch (error) {
