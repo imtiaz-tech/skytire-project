@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Search, Loader2, Plus, Edit2, Trash2, CircleDot,
+  Search, Loader2, Plus, Edit2, Trash2, CircleDot, Copy,
   ArrowUp, ArrowDown, ArrowUpDown, Eye, EyeOff, Wrench
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -97,6 +97,11 @@ export default function WireWheelsPage() {
   const openDeleteModal = (id: string) => {
     setWireWheelToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleDuplicate = (id: string) => {
+    sessionStorage.setItem('duplicateWireWheelId', id);
+    router.push('/admin/wire-wheels/add');
   };
 
   const openPreview = (wireWheel: WireWheel) => {
@@ -476,6 +481,13 @@ export default function WireWheelsPage() {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            // onClick={() => handleDuplicate(wheel.id)}
+                            className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            title="Duplicate"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
                           <Link
                             href={``}
                             className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
