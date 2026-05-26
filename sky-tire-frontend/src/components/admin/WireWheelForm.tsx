@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWireWheel, updateWireWheel } from '@/features/wire-wheels/slice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
-import { ArrowLeft, Loader2, UploadCloud, X, Plus, Trash2, Calculator, ChevronDown, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, X, Plus, Trash2, Calculator, ChevronDown, Check, Settings2 } from 'lucide-react';
 import { calculatePricing } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -79,6 +80,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
   const [publishLoading, setPublishLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [brands, setBrands] = useState<{ id: string; brandName: string }[]>([]);
+
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const sourceDropdownRef = useRef<HTMLDivElement>(null);
+  const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
 
   const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(duplicateId || null);
 
@@ -260,6 +265,28 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
     };
     fetchData();
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
+        setIsSourceDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleSource = (sourceId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.sourceId === sourceId;
+      if (isSelected) {
+        return { ...prev, sourceId: '' };
+      } else {
+        return { ...prev, sourceId };
+      }
+    });
+    setIsSourceDropdownOpen(false);
+  };
 
   // Load edit/duplicate data
   useEffect(() => {
@@ -971,22 +998,54 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           
           <div className="space-y-4">
-            <h3 className="text-[18px] font-bold text-[#1e2a4a]">Source Stock & Cost</h3>
+            <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Source Stock & Cost</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="relative w-full">
-                {formData.sourceId && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Source</label>}
-                <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={formData.sourceId} onChange={(e) => setFormData({ ...formData, sourceId: e.target.value })} required>
-                  <option value="">Select a Source</option>
-                  {sources && sources.map(s => <option key={s.id} value={s.id}>{s.source}</option>)}
-                </select>
+              <div className="relative w-full" ref={sourceDropdownRef}>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <label className="text-[14px] font-medium text-gray-400 uppercase tracking-wider">Select a Source</label>
+                  <button type="button" onClick={() => setIsManageSourcesOpen(true)} className="text-blue-500 hover:text-blue-600 text-[14px] font-bold flex items-center gap-1 transition-colors">
+                    <Settings2 className="h-3.5 w-3.5" /> Manage
+                  </button>
+                </div>
+                <div className={`w-full px-4 py-3.5 bg-transparent border ${isSourceDropdownOpen ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-gray-200'} rounded-xl text-[#1e2a4a] cursor-pointer flex items-center justify-between transition-all min-h-[54px]`} onClick={() => setIsSourceDropdownOpen(!isSourceDropdownOpen)}>
+                  <div className="flex flex-wrap gap-2 text-[16px]">
+                    {formData.sourceId ? (() => {
+                      const source = sources?.find((s: { id: string; source: string }) => s.id === formData.sourceId);
+                      return (
+                        <span key={formData.sourceId} className="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[13px] font-bold flex items-center gap-1">
+                          {source?.source || 'Unknown'}
+                          <X className="h-3 w-3 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); toggleSource(formData.sourceId); }} />
+                        </span>
+                      );
+                    })() : (
+                      <span className="text-gray-500">Select a Source</span>
+                    )}
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isSourceDropdownOpen ? 'rotate-180' : ''}`} />
+                </div>
+
+                {isSourceDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-150 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                    {sources && sources.length > 0 ? (
+                      sources.map((source: { id: string; source: string }) => (
+                        <div key={source.id} className={`px-4 py-3 text-[14px] cursor-pointer hover:bg-blue-50 flex items-center justify-between transition-colors ${formData.sourceId === source.id ? 'bg-blue-50 text-blue-600 font-bold' : 'text-gray-700 font-medium'}`} onClick={() => toggleSource(source.id)}>
+                          <span>{source.source}</span>
+                          {formData.sourceId === source.id && <Check className="h-4 w-4" />}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-8 text-center text-gray-400 text-[14px]">No sources found. Click manage to add.</div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="relative w-full">
+              <div className="relative w-full mt-[28px]">
                 {formData.stock && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stock</label>}
                 <input type="number" placeholder="Stock" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} required />
               </div>
-              <div className="relative w-full">
+              <div className="relative w-full mt-[28px]">
                 {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost</label>}
-                <input type="number" step="0.01" placeholder="Cost" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onBlur={(e) => setFormData({ ...formData, cost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
+                <input type="number" step="0.01" placeholder="Cost" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-blue-600" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onBlur={(e) => setFormData({ ...formData, cost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} required />
               </div>
             </div>
           </div>
@@ -1295,6 +1354,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
         </div>
 
       </form>
+
+      {isManageSourcesOpen && (
+        <ManageInventorySourcesModal onClose={() => setIsManageSourcesOpen(false)} />
+      )}
     </div>
   );
 }

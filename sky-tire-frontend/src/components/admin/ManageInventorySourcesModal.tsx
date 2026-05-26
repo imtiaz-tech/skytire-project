@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { 
-  fetchInventorySources, 
+  fetchAllInventorySources, 
   createInventorySource, 
   updateInventorySource, 
   deleteInventorySource 
@@ -26,14 +26,15 @@ export default function ManageInventorySourcesModal({ onClose }: ManageInventory
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(fetchInventorySources());
+    dispatch(fetchAllInventorySources());
   }, [dispatch]);
 
   const handleAdd = async () => {
     if (!newSourceName.trim()) return;
     setIsSubmitting(true);
     try {
-      await dispatch(createInventorySource(newSourceName)).unwrap();
+      await dispatch(createInventorySource({ source: newSourceName })).unwrap();
+      dispatch(fetchAllInventorySources());
       setNewSourceName('');
     } catch (error: any) {
       alert(error.message || 'Failed to add source');
@@ -46,7 +47,8 @@ export default function ManageInventorySourcesModal({ onClose }: ManageInventory
     if (!editingName.trim()) return;
     setIsSubmitting(true);
     try {
-      await dispatch(updateInventorySource({ id, source: editingName })).unwrap();
+      await dispatch(updateInventorySource({ id, data: { source: editingName } })).unwrap();
+      dispatch(fetchAllInventorySources());
       setEditingId(null);
     } catch (error: any) {
       alert(error.message || 'Failed to update source');
