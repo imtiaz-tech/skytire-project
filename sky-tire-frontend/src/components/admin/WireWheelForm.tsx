@@ -11,6 +11,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import ManageBrandsModal from './ManageBrandsModal';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -84,6 +85,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+  const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
 
   const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(duplicateId || null);
 
@@ -252,24 +257,29 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
     status: 'draft',
   });
 
+  // Fetch brands data
+  const fetchBrandsData = async () => {
+    try {
+      const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wire_wheel');
+      setBrands(brandsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
+
   // Fetch dropdown data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wire_wheel');
-        setBrands(brandsRes.data || []);
-        dispatch(fetchAllInventorySources());
-      } catch (error) {
-        console.error('Error fetching brand/source data:', error);
-      }
-    };
-    fetchData();
+    fetchBrandsData();
+    dispatch(fetchAllInventorySources());
   }, [dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
         setIsSourceDropdownOpen(false);
+      }
+      if (brandDropdownRef.current && !brandDropdownRef.current.contains(event.target as Node)) {
+        setIsBrandDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -969,12 +979,52 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
               {formData.sku && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>}
               <input type="text" placeholder="SKU" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} required />
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full" ref={brandDropdownRef}>
               <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand</label>
-              <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={formData.brandId} onChange={(e) => setFormData({ ...formData, brandId: e.target.value })} required>
-                <option value="">Select Brand</option>
-                {brands.map(b => <option key={b.id} value={b.id}>{b.brandName}</option>)}
-              </select>
+              <button
+                type="button"
+                onClick={() => setIsBrandDropdownOpen(!isBrandDropdownOpen)}
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[16px] outline-none text-left flex items-center justify-between"
+              >
+                <span className={formData.brandId ? 'text-[#1e2a4a]' : 'text-gray-400'}>
+                  {formData.brandId ? brands.find(b => b.id === formData.brandId)?.brandName || 'Select Brand' : 'Select Brand'}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isBrandDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isBrandDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-[220px] overflow-y-auto">
+                  <div
+                    onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
+                    className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                      !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
+                    }`}
+                  >
+                    Select Brand
+                    {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
+                  </div>
+                  {brands.map((b) => (
+                    <div
+                      key={b.id}
+                      onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                      className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                        formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                      }`}
+                    >
+                      {b.brandName}
+                      {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                    </div>
+                  ))}
+                  <div className="border-t border-gray-100">
+                    <div
+                      onClick={() => { setIsBrandDropdownOpen(false); setIsManageBrandsOpen(true); }}
+                      className="px-4 py-2.5 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-medium"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Brand
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="relative w-full">
               {formData.countryOfOrigin && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Country of Origin</label>}
@@ -1357,6 +1407,14 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
       {isManageSourcesOpen && (
         <ManageInventorySourcesModal onClose={() => setIsManageSourcesOpen(false)} />
+      )}
+
+      {isManageBrandsOpen && (
+        <ManageBrandsModal
+          category="wire_wheel"
+          onClose={() => setIsManageBrandsOpen(false)}
+          onBrandsUpdated={fetchBrandsData}
+        />
       )}
     </div>
   );
