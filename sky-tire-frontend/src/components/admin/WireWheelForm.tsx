@@ -992,32 +992,34 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isBrandDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               {isBrandDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-[220px] overflow-y-auto">
-                  <div
-                    onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
-                    className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
-                      !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
-                    }`}
-                  >
-                    Select Brand
-                    {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
-                  </div>
-                  {brands.map((b) => (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 flex flex-col max-h-[260px] overflow-hidden">
+                  <div className="overflow-y-auto flex-1">
                     <div
-                      key={b.id}
-                      onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                      onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
                       className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
-                        formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                        !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
                       }`}
                     >
-                      {b.brandName}
-                      {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                      Select Brand
+                      {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
                     </div>
-                  ))}
-                  <div className="border-t border-gray-100">
+                    {brands.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                        className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                          formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                        }`}
+                      >
+                        {b.brandName}
+                        {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 bg-white sticky bottom-0 z-10 shrink-0">
                     <div
                       onClick={() => { setIsBrandDropdownOpen(false); setIsManageBrandsOpen(true); }}
-                      className="px-4 py-2.5 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-medium"
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-bold transition-colors"
                     >
                       <Plus className="h-4 w-4" />
                       Add Brand

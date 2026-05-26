@@ -21,6 +21,7 @@ export default function ManageBrandsModal({ category, onClose, onBrandsUpdated }
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newBrandName, setNewBrandName] = useState('');
+  const [newBrandImage, setNewBrandImage] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +47,18 @@ export default function ManageBrandsModal({ category, onClose, onBrandsUpdated }
     if (!newBrandName.trim()) return;
     setIsSubmitting(true);
     try {
-      await axios.post('/api/admin/brands/manage', {
-        brandName: newBrandName.trim(),
-        category,
+      const formData = new FormData();
+      formData.append('brandName', newBrandName.trim());
+      formData.append('category', category);
+      if (newBrandImage) {
+        formData.append('brandLogo', newBrandImage);
+      }
+
+      await axios.post('/api/admin/brands/manage', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       setNewBrandName('');
+      setNewBrandImage(null);
       await fetchBrands();
       onBrandsUpdated?.();
     } catch (error: any) {
@@ -108,22 +116,57 @@ export default function ManageBrandsModal({ category, onClose, onBrandsUpdated }
         
         <div className="p-6 flex-1 overflow-y-auto space-y-6">
           {/* Add New Brand */}
-          <div className="flex gap-3 items-center">
-            <input
-              type="text"
-              placeholder="New Brand Name"
-              value={newBrandName}
-              onChange={(e) => setNewBrandName(e.target.value)}
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-lg text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-[#1e2a4a]"
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            />
-            <button
-              onClick={handleAdd}
-              disabled={!newBrandName.trim() || isSubmitting}
-              className="px-6 py-3 bg-[#e8edf5] text-[#3B5998] font-medium rounded-lg hover:bg-[#d8e0ee] transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Add
-            </button>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3 items-center">
+              <input
+                type="text"
+                placeholder="New Brand Name"
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-[#1e2a4a]"
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              />
+              <button
+                onClick={handleAdd}
+                disabled={!newBrandName.trim() || isSubmitting}
+                className="px-6 py-3 bg-[#e8edf5] text-[#3B5998] font-medium rounded-lg hover:bg-[#d8e0ee] transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" /> Add
+              </button>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="file"
+                  id="brandImageUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setNewBrandImage(e.target.files[0]);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="brandImageUpload"
+                  className="flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-500">
+                    {newBrandImage ? newBrandImage.name : 'Upload Brand Logo (Optional)'}
+                  </span>
+                </label>
+              </div>
+              {newBrandImage && (
+                <button
+                  onClick={() => setNewBrandImage(null)}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Remove image"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List Brands */}
