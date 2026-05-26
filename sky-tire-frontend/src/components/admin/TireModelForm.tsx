@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createTireModel, updateTireModel } from '@/redux/slices/tireModelsSlice';
 import { TireModel } from '@/redux/types/tireModelTypes';
-import { ArrowLeft, Upload, X, Loader2, Plus, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Upload, X, Loader2, Plus, Image as ImageIcon, ChevronDown, Check } from 'lucide-react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
+import ManageBrandsModal from './ManageBrandsModal';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -37,6 +38,10 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<{ id: string; brandName: string }[]>([]);
   
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+  const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
+
   // Images State
   const [previews, setPreviews] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -82,16 +87,27 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     language: 'en',
   }), [editModel]);
 
+  const fetchBrandsData = async () => {
+    try {
+      const response = await axios.get('/api/admin/brands/dropdown?category=tire');
+      setBrands(response.data);
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const response = await axios.get('/api/admin/brands/dropdown');
-        setBrands(response.data);
-      } catch (error) {
-        console.error('Error fetching brands:', error);
+    fetchBrandsData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (brandDropdownRef.current && !brandDropdownRef.current.contains(event.target as Node)) {
+        setIsBrandDropdownOpen(false);
       }
     };
-    fetchBrands();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -266,21 +282,56 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" ref={brandDropdownRef}>
               <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider ml-1">Brand</label>
-              <select
-                className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-blue-500/20 transition-all font-medium appearance-none"
-                value={formData.brandId}
-                onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                required
-              >
-                <option value="">Select Brand</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.brandName}
-                  </option>
-                ))}
-              </select>
+              <div className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() => setIsBrandDropdownOpen(!isBrandDropdownOpen)}
+                  className="w-full px-5 py-4 bg-gray-50/50 border-none rounded-2xl text-[16px] outline-none text-left flex items-center justify-between font-medium"
+                >
+                  <span className={formData.brandId ? 'text-[#1e2a4a]' : 'text-gray-400'}>
+                    {formData.brandId ? brands.find(b => b.id === formData.brandId)?.brandName || 'Select Brand' : 'Select Brand'}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isBrandDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isBrandDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 flex flex-col max-h-[260px] overflow-hidden">
+                    <div className="overflow-y-auto flex-1">
+                      <div
+                        onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
+                        className={`px-5 py-3.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                          !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
+                        }`}
+                      >
+                        Select Brand
+                        {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
+                      </div>
+                      {brands.map((b) => (
+                        <div
+                          key={b.id}
+                          onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                          className={`px-5 py-3.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                            formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                          }`}
+                        >
+                          {b.brandName}
+                          {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-100 bg-white sticky bottom-0 z-10 shrink-0">
+                      <div
+                        onClick={() => { setIsBrandDropdownOpen(false); setIsManageBrandsOpen(true); }}
+                        className="px-5 py-4 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-bold transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Brand
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -407,6 +458,14 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
           </div>
         </div>
       </form>
+
+      {isManageBrandsOpen && (
+        <ManageBrandsModal
+          category="tire"
+          onClose={() => setIsManageBrandsOpen(false)}
+          onBrandsUpdated={fetchBrandsData}
+        />
+      )}
     </div>
   );
 }
