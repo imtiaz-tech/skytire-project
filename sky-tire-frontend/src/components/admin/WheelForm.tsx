@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWheel, updateWheel } from '@/redux/slices/wheelsSlice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
-import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator, Plus } from 'lucide-react';
 import { calculatePricing } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import ManageBrandsModal from './ManageBrandsModal';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -56,6 +57,10 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
   const [fetching, setFetching] = useState(false);
   const [brands, setBrands] = useState<{ id: string; brandName: string }[]>([]);
   
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
@@ -118,11 +123,19 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     feedbackScore: '',
   });
 
+  const fetchBrands = async () => {
+    try {
+      const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wheel');
+      setBrands(brandsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const brandsRes = await axios.get('/api/admin/brands/dropdown?category=wheel');
-        setBrands(brandsRes.data || []);
+        await fetchBrands();
         dispatch(fetchAllInventorySources());
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -207,6 +220,9 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     const handleClickOutside = (event: MouseEvent) => {
       if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
         setIsSourceDropdownOpen(false);
+      }
+      if (brandDropdownRef.current && !brandDropdownRef.current.contains(event.target as Node)) {
+        setIsBrandDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -478,12 +494,54 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               {formData.sku && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>}
               <input type="text" placeholder="SKU" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} required />
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full" ref={brandDropdownRef}>
               <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand</label>
-              <select className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none appearance-none" value={formData.brandId} onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}>
-                <option value="">Select Brand</option>
-                {brands.map(b => <option key={b.id} value={b.id}>{b.brandName}</option>)}
-              </select>
+              <button
+                type="button"
+                onClick={() => setIsBrandDropdownOpen(!isBrandDropdownOpen)}
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[16px] outline-none text-left flex items-center justify-between"
+              >
+                <span className={formData.brandId ? 'text-[#1e2a4a]' : 'text-gray-400'}>
+                  {formData.brandId ? brands.find(b => b.id === formData.brandId)?.brandName || 'Select Brand' : 'Select Brand'}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isBrandDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isBrandDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 flex flex-col max-h-[260px] overflow-hidden">
+                  <div className="overflow-y-auto flex-1">
+                    <div
+                      onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
+                      className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                        !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
+                      }`}
+                    >
+                      Select Brand
+                      {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
+                    </div>
+                    {brands.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                        className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                          formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                        }`}
+                      >
+                        {b.brandName}
+                        {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 bg-white sticky bottom-0 z-10 shrink-0">
+                    <div
+                      onClick={() => { setIsBrandDropdownOpen(false); setIsManageBrandsOpen(true); }}
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-bold transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Brand
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="relative w-full">
               {formData.brandVariant && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand Variant</label>}
@@ -786,7 +844,17 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
       </form>
 
       {isManageSourcesOpen && (
-        <ManageInventorySourcesModal onClose={() => setIsManageSourcesOpen(false)} />
+        <ManageInventorySourcesModal
+          onClose={() => setIsManageSourcesOpen(false)}
+        />
+      )}
+
+      {isManageBrandsOpen && (
+        <ManageBrandsModal
+          category="wheel"
+          onClose={() => setIsManageBrandsOpen(false)}
+          onBrandsUpdated={fetchBrands}
+        />
       )}
     </div>
   );
