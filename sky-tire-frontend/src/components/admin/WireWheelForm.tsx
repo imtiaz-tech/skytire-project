@@ -255,6 +255,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
     isVisible: true,
     isActive: true,
     status: 'draft',
+    staggeredFitment: false,
   });
 
   // Fetch brands data
@@ -344,6 +345,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
           isVisible: wheel.isVisible !== false,
           isActive: wheel.isActive !== false,
           status: wheel.status || 'draft',
+          staggeredFitment: wheel.staggeredFitment || false,
         });
 
         if (wheel.keywords) {
@@ -1034,7 +1036,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div className="relative w-full">
               <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Size</label>
               <input type="text" placeholder="Size (e.g. 13x7, 20x8)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} required />
@@ -1042,6 +1044,18 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
             <div className="relative w-full">
               <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Finish</label>
               <input type="text" placeholder="Finish (e.g. All Chrome, Gold Spoke)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.finish} onChange={(e) => setFormData({ ...formData, finish: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Staggered Fitment</label>
+              <select
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none appearance-none cursor-pointer"
+                value={formData.staggeredFitment ? 'true' : 'false'}
+                onChange={(e) => setFormData({ ...formData, staggeredFitment: e.target.value === 'true' })}
+              >
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>
