@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import tiresReducer from './slices/tiresSlice';
 import wheelsReducer from './slices/wheelsSlice';
 import wireWheelsReducer from '../features/wire-wheels/slice';
+import boltOnWireWheelsReducer from '../features/bolt-on-wire-wheels/slice';
 import accessoriesReducer from '../features/accessories/slice';
 import dashboardReducer from '../features/dashboard/slice';
 import authReducer from './slices/authSlice';
@@ -20,6 +21,7 @@ export const store = configureStore({
     tires: tiresReducer,
     wheels: wheelsReducer,
     wireWheels: wireWheelsReducer,
+    boltOnWireWheels: boltOnWireWheelsReducer,
     accessories: accessoriesReducer,
     dashboard: dashboardReducer,
     users: usersReducer,

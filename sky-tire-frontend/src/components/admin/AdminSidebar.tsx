@@ -27,6 +27,7 @@ const navItems = [
   { label: 'Guest User', href: '/admin/guest-users', icon: UserRound },
   { label: 'Wheels', href: '/admin/wheels', icon: Disc3 },
   { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
+  { label: 'Bolt-On Wire Wheels', href: '/admin/bolt-on-wire-wheels', icon: Disc3 },
   { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
   { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Tires', href: '/admin/tires', icon: CircleDot },
