@@ -102,7 +102,7 @@ export default function BoltOnWireWheelsPage() {
   };
 
   const handleDuplicate = (id: string) => {
-    sessionStorage.setItem('duplicateWireWheelId', id);
+    sessionStorage.setItem('duplicateBoltOnWireWheelId', id);
     router.push('/admin/bolt-on-wire-wheels/add');
   };
 
@@ -484,14 +484,14 @@ export default function BoltOnWireWheelsPage() {
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleDuplicate(wheel.id)}
+                            // onClick={() => handleDuplicate(wheel.id)}
                             className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                             title="Duplicate"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
                           <Link
-                            href={`/admin/bolt-on-wire-wheels/edit/${wheel.id}`}
+                            href={``}
                             className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
                             title="Edit"
                           >

@@ -1427,7 +1427,7 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
 
       {isManageBrandsOpen && (
         <ManageBrandsModal
-          category="wire_wheel"
+          category="bolt_on_wheels"
           onClose={() => setIsManageBrandsOpen(false)}
           onBrandsUpdated={fetchBrandsData}
         />
