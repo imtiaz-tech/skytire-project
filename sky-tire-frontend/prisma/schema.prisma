@@ -137,6 +137,7 @@ model InventorySource {
   wheels    Wheel[]
   wireWheels WireWheel[]
   boltOnWireWheels BoltOnWireWheel[]
+  accessories Accessory[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -454,4 +455,48 @@ model BoltOnWireWheel {
   @@index([brandId])
   @@index([sku])
   @@index([slug])
+}
+
+model Accessory {
+  id                    String            @id @default(cuid())
+  sku                   String            @unique
+  category              String
+  productName           String
+  status                String            @default("draft")
+  slug                  String            @unique
+  oldSlugs              String[]          @default([])
+  packageInclude        String?
+  cost                  Float             @default(1)
+  salePrice             Float             @default(1)
+  mapPrice              Float             @default(0)
+  mapPriceHistory       Json?             @default("[]")
+  regularPrice          Float?
+  shippingCost          Float             @default(0)
+  handlingFee           Float             @default(0)
+  priceChanged          Float             @default(0)
+  sourceId              String?
+  stock                 Int               @default(0)
+  images                String[]
+  leftImage             String?
+  rightImage            String?
+  isFeatured            Boolean           @default(false)
+  isVisible             Boolean           @default(true)
+  description           String?
+  keywords              String?
+  metaDescription       String?
+  seoTitle              String?
+  specifications        Json?             @default("{}")
+  materialHardnessScore Int?
+  threadPrecisionScore  Int?
+  torqueRetentionScore  Int?
+  feedbackScore         Int?
+  overallRating         Float             @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  source                InventorySource?  @relation(fields: [sourceId], references: [id])
+
+  @@index([sku])
+  @@index([slug])
+  @@index([category])
 }
