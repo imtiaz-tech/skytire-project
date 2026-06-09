@@ -72,6 +72,7 @@ model Brand {
   wheels      Wheel[]
   wireWheels  WireWheel[]
   boltOnWireWheels BoltOnWireWheel[]
+  accessories Accessory[]
 
   @@index([brandName])
 }
@@ -460,6 +461,7 @@ model BoltOnWireWheel {
 model Accessory {
   id                    String            @id @default(cuid())
   sku                   String            @unique
+  brandId               String?
   category              String
   productName           String
   status                String            @default("draft")
@@ -494,9 +496,11 @@ model Accessory {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
+  brand                 Brand?            @relation(fields: [brandId], references: [id])
   source                InventorySource?  @relation(fields: [sourceId], references: [id])
 
   @@index([sku])
   @@index([slug])
   @@index([category])
+  @@index([brandId])
 }

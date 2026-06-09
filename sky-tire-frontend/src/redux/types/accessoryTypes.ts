@@ -39,6 +39,7 @@ export interface Accessory {
   shippingCost: number;
   handlingFee: number;
   priceChanged: number;
+  brandId: string | null;
   sourceId: string | null;
   stock: number;
   images: string[];
@@ -56,6 +57,11 @@ export interface Accessory {
   torqueRetentionScore: number | null;
   feedbackScore: number | null;
   overallRating: number;
+  brand?: {
+    id: string;
+    brandName: string;
+    brandLogo?: string;
+  } | null;
   source?: {
     id: string;
     source: string;

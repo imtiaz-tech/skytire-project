@@ -58,6 +58,11 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-20">
           <div className="flex items-center gap-2 flex-wrap">
+            {accessory.brand?.brandName && (
+              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide">
+                {accessory.brand.brandName}
+              </span>
+            )}
             {accessory.category && (
               <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[13px] font-bold tracking-wide">
                 {accessory.category}
@@ -85,7 +90,7 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
 
             <div className="flex items-center gap-2 ml-2">
               <Link
-                href={``}
+                href={`/admin/accessories/edit/${accessory.id}`}
                 className="p-1.5 px-3 bg-white border border-gray-200 rounded-lg text-[#1e2a4a] hover:bg-gray-50 transition-all shadow-sm"
               >
                 <Pencil className="h-4 w-4" />
@@ -139,6 +144,9 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      {accessory.brand?.brandName || 'Unknown Brand'}
+                    </span>
+                    <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
                       {accessory.category || 'Uncategorized'}
                     </span>
                     {accessory.isFeatured && (
@@ -302,6 +310,7 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="SKU" value={<span className="font-bold">{accessory.sku}</span>} />
+                <InfoRow label="Brand" value={accessory.brand?.brandName} />
                 <InfoRow label="Category" value={accessory.category} />
                 <InfoRow label="Package Include" value={accessory.packageInclude} />
                 <InfoRow label="Stock Level" value={<span className="font-bold">{accessory.stock} units</span>} />

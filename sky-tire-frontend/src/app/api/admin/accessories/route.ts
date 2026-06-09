@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         { sku: { contains: search, mode: 'insensitive' as const } },
         { productName: { contains: search, mode: 'insensitive' as const } },
         { category: { contains: search, mode: 'insensitive' as const } },
+        { brand: { brandName: { contains: search, mode: 'insensitive' as const } } },
         { source: { source: { contains: search, mode: 'insensitive' as const } } },
       ];
     }
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        include: { source: true },
+        include: { source: true, brand: true },
         orderBy: { [sortBy]: sortOrder },
       }),
       prisma.accessory.count({ where }),
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
     const productName = formData.get('productName') as string;
     const sku = formData.get('sku') as string;
     const category = formData.get('category') as string;
+    const brandId = formData.get('brandId') as string;
     const description = formData.get('description') as string;
     const sourceId = formData.get('sourceId') as string;
     const packageInclude = formData.get('packageInclude') as string;
@@ -132,6 +134,7 @@ export async function POST(request: NextRequest) {
       if (!productName?.trim()) return NextResponse.json({ error: 'Product Name is required' }, { status: 400 });
       if (!sku?.trim()) return NextResponse.json({ error: 'SKU is required' }, { status: 400 });
       if (!category?.trim()) return NextResponse.json({ error: 'Accessory Category is required' }, { status: 400 });
+      if (!brandId) return NextResponse.json({ error: 'Brand is required' }, { status: 400 });
       if (!sourceId) return NextResponse.json({ error: 'Inventory Source is required' }, { status: 400 });
 
       const costNum = parseFloat(costStr) || 0;
@@ -194,6 +197,7 @@ export async function POST(request: NextRequest) {
         sku: sku || `DRAFT-${Date.now()}`,
         category: category || 'Lowrider Adapters',
         productName: productName || 'Draft Accessory',
+        brandId: brandId || null,
         description: description || null,
         images: allImages,
         leftImage,
@@ -222,7 +226,7 @@ export async function POST(request: NextRequest) {
         slug: uniqueSlug,
         oldSlugs: [],
       },
-      include: { source: true },
+      include: { source: true, brand: true },
     });
 
     return NextResponse.json(accessory);

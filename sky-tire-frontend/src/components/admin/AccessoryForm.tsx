@@ -6,13 +6,14 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createAccessory, updateAccessory } from '@/features/accessories/slice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import {
-  ArrowLeft, Loader2, UploadCloud, X, Calculator, ChevronDown, Check, Settings2,
+  ArrowLeft, Loader2, UploadCloud, X, Calculator, ChevronDown, Check, Settings2, Plus,
 } from 'lucide-react';
 import { calculatePricing } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import ManageBrandsModal from './ManageBrandsModal';
 import { ACCESSORY_CATEGORIES, SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
 import { AccessorySpecifications } from '@/redux/types/accessoryTypes';
 
@@ -60,13 +61,17 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   const [draftLoading, setDraftLoading] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [brands, setBrands] = useState<{ id: string; brandName: string }[]>([]);
   const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(duplicateId || null);
 
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+  const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -82,6 +87,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   const [formData, setFormData] = useState({
     sku: '',
     productName: '',
+    brandId: '',
     category: '',
     description: '',
     sourceId: '',
@@ -114,7 +120,17 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     }
   }, [duplicateId]);
 
+  const fetchBrandsData = async () => {
+    try {
+      const brandsRes = await axios.get('/api/admin/brands/dropdown?category=accessory');
+      setBrands(brandsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchBrandsData();
     dispatch(fetchAllInventorySources());
   }, [dispatch]);
 
@@ -125,6 +141,9 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
       }
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
         setIsCategoryDropdownOpen(false);
+      }
+      if (brandDropdownRef.current && !brandDropdownRef.current.contains(e.target as Node)) {
+        setIsBrandDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -144,6 +163,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
         setFormData({
           sku: activeDuplicateId ? '' : item.sku || '',
           productName: item.productName || '',
+          brandId: item.brandId || '',
           category: item.category || '',
           description: item.description || '',
           sourceId: item.sourceId || '',
@@ -234,6 +254,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     if (!formData.productName) return toast.error('Product Name is required');
     if (!formData.sku) return toast.error('SKU is required');
     if (!formData.category) return toast.error('Accessory Category is required');
+    if (!formData.brandId) return toast.error('Brand is required');
     if (!formData.sourceId) return toast.error('Inventory Source is required');
 
     const stockNum = parseInt(formData.stock) || 0;
@@ -543,7 +564,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-50">
             <div className="relative w-full">
               {formData.sku && (
                 <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>
@@ -555,6 +576,55 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
                 value={formData.sku}
                 onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
               />
+            </div>
+            <div className="relative w-full" ref={brandDropdownRef}>
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand</label>
+              <button
+                type="button"
+                onClick={() => setIsBrandDropdownOpen(!isBrandDropdownOpen)}
+                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[16px] outline-none text-left flex items-center justify-between"
+              >
+                <span className={formData.brandId ? 'text-[#1e2a4a]' : 'text-gray-400'}>
+                  {formData.brandId ? brands.find((b) => b.id === formData.brandId)?.brandName || 'Select Brand' : 'Select Brand'}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isBrandDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isBrandDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 flex flex-col max-h-[260px] overflow-hidden">
+                  <div className="overflow-y-auto flex-1">
+                    <div
+                      onClick={() => { setFormData({ ...formData, brandId: '' }); setIsBrandDropdownOpen(false); }}
+                      className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                        !formData.brandId ? 'text-blue-600 font-medium' : 'text-gray-400'
+                      }`}
+                    >
+                      Select Brand
+                      {!formData.brandId && <Check className="h-4 w-4 text-blue-600" />}
+                    </div>
+                    {brands.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => { setFormData({ ...formData, brandId: b.id }); setIsBrandDropdownOpen(false); }}
+                        className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
+                          formData.brandId === b.id ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                        }`}
+                      >
+                        {b.brandName}
+                        {formData.brandId === b.id && <Check className="h-4 w-4 text-blue-600" />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 bg-white sticky bottom-0 z-10 shrink-0">
+                    <div
+                      onClick={() => { setIsBrandDropdownOpen(false); setIsManageBrandsOpen(true); }}
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-bold transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Brand
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="relative w-full" ref={categoryDropdownRef}>
               <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Accessory Category</label>
@@ -805,6 +875,14 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
 
       {isManageSourcesOpen && (
         <ManageInventorySourcesModal onClose={() => setIsManageSourcesOpen(false)} />
+      )}
+
+      {isManageBrandsOpen && (
+        <ManageBrandsModal
+          category="accessory"
+          onClose={() => setIsManageBrandsOpen(false)}
+          onBrandsUpdated={fetchBrandsData}
+        />
       )}
     </div>
   );

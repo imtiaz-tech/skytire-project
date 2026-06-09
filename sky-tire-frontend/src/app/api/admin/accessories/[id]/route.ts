@@ -39,7 +39,7 @@ export async function GET(
     const { id } = await params;
     const accessory = await prisma.accessory.findUnique({
       where: { id },
-      include: { source: true },
+      include: { source: true, brand: true },
     });
 
     if (!accessory) {
@@ -64,6 +64,7 @@ export async function PUT(
     const productName = formData.get('productName') as string;
     const sku = formData.get('sku') as string;
     const category = formData.get('category') as string;
+    const brandId = formData.get('brandId') as string;
     const description = formData.get('description') as string;
     const sourceId = formData.get('sourceId') as string;
     const packageInclude = formData.get('packageInclude') as string;
@@ -115,6 +116,7 @@ export async function PUT(
       if (!productName?.trim()) return NextResponse.json({ error: 'Product Name is required' }, { status: 400 });
       if (!sku?.trim()) return NextResponse.json({ error: 'SKU is required' }, { status: 400 });
       if (!category?.trim()) return NextResponse.json({ error: 'Accessory Category is required' }, { status: 400 });
+      if (!brandId) return NextResponse.json({ error: 'Brand is required' }, { status: 400 });
       if (!sourceId) return NextResponse.json({ error: 'Inventory Source is required' }, { status: 400 });
 
       const costNum = parseFloat(costStr) || 0;
@@ -188,6 +190,7 @@ export async function PUT(
         sku: sku || current.sku,
         category: category || current.category,
         productName: productName || current.productName,
+        brandId: brandId || null,
         description: description || null,
         images: allImages,
         leftImage,
@@ -216,7 +219,7 @@ export async function PUT(
         slug,
         oldSlugs,
       },
-      include: { source: true },
+      include: { source: true, brand: true },
     });
 
     return NextResponse.json(accessory);

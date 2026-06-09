@@ -293,11 +293,11 @@ export default function AccessoriesPage() {
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                          //  onClick={() => handleDuplicate(item.id)} 
+                           onClick={() => handleDuplicate(item.id)} 
                            className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all" title="Duplicate"><Copy className="h-4 w-4" /></button>
-                          <Link href={``} className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all" title="Edit"><Edit2 className="h-4 w-4" /></Link>
+                          <Link href={`/admin/accessories/edit/${item.id}`} className="w-9 h-9 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all" title="Edit"><Edit2 className="h-4 w-4" /></Link>
                           <button
-                          //  onClick={() => openDeleteModal(item.id)}
+                           onClick={() => openDeleteModal(item.id)}
                            className="w-9 h-9 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all" title="Delete"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       </td>
