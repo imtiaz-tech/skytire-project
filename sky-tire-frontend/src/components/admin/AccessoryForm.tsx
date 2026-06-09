@@ -318,6 +318,12 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
       if (rightImageFile) submitData.append('rightImage', rightImageFile);
       if (existingLeftImage && !leftImageFile) submitData.append('existingLeftImage', existingLeftImage);
       if (existingRightImage && !rightImageFile) submitData.append('existingRightImage', existingRightImage);
+      if (editAccessoryId && !leftImageFile && !existingLeftImage) {
+        submitData.append('removeLeftImage', 'true');
+      }
+      if (editAccessoryId && !rightImageFile && !existingRightImage) {
+        submitData.append('removeRightImage', 'true');
+      }
 
       if (editAccessoryId) {
         await dispatch(updateAccessory({ id: editAccessoryId, data: submitData })).unwrap();
@@ -400,24 +406,21 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
       <h3 className="text-[18px] font-bold text-[#1e2a4a]">{label}</h3>
       <div className="relative w-[140px] h-[140px] shrink-0">
         {preview ? (
-          <div className="relative w-full h-full rounded-[24px] overflow-hidden border border-gray-100 bg-white group">
+          <div className="relative w-full h-full rounded-[24px] overflow-hidden border border-gray-100 bg-white">
             <img src={preview} alt={label} className="w-full h-full object-contain" />
             {onRemove && (
               <button
                 type="button"
-                onClick={onRemove}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="absolute top-2 right-2 z-10 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-sm"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              multiple={multiple}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={onChange}
-            />
           </div>
         ) : (
           <div className="w-full h-full border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative">
@@ -505,16 +508,28 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
             label="Left Side Image"
             buttonText="Add Image"
             preview={leftImageFile ? URL.createObjectURL(leftImageFile) : existingLeftImage ? getImageUrl(existingLeftImage) : null}
-            onChange={(e) => { if (e.target.files?.[0]) setLeftImageFile(e.target.files[0]); }}
-            onRemove={() => { setLeftImageFile(null); setExistingLeftImage(null); }}
+            onChange={(e) => {
+              if (e.target.files?.[0]) setLeftImageFile(e.target.files[0]);
+              e.target.value = '';
+            }}
+            onRemove={() => {
+              setLeftImageFile(null);
+              setExistingLeftImage(null);
+            }}
           />
 
           <ImageUploadZone
             label="Right Side Image"
             buttonText="Add Image"
             preview={rightImageFile ? URL.createObjectURL(rightImageFile) : existingRightImage ? getImageUrl(existingRightImage) : null}
-            onChange={(e) => { if (e.target.files?.[0]) setRightImageFile(e.target.files[0]); }}
-            onRemove={() => { setRightImageFile(null); setExistingRightImage(null); }}
+            onChange={(e) => {
+              if (e.target.files?.[0]) setRightImageFile(e.target.files[0]);
+              e.target.value = '';
+            }}
+            onRemove={() => {
+              setRightImageFile(null);
+              setExistingRightImage(null);
+            }}
           />
         </div>
         {/* Basic Information */}
