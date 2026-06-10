@@ -156,10 +156,10 @@ export default function AccessoriesPage() {
   ];
 
   const searchPlaceholder =
-    activeTab === 'DRAFT' ? 'Search Drafts...'
-    : activeTab === 'VISIBLE' ? 'Search Visible...'
-    : activeTab === 'INVISIBLE' ? 'Search Invisible...'
-    : 'Search Accessories...';
+    activeTab === 'DRAFT' ? 'Search drafts by name, SKU, brand...'
+    : activeTab === 'VISIBLE' ? 'Search visible by name, SKU, brand...'
+    : activeTab === 'INVISIBLE' ? 'Search invisible by name, SKU, brand...'
+    : 'Search by name, SKU, brand, category...';
 
   const bulkButtonLabel = activeTab === 'VISIBLE' ? 'Make Invisible' : 'Make Visible';
   const bulkButtonIcon = activeTab === 'VISIBLE' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />;
@@ -225,6 +225,7 @@ export default function AccessoriesPage() {
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('category')}>
                   <div className="flex items-center gap-2">Category <SortIcon col="category" /></div>
                 </th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Source</th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('cost')}>
                   <div className="flex items-center gap-2">Cost <SortIcon col="cost" /></div>
@@ -247,13 +248,13 @@ export default function AccessoriesPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={isBulkTab ? 12 : 11} className="px-8 py-20 text-center">
+                  <td colSpan={isBulkTab ? 13 : 12} className="px-8 py-20 text-center">
                     <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : accessories.length === 0 ? (
                 <tr>
-                  <td colSpan={isBulkTab ? 12 : 11} className="px-8 py-20 text-center text-gray-400 font-semibold">No accessories found</td>
+                  <td colSpan={isBulkTab ? 13 : 12} className="px-8 py-20 text-center text-gray-400 font-semibold">No accessories found</td>
                 </tr>
               ) : (
                 accessories.map((item) => {
@@ -278,6 +279,14 @@ export default function AccessoriesPage() {
                         <button onClick={() => openPreview(item)} className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600">{item.sku}</button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">{item.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(item)}
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
+                        >
+                          {item.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-500">{item.source?.source || '—'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-[#1e2a4a]">${item.cost.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">
