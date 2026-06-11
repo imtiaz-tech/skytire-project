@@ -551,7 +551,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                 onFocus={() => setIsFeatureFocused(true)}
                 onBlur={() => setTimeout(() => setIsFeatureFocused(false), 200)}
               />
-              {isFeatureFocused && (
+              {/* {isFeatureFocused && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto">
                   {featureSuggestions.filter(s => s.toLowerCase().includes(featureInput.toLowerCase())).map(suggestion => (
                     <div 
@@ -566,7 +566,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                     <div className="px-4 py-3 text-[14px] text-gray-400">Press colon (:) or Enter to add custom feature</div>
                   )}
                 </div>
-              )}
+              )} */}
             </div>
             <div className="flex flex-wrap gap-2">
               {featureArray.map(feat => (

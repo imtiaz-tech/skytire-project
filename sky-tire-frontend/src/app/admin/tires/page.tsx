@@ -174,18 +174,18 @@ export default function TiresPage() {
   ];
 
   const searchPlaceholder =
-    activeTab === 'DRAFT' ? 'Search Drafts...'
-    : activeTab === 'VISIBLE' ? 'Search Visible...'
-    : activeTab === 'INVISIBLE' ? 'Search Invisible...'
-    : 'Search Tires...';
+    activeTab === 'DRAFT' ? 'Search drafts by brand, model, SKU...'
+    : activeTab === 'VISIBLE' ? 'Search visible by brand, model, SKU...'
+    : activeTab === 'INVISIBLE' ? 'Search invisible by brand, model, SKU...'
+    : 'Search by brand, model, SKU, tire size...';
 
   const bulkButtonLabel = activeTab === 'VISIBLE' ? 'Make Invisible' : 'Make Visible';
   const bulkButtonIcon = activeTab === 'VISIBLE'
     ? <EyeOff className="h-4 w-4" />
     : <Eye className="h-4 w-4" />;
 
-  // colSpan: 11 base columns + 1 checkbox when isBulkTab
-  const colSpan = isBulkTab ? 12 : 11;
+  // colSpan: 12 base columns + 1 checkbox when isBulkTab
+  const colSpan = isBulkTab ? 13 : 12;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -275,15 +275,8 @@ export default function TiresPage() {
                     />
                   </th>
                 )}
-                <th
-                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
-                  onClick={() => handleSort('sku')}
-                >
-                  <div className="flex items-center gap-2">
-                    SKU
-                    <SortIcon col="sku" />
-                  </div>
-                </th>
+                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
+                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Model</th>
                 <th
                   className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('tireSize')}
@@ -291,6 +284,15 @@ export default function TiresPage() {
                   <div className="flex items-center gap-2">
                     Tire Size
                     <SortIcon col="tireSize" />
+                  </div>
+                </th>
+                <th
+                  className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('sku')}
+                >
+                  <div className="flex items-center gap-2">
+                    SKU
+                    <SortIcon col="sku" />
                   </div>
                 </th>
                 <th
@@ -311,7 +313,6 @@ export default function TiresPage() {
                     <SortIcon col="upcNo" />
                   </div>
                 </th>
-                <th className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand/Model</th>
                 <th
                   className="px-8 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('cost')}
@@ -401,40 +402,53 @@ export default function TiresPage() {
                         </td>
                       )}
                       <td className="px-8 py-5 whitespace-nowrap">
-                        <div
-                          className="text-[15px] font-bold text-[#1e2a4a] cursor-pointer hover:text-blue-600 transition-colors"
+                        <button
+                          type="button"
                           onClick={() => openPreview(tire)}
+                          className="text-[15px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
+                          title="Click to preview"
+                        >
+                          {tire.model?.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openPreview(tire)}
+                          className="text-[15px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
+                          title="Click to preview"
+                        >
+                          {tire.model?.modelName || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openPreview(tire)}
+                          className="text-[15px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
+                          title="Click to preview"
+                        >
+                          {tire.tireSize || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openPreview(tire)}
+                          className="text-[15px] font-bold text-[#1e2a4a] hover:text-blue-600 transition-colors underline-offset-2"
                           title="Click to preview"
                         >
                           {tire.sku}
-                        </div>
+                        </button>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
-                        <div
-                          className="text-[15px] font-bold text-[#1e2a4a] cursor-pointer hover:text-blue-600 transition-colors"
-                          onClick={() => openPreview(tire)}
-                          title="Click to preview"
-                        >
-                          {tire.tireSize || 'Unknown Size'}
+                        <div className="text-[15px] font-bold text-gray-600">
+                          {tire.alternatePartNumber || <span className="text-gray-300 italic">—</span>}
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="text-[15px] font-bold text-gray-600">
-                          {tire.alternatePartNumber || <span className="text-gray-300 italic">-</span>}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 whitespace-nowrap">
-                        <div className="text-[15px] font-bold text-gray-600">
-                          {tire.upcNo || <span className="text-gray-300 italic">-</span>}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 whitespace-nowrap">
-                        <div
-                          className="text-[15px] font-bold text-[#1e2a4a] cursor-pointer hover:opacity-70 transition-opacity"
-                          onClick={() => openPreview(tire)}
-                          title="Click to preview"
-                        >
-                          {tire.model?.brand?.brandName} / {tire.model?.modelName}
+                          {tire.upcNo || <span className="text-gray-300 italic">—</span>}
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
