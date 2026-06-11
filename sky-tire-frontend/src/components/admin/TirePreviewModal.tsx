@@ -4,7 +4,10 @@ import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Tire } from '@/redux/types/tireTypes';
-import { calculatePricing } from '@/utils/pricing';
+import {
+  calculateTireNetCostPricing,
+  calculateSaleMarkupPercentage,
+} from '@/utils/pricing';
 
 interface TirePreviewModalProps {
   open: boolean;
@@ -15,12 +18,20 @@ interface TirePreviewModalProps {
 export default function TirePreviewModal({ open, onClose, tire }: TirePreviewModalProps) {
   const pricing = useMemo(() => {
     if (!tire) return null;
-    return calculatePricing(
+    const netCostPricing = calculateTireNetCostPricing(
       tire.cost,
-      tire.freightCharges,
-      tire.salePrice,
-      3.5
+      tire.internalShipping ?? 0,
+      tire.processingCharges ?? 0,
+      tire.margin ?? 0
     );
+    const saleMarkupPercentage = calculateSaleMarkupPercentage(
+      tire.salePrice,
+      netCostPricing.netCost
+    );
+    return {
+      ...netCostPricing,
+      saleMarkupPercentage,
+    };
   }, [tire]);
 
   if (!open || !tire) return null;
@@ -99,9 +110,9 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
               <div className="bg-green-50 px-8 py-6 rounded-[32px] border border-green-100 text-center min-w-[200px]">
                 <div className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Sale Price</div>
                 <div className="text-4xl font-black text-green-700">${tire.salePrice.toFixed(2)}</div>
-                {pricing?.marginPercentage && (
-                  <div className={`mt-1 text-xs font-bold ${parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                    Markup: {pricing.marginPercentage}%
+                {pricing?.saleMarkupPercentage && (
+                  <div className={`mt-1 text-xs font-bold ${parseFloat(pricing.saleMarkupPercentage) < 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                    Markup: {pricing.saleMarkupPercentage}%
                   </div>
                 )}
               </div>
@@ -135,10 +146,14 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="Regular Price" value={`$${tire.regularPrice.toFixed(2)}`} />
-                <InfoRow label="Unit Cost" value={`$${tire.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
                 <InfoRow label="MAP Price" value={`$${tire.mapPrice.toFixed(2)}`} />
+                <InfoRow label="Unit Cost" value={`$${tire.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Internal Shipping" value={`$${(tire.internalShipping ?? 0).toFixed(2)}`} />
+                <InfoRow label="Processing Charges" value={`${tire.processingCharges ?? 0}%`} />
+                <InfoRow label="Margin" value={`${tire.margin ?? 0}%`} />
+                <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
+                <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
                 <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-red-600 font-bold" />
-                <InfoRow label="Processing (3.5%)" value={`$${pricing?.processingAmount.toFixed(2)}`} />
                 <InfoRow label="Rebate" value={tire.rebateAvailable ? <span className="text-green-600 font-bold">Available</span> : <span className="text-gray-400 font-bold">Not Available</span>} />
               </div>
             </div>

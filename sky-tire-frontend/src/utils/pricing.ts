@@ -10,6 +10,12 @@ export interface PricingCalculationResult {
   recommendedSalePrice: string | null;
 }
 
+export interface TireNetCostCalculationResult {
+  processingAmount: number;
+  marginAmount: number;
+  netCost: number;
+}
+
 const DEFAULT_MARGIN_PERCENTAGE = 23; // From VITE_REACT_APP_MARGIN_PERCENTAGE
 const DEFAULT_PROCESSING_PERCENTAGE = 3.5;
 
@@ -82,5 +88,57 @@ export const calculateRecommendedSalePrice = (
     }
   }
 
+  return null;
+};
+
+/**
+ * Tire net cost pricing: processing and margin applied sequentially on cost + internal shipping.
+ */
+export const calculateTireNetCostPricing = (
+  cost: number,
+  internalShipping: number,
+  processingChargesPercent: number,
+  marginPercent: number
+): TireNetCostCalculationResult => {
+  const costNum = Number(cost) || 0;
+  const internalShippingNum = Number(internalShipping) || 0;
+  const processingPct = Number(processingChargesPercent) || 0;
+  const marginPct = Number(marginPercent) || 0;
+
+  const base = costNum + internalShippingNum;
+  const processingAmount = (base * processingPct) / 100;
+  const marginBase = base + processingAmount;
+  const marginAmount = (marginBase * marginPct) / 100;
+  const netCost = costNum + internalShippingNum + processingAmount + marginAmount;
+
+  return {
+    processingAmount,
+    marginAmount,
+    netCost,
+  };
+};
+
+export const calculateSaleMarkupPercentage = (
+  salePrice: number,
+  netCost: number
+): string | null => {
+  const salePriceNum = Number(salePrice) || 0;
+  const netCostNum = Number(netCost) || 0;
+
+  if (netCostNum > 0 && salePriceNum > 0) {
+    return (((salePriceNum - netCostNum) / netCostNum) * 100).toFixed(2);
+  }
+
+  return null;
+};
+
+export const calculateRecommendedSalePriceFromNetCost = (
+  netCost: number,
+  targetMargin: number = DEFAULT_MARGIN_PERCENTAGE
+): string | null => {
+  const netCostNum = Number(netCost) || 0;
+  if (netCostNum > 0) {
+    return (netCostNum * (1 + targetMargin / 100)).toFixed(2);
+  }
   return null;
 };

@@ -14,6 +14,12 @@ export interface Tire {
   upcNo?: string;
   stock: number;
   cost: number;
+  internalShipping?: number;
+  processingCharges?: number;
+  margin?: number;
+  processingAmount?: number;
+  marginAmount?: number;
+  netCost?: number;
   salePrice: number;
   regularPrice: number;
   mapPrice: number;

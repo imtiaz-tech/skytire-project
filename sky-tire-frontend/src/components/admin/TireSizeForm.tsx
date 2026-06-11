@@ -101,6 +101,9 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     upcNo: '',
     stock: '0',
     cost: '0',
+    internalShipping: '0',
+    processingCharges: '0',
+    margin: '0',
     salePrice: '0',
     regularPrice: '0',
     mapPrice: '0',
@@ -115,8 +118,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     sourceIds: [] as string[],
     publishStatus: 'PUBLISHED',
   });
-
-  const processingPercentage = 3.5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,6 +177,9 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           upcNo: tire.upcNo || '',
           stock: String(tire.stock || 0),
           cost: tire.cost ? tire.cost.toFixed(2) : '0',
+          internalShipping: tire.internalShipping != null ? tire.internalShipping.toFixed(2) : '0',
+          processingCharges: tire.processingCharges != null ? String(tire.processingCharges) : '0',
+          margin: tire.margin != null ? String(tire.margin) : '0',
           salePrice: tire.salePrice ? tire.salePrice.toFixed(2) : '0',
           regularPrice: tire.regularPrice ? tire.regularPrice.toFixed(2) : '0',
           mapPrice: tire.mapPrice ? tire.mapPrice.toFixed(2) : '0',
@@ -317,13 +321,29 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
 
     setLoading(true);
     try {
+      const costNum = parseFloat(formData.cost) || 0;
+      const internalShippingNum = parseFloat(formData.internalShipping) || 0;
+      const processingChargesNum = parseFloat(formData.processingCharges) || 0;
+      const marginNum = parseFloat(formData.margin) || 0;
+      const base = costNum + internalShippingNum;
+      const processingAmount = Math.round((base * processingChargesNum) / 100 * 100) / 100;
+      const marginBase = base + processingAmount;
+      const marginAmount = Math.round((marginBase * marginNum) / 100 * 100) / 100;
+      const netCost = Math.round((costNum + internalShippingNum + processingAmount + marginAmount) * 100) / 100;
+
       const payload = {
         ...formData,
         publishStatus: finalStatus,
         keywords: keywordArray.join(';'),
         features: featureArray,
         stock: parseInt(formData.stock) || 0,
-        cost: Math.round(parseFloat(formData.cost) * 100) / 100 || 0,
+        cost: Math.round(costNum * 100) / 100,
+        internalShipping: Math.round(internalShippingNum * 100) / 100,
+        processingCharges: processingChargesNum,
+        margin: marginNum,
+        processingAmount,
+        marginAmount,
+        netCost,
         salePrice: Math.round(parseFloat(formData.salePrice) * 100) / 100 || 0,
         regularPrice: Math.round(parseFloat(formData.regularPrice) * 100) / 100 || 0,
         mapPrice: Math.round(parseFloat(formData.mapPrice) * 100) / 100 || 0,
@@ -551,7 +571,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                 onFocus={() => setIsFeatureFocused(true)}
                 onBlur={() => setTimeout(() => setIsFeatureFocused(false), 200)}
               />
-              {/* {isFeatureFocused && (
+              {isFeatureFocused && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto">
                   {featureSuggestions.filter(s => s.toLowerCase().includes(featureInput.toLowerCase())).map(suggestion => (
                     <div 
@@ -566,7 +586,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                     <div className="px-4 py-3 text-[14px] text-gray-400">Press colon (:) or Enter to add custom feature</div>
                   )}
                 </div>
-              )} */}
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {featureArray.map(feat => (
@@ -605,7 +625,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             sourceDropdownRef={sourceDropdownRef}
             setIsManageSourcesOpen={setIsManageSourcesOpen}
             toggleSource={toggleSource}
-            processingPercentage={processingPercentage}
           />
         </div>
 
