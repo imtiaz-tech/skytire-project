@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Wheel } from '@/redux/types/wheelTypes';
+import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface WheelPreviewModalProps {
   open: boolean;
@@ -19,6 +20,16 @@ const getImageUrl = (path: string) => {
 };
 
 export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreviewModalProps) {
+  const pricing = useMemo(() => {
+    if (!wheel) return null;
+    return calculateTireNetCostPricing(
+      wheel.cost,
+      wheel.internalShipping ?? 0,
+      wheel.processingCharges ?? 0,
+      wheel.margin ?? 0
+    );
+  }, [wheel]);
+
   if (!open || !wheel) return null;
 
   const InfoRow = ({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) => (
@@ -225,8 +236,15 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="Regular Price" value={`$${wheel.regularPrice.toFixed(2)}`} />
-                <InfoRow label="Unit Cost" value={`$${wheel.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
                 <InfoRow label="MAP Price" value={`$${wheel.mapPrice.toFixed(2)}`} />
+                <InfoRow label="Unit Cost" value={`$${wheel.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Internal Shipping" value={`$${(wheel.internalShipping ?? 0).toFixed(2)}`} />
+                <InfoRow label="Processing Charges" value={`${wheel.processingCharges ?? 0}%`} />
+                <InfoRow label="Margin" value={`${wheel.margin ?? 0}%`} />
+                <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
+                <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
+                <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-red-600 font-bold" />
+                <InfoRow label="Minimum Sale Price" value={`$${pricing?.minimumSalePrice.toFixed(2)}`} color="text-green-600 font-bold" />
               </div>
             </div>
 

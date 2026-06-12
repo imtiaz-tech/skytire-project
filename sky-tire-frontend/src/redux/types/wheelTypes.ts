@@ -27,9 +27,18 @@ export interface Wheel {
   features: string[];
   stock: number;
   cost: number;
+  internalShipping?: number;
+  processingCharges?: number;
+  margin?: number;
+  processingAmount?: number;
+  marginAmount?: number;
+  netCost?: number;
+  minimumSalePrice?: number;
   salePrice: number;
   regularPrice: number;
   mapPrice: number;
+  shippingCost?: number;
+  handlingFee?: number;
   keywords: string | null;
   metaDescription: string | null;
   seoTitle: string | null;

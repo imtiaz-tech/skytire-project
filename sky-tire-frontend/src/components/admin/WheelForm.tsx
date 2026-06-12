@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWheel, updateWheel } from '@/redux/slices/wheelsSlice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator, Plus } from 'lucide-react';
-import { calculatePricing } from '@/utils/pricing';
+import { calculateTireNetCostPricing, calculateSaleMarkupPercentage, isSalePriceBelowRecommended } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
@@ -103,6 +103,9 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     invOrderType: '',
     stock: '0',
     cost: '0',
+    internalShipping: '0',
+    processingCharges: '0',
+    margin: '0',
     salePrice: '0',
     regularPrice: '0',
     mapPrice: '0',
@@ -178,10 +181,13 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
           description: wheel.description || '',
           invOrderType: wheel.invOrderType || '',
           stock: String(wheel.stock || 0),
+          cost: wheel.cost != null ? Number(wheel.cost).toFixed(2) : '0.00',
+          internalShipping: wheel.internalShipping != null ? Number(wheel.internalShipping).toFixed(2) : '0',
+          processingCharges: wheel.processingCharges != null ? String(wheel.processingCharges) : '0',
+          margin: wheel.margin != null ? String(wheel.margin) : '0',
           salePrice: wheel.salePrice != null ? Number(wheel.salePrice).toFixed(2) : '0.00',
           regularPrice: wheel.regularPrice != null ? Number(wheel.regularPrice).toFixed(2) : '0.00',
           mapPrice: wheel.mapPrice != null ? Number(wheel.mapPrice).toFixed(2) : '0.00',
-          cost: wheel.cost != null ? Number(wheel.cost).toFixed(2) : '0.00',
           shippingCost: wheel.shippingCost != null ? Number(wheel.shippingCost).toFixed(2) : '0.00',
           handlingFee: wheel.handlingFee != null ? Number(wheel.handlingFee).toFixed(2) : '0.00',
           isFeatured: !!wheel.isFeatured,
@@ -230,13 +236,20 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
   }, []);
 
   const pricing = useMemo(() => {
-    return calculatePricing(
+    return calculateTireNetCostPricing(
       Number(formData.cost),
-      Number(formData.shippingCost),
-      Number(formData.salePrice),
-      3.5
+      Number(formData.internalShipping),
+      Number(formData.processingCharges),
+      Number(formData.margin)
     );
-  }, [formData.cost, formData.shippingCost, formData.salePrice]);
+  }, [formData.cost, formData.internalShipping, formData.processingCharges, formData.margin]);
+
+  const saleMarkupPercentage = useMemo(() => {
+    return calculateSaleMarkupPercentage(Number(formData.salePrice), pricing.netCost);
+  }, [formData.salePrice, pricing.netCost]);
+
+  const processingChargesLabel = formData.processingCharges || '0';
+  const marginLabel = formData.margin || '0';
 
   const toggleSource = (sourceId: string) => {
     setFormData(prev => {
@@ -329,16 +342,21 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
       const saleNum = parseFloat(formData.salePrice) || 0;
       const mapNum = parseFloat(formData.mapPrice) || 0;
       const regularNum = parseFloat(formData.regularPrice) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(formData.internalShipping) || 0,
+        parseFloat(formData.processingCharges) || 0,
+        parseFloat(formData.margin) || 0
+      );
 
       if (stockNum <= 0) return toast.error('Stock must be greater than 0');
       if (costNum <= 0) return toast.error('Cost Price is required');
       if (saleNum < 0) return toast.error('Sale price cannot be less than 0');
+      if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+        return toast.error('Sale Price cannot be lower than the Recommended Sale Price.');
+      }
       if (regularNum > 0 && regularNum <= saleNum) return toast.error('Regular price must be greater than sale price');
       if (mapNum > 0 && saleNum < mapNum) return toast.error('Sale price must be >= MAP price');
-
-      if (saleNum < costNum && !window.confirm(`Warning: Sale price ($${saleNum}) is less than Cost ($${costNum}). Continue?`)) {
-        return;
-      }
     }
 
     if (finalStatus === 'draft') {
@@ -347,6 +365,14 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
       setPublishLoading(true);
     }
     try {
+      const costNum = parseFloat(formData.cost) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(formData.internalShipping) || 0,
+        parseFloat(formData.processingCharges) || 0,
+        parseFloat(formData.margin) || 0
+      );
+
       const submitData = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'sourceIds') {
@@ -360,6 +386,10 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
         }
       });
 
+      submitData.set('processingAmount', String(tirePricing.processingAmount));
+      submitData.set('marginAmount', String(tirePricing.marginAmount));
+      submitData.set('netCost', String(tirePricing.netCost));
+      submitData.set('minimumSalePrice', String(tirePricing.minimumSalePrice));
       submitData.set('status', finalStatus);
 
       imageFiles.forEach(file => {
@@ -562,7 +592,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Source Stock & Cost</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full" ref={sourceDropdownRef}>
               <div className="flex items-center justify-between mb-1.5 px-1">
                 <label className="text-[14px] font-medium text-gray-400 uppercase tracking-wider">Select a Source</label>
@@ -609,59 +639,97 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               {formData.stock && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stock</label>}
               <input type="number" placeholder="Stock" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
             </div>
-            
-            <div className="relative w-full mt-[28px]">
-              {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost</label>}
-              <input type="number" placeholder="Cost" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-blue-600" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} />
-            </div>
           </div>
         </div>
 
         {/* Section 4: Pricing Details */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Pricing Details</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative w-full">
+              {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost ($)</label>}
+              <input type="number" placeholder="Cost ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-blue-600" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+            </div>
+            <div className="relative w-full">
+              {formData.internalShipping && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Internal Shipping ($)</label>}
+              <input type="number" placeholder="Internal Shipping ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.internalShipping} onChange={(e) => setFormData({ ...formData, internalShipping: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative w-full">
+              {formData.processingCharges && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Processing Charges (%)</label>}
+              <input type="number" placeholder="Processing Charges (%)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.processingCharges} onChange={(e) => setFormData({ ...formData, processingCharges: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Processing Amount ($)</label>
+              <input type="text" readOnly value={`$${pricing.processingAmount.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Net Cost ($)</label>
+              <input type="text" readOnly value={`$${pricing.netCost.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative w-full">
+              {formData.margin && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Margin (%)</label>}
+              <input type="number" placeholder="Margin (%)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.margin} onChange={(e) => setFormData({ ...formData, margin: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Margin Amount ($)</label>
+              <input type="text" readOnly value={`$${pricing.marginAmount.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+            </div>
+            <div className="relative w-full">
+              <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Minimum Sale Price ($)</label>
+              <input type="text" readOnly value={`$${pricing.minimumSalePrice.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative w-full">
-              {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price</label>}
-              <input type="number" placeholder="Sale Price" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-green-600" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
-              {pricing.recommendedSalePrice && Number(formData.salePrice) < parseFloat(pricing.recommendedSalePrice) && (
-                <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
-                  Recommended sale price is: ${pricing.recommendedSalePrice} (23%)
+              {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price ($)</label>}
+              <input type="number" placeholder="Sale Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-green-600" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
+                Recommended Sale Price: ${pricing.minimumSalePrice.toFixed(2)}
+              </p>
+              {Number(formData.salePrice) > 0 && isSalePriceBelowRecommended(Number(formData.salePrice), pricing.minimumSalePrice) && (
+                <p className="mt-1 text-[13px] font-medium text-red-500">
+                  Sale Price cannot be lower than the Recommended Sale Price.
                 </p>
               )}
-              {pricing.marginPercentage && (
-                <div className={`mt-1 text-[11px] font-bold uppercase tracking-wider ${parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
-                  Markup: {pricing.marginPercentage}%
+              {saleMarkupPercentage && (
+                <div className={`mt-1 text-[11px] font-bold uppercase tracking-wider ${parseFloat(saleMarkupPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
+                  Markup: {saleMarkupPercentage}%
                 </div>
               )}
             </div>
             <div className="relative w-full">
-              {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Map Price</label>}
-              <input type="number" placeholder="Map Price" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} />
+              {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">MAP Price ($)</label>}
+              <input type="number" placeholder="MAP Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
             </div>
             <div className="relative w-full">
-              {formData.regularPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Regular Price</label>}
-              <input type="number" placeholder="Regular Price" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} />
+              {formData.regularPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Regular Price ($)</label>}
+              <input type="number" placeholder="Regular Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full">
-              {formData.shippingCost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping</label>}
-              <input type="number" placeholder="Shipping" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} />
+              {formData.shippingCost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Cost ($)</label>}
+              <input type="number" placeholder="Shipping Cost ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
             </div>
             <div className="relative w-full">
-              {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee</label>}
-              <input type="number" placeholder="Handling Fee" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} />
+              {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee ($)</label>}
+              <input type="number" placeholder="Handling Fee ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
             </div>
           </div>
 
-          {/* Pricing Summary Box */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
             <div>
               <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                <Calculator className="h-3 w-3" /> Processing Amount (3.5%)
+                <Calculator className="h-3 w-3" /> Processing Amount ({processingChargesLabel}%)
               </p>
               <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.processingAmount.toFixed(2)}</p>
             </div>
@@ -670,10 +738,12 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.netCost.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Margin (based on Net Cost)</p>
-              <p className={`text-[18px] font-black ${pricing.marginPercentage && parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
-                {pricing.marginPercentage ? `${pricing.marginPercentage}%` : '0.00%'}
-              </p>
+              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Margin Amount ({marginLabel}%)</p>
+              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.marginAmount.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Minimum Sale Price</p>
+              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.minimumSalePrice.toFixed(2)}</p>
             </div>
           </div>
         </div>
