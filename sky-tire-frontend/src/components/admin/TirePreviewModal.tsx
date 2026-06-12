@@ -154,6 +154,7 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
                 <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
                 <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
                 <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-red-600 font-bold" />
+                <InfoRow label="Minimum Sale Price" value={`$${pricing?.minimumSalePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="Rebate" value={tire.rebateAvailable ? <span className="text-green-600 font-bold">Available</span> : <span className="text-gray-400 font-bold">Not Available</span>} />
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
 
 export async function GET(
   request: NextRequest,
@@ -50,6 +51,7 @@ export async function PUT(
       processingAmount,
       marginAmount,
       netCost,
+      minimumSalePrice,
       salePrice,
       regularPrice,
       mapPrice,
@@ -116,12 +118,25 @@ export async function PUT(
       const saleNum = parseFloat(salePrice) || 0;
       const mapNum = parseFloat(mapPrice) || 0;
       const stockNum = parseInt(stock) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(internalShipping) || 0,
+        parseFloat(processingCharges) || 0,
+        parseFloat(margin) || 0
+      );
 
       if (stockNum <= 0) return NextResponse.json({ error: 'Stock must be greater than 0' }, { status: 400 });
       if (costNum <= 0) return NextResponse.json({ error: 'Cost Price is required' }, { status: 400 });
       if (saleNum <= 0) return NextResponse.json({ error: 'Sale Price is required' }, { status: 400 });
       if (regularNum <= 0) return NextResponse.json({ error: 'Regular Price is required' }, { status: 400 });
       if (mapNum <= 0) return NextResponse.json({ error: 'MAP Price is required' }, { status: 400 });
+
+      if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+        return NextResponse.json(
+          { error: 'Sale Price cannot be lower than the Recommended Sale Price.' },
+          { status: 400 }
+        );
+      }
 
       // Price Logic Validations
       if (saleNum <= costNum) {
@@ -150,6 +165,7 @@ export async function PUT(
         processingAmount: Math.round(parseFloat(processingAmount) * 100) / 100 || 0,
         marginAmount: Math.round(parseFloat(marginAmount) * 100) / 100 || 0,
         netCost: Math.round(parseFloat(netCost) * 100) / 100 || 0,
+        minimumSalePrice: Math.round(parseFloat(minimumSalePrice) * 100) / 100 || 0,
         salePrice: Math.round(parseFloat(salePrice) * 100) / 100 || 0,
         regularPrice: Math.round(parseFloat(regularPrice) * 100) / 100 || 0,
         mapPrice: Math.round(parseFloat(mapPrice) * 100) / 100 || 0,

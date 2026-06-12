@@ -11,6 +11,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import TireFieldsSection from './TireFieldsSection';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
 
 interface TireSizeFormProps {
   editTireId?: string;
@@ -300,12 +301,22 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
       const saleNum = parseFloat(formData.salePrice) || 0;
       const regularNum = parseFloat(formData.regularPrice) || 0;
       const mapNum = parseFloat(formData.mapPrice) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(formData.internalShipping) || 0,
+        parseFloat(formData.processingCharges) || 0,
+        parseFloat(formData.margin) || 0
+      );
 
       if (stockNum <= 0) return toast.error('Stock must be greater than 0');
       if (costNum <= 0) return toast.error('Cost Price is required');
       if (saleNum <= 0) return toast.error('Sale Price is required');
       if (regularNum <= 0) return toast.error('Regular Price is required');
       if (mapNum <= 0) return toast.error('MAP Price is required');
+
+      if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+        return toast.error('Sale Price cannot be lower than the Recommended Sale Price.');
+      }
 
       // Price Logic Validations
       if (saleNum <= costNum) {
@@ -325,11 +336,16 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
       const internalShippingNum = parseFloat(formData.internalShipping) || 0;
       const processingChargesNum = parseFloat(formData.processingCharges) || 0;
       const marginNum = parseFloat(formData.margin) || 0;
-      const base = costNum + internalShippingNum;
-      const processingAmount = Math.round((base * processingChargesNum) / 100 * 100) / 100;
-      const marginBase = base + processingAmount;
-      const marginAmount = Math.round((marginBase * marginNum) / 100 * 100) / 100;
-      const netCost = Math.round((costNum + internalShippingNum + processingAmount + marginAmount) * 100) / 100;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        internalShippingNum,
+        processingChargesNum,
+        marginNum
+      );
+      const processingAmount = tirePricing.processingAmount;
+      const netCost = tirePricing.netCost;
+      const marginAmount = tirePricing.marginAmount;
+      const minimumSalePrice = tirePricing.minimumSalePrice;
 
       const payload = {
         ...formData,
@@ -342,8 +358,9 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
         processingCharges: processingChargesNum,
         margin: marginNum,
         processingAmount,
-        marginAmount,
         netCost,
+        marginAmount,
+        minimumSalePrice,
         salePrice: Math.round(parseFloat(formData.salePrice) * 100) / 100 || 0,
         regularPrice: Math.round(parseFloat(formData.regularPrice) * 100) / 100 || 0,
         mapPrice: Math.round(parseFloat(formData.mapPrice) * 100) / 100 || 0,

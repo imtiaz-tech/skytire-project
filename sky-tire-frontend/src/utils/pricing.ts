@@ -12,9 +12,18 @@ export interface PricingCalculationResult {
 
 export interface TireNetCostCalculationResult {
   processingAmount: number;
-  marginAmount: number;
   netCost: number;
+  marginAmount: number;
+  minimumSalePrice: number;
 }
+
+const roundCurrency = (value: number): number =>
+  Math.round((Number(value) || 0) * 100) / 100;
+
+export const isSalePriceBelowRecommended = (
+  salePrice: number,
+  minimumSalePrice: number
+): boolean => roundCurrency(salePrice) < roundCurrency(minimumSalePrice);
 
 const DEFAULT_MARGIN_PERCENTAGE = 23; // From VITE_REACT_APP_MARGIN_PERCENTAGE
 const DEFAULT_PROCESSING_PERCENTAGE = 3.5;
@@ -92,7 +101,7 @@ export const calculateRecommendedSalePrice = (
 };
 
 /**
- * Tire net cost pricing: processing and margin applied sequentially on cost + internal shipping.
+ * Tire pricing: net cost excludes margin; minimum sale price applies margin on net cost.
  */
 export const calculateTireNetCostPricing = (
   cost: number,
@@ -105,16 +114,17 @@ export const calculateTireNetCostPricing = (
   const processingPct = Number(processingChargesPercent) || 0;
   const marginPct = Number(marginPercent) || 0;
 
-  const base = costNum + internalShippingNum;
-  const processingAmount = (base * processingPct) / 100;
-  const marginBase = base + processingAmount;
-  const marginAmount = (marginBase * marginPct) / 100;
-  const netCost = costNum + internalShippingNum + processingAmount + marginAmount;
+  const baseCost = costNum + internalShippingNum;
+  const processingAmount = roundCurrency((baseCost * processingPct) / 100);
+  const netCost = roundCurrency(costNum + internalShippingNum + processingAmount);
+  const marginAmount = roundCurrency((netCost * marginPct) / 100);
+  const minimumSalePrice = roundCurrency(netCost + marginAmount);
 
   return {
     processingAmount,
-    marginAmount,
     netCost,
+    marginAmount,
+    minimumSalePrice,
   };
 };
 
@@ -129,16 +139,5 @@ export const calculateSaleMarkupPercentage = (
     return (((salePriceNum - netCostNum) / netCostNum) * 100).toFixed(2);
   }
 
-  return null;
-};
-
-export const calculateRecommendedSalePriceFromNetCost = (
-  netCost: number,
-  targetMargin: number = DEFAULT_MARGIN_PERCENTAGE
-): string | null => {
-  const netCostNum = Number(netCost) || 0;
-  if (netCostNum > 0) {
-    return (netCostNum * (1 + targetMargin / 100)).toFixed(2);
-  }
   return null;
 };

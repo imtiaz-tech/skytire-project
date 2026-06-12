@@ -20,6 +20,7 @@ export interface Tire {
   processingAmount?: number;
   marginAmount?: number;
   netCost?: number;
+  minimumSalePrice?: number;
   salePrice: number;
   regularPrice: number;
   mapPrice: number;
