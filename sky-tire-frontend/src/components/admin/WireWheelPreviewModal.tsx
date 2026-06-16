@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 'lucide-react';
 import Link from 'next/link';
 import { WireWheel } from '@/redux/types/wireWheelTypes';
+import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface WireWheelPreviewModalProps {
   open: boolean;
@@ -20,6 +21,16 @@ const getImageUrl = (path: string) => {
 };
 
 export default function WireWheelPreviewModal({ open, onClose, wireWheel }: WireWheelPreviewModalProps) {
+  const pricing = useMemo(() => {
+    if (!wireWheel) return null;
+    return calculateTireNetCostPricing(
+      wireWheel.cost,
+      wireWheel.internalShipping ?? 0,
+      wireWheel.processingCharges ?? 0,
+      wireWheel.margin ?? 0
+    );
+  }, [wireWheel]);
+
   if (!open || !wireWheel) return null;
 
   const InfoRow = ({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) => (
@@ -333,7 +344,15 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="Regular Price" value={`$${wireWheel.regularPrice.toFixed(2)}`} />
+                <InfoRow label="Sale Price" value={`$${wireWheel.salePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="Unit Cost" value={`$${wireWheel.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Internal Shipping" value={`$${(wireWheel.internalShipping ?? 0).toFixed(2)}`} />
+                <InfoRow label="Processing Charges" value={`${wireWheel.processingCharges ?? 0}%`} />
+                <InfoRow label="Margin" value={`${wireWheel.margin ?? 0}%`} />
+                <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
+                <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
+                <InfoRow label="Minimum Sale Price" value={`$${pricing?.minimumSalePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="MAP Price" value={`$${wireWheel.mapPrice.toFixed(2)}`} />
                 <InfoRow label="Shipping Cost" value={`$${wireWheel.shippingCost.toFixed(2)}`} />
                 <InfoRow label="Handling Fee" value={`$${wireWheel.handlingFee.toFixed(2)}`} />
