@@ -497,6 +497,13 @@ model Accessory {
   oldSlugs              String[]          @default([])
   packageInclude        String?
   cost                  Float             @default(1)
+  internalShipping      Float             @default(0)
+  processingCharges     Float             @default(0)
+  margin                Float             @default(0)
+  processingAmount      Float             @default(0)
+  marginAmount          Float             @default(0)
+  netCost               Float             @default(0)
+  minimumSalePrice      Float             @default(0)
   salePrice             Float             @default(1)
   mapPrice              Float             @default(0)
   mapPriceHistory       Json?             @default("[]")

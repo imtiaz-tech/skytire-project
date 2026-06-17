@@ -32,6 +32,13 @@ export interface Accessory {
   oldSlugs: string[];
   packageInclude: string | null;
   cost: number;
+  internalShipping?: number;
+  processingCharges?: number;
+  margin?: number;
+  processingAmount?: number;
+  marginAmount?: number;
+  netCost?: number;
+  minimumSalePrice?: number;
   salePrice: number;
   mapPrice: number;
   mapPriceHistory?: { value: number; createdAt: string }[] | null;

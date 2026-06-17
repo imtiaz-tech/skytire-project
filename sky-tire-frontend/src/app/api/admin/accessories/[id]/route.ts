@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -72,6 +73,13 @@ export async function PUT(
 
     const stockStr = formData.get('stock') as string;
     const costStr = formData.get('cost') as string;
+    const internalShippingStr = formData.get('internalShipping') as string;
+    const processingChargesStr = formData.get('processingCharges') as string;
+    const marginStr = formData.get('margin') as string;
+    const processingAmountStr = formData.get('processingAmount') as string;
+    const marginAmountStr = formData.get('marginAmount') as string;
+    const netCostStr = formData.get('netCost') as string;
+    const minimumSalePriceStr = formData.get('minimumSalePrice') as string;
     const salePriceStr = formData.get('salePrice') as string;
     const regularPriceStr = formData.get('regularPrice') as string;
     const mapPriceStr = formData.get('mapPrice') as string;
@@ -123,11 +131,22 @@ export async function PUT(
       const saleNum = parseFloat(salePriceStr) || 0;
       const mapNum = parseFloat(mapPriceStr) || 0;
       const stockNum = parseInt(stockStr) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(internalShippingStr) || 0,
+        parseFloat(processingChargesStr) || 0,
+        parseFloat(marginStr) || 0
+      );
 
       if (stockNum <= 0) return NextResponse.json({ error: 'Stock must be greater than 0' }, { status: 400 });
       if (costNum <= 0) return NextResponse.json({ error: 'Cost is required' }, { status: 400 });
       if (saleNum <= 0) return NextResponse.json({ error: 'Sale Price is required' }, { status: 400 });
-      if (saleNum < costNum) return NextResponse.json({ error: 'Sale price must be greater than or equal to cost' }, { status: 400 });
+      if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+        return NextResponse.json(
+          { error: 'Sale Price cannot be lower than the Recommended Sale Price.' },
+          { status: 400 }
+        );
+      }
       if (mapNum > 0 && saleNum < mapNum) {
         return NextResponse.json({ error: 'Sale price must be greater than or equal to MAP price' }, { status: 400 });
       }
@@ -197,8 +216,15 @@ export async function PUT(
         rightImage,
         sourceId: sourceId || null,
         stock: parseInt(stockStr) || 0,
-        cost: Number(parseFloat(costStr || '1').toFixed(2)) || 1,
-        salePrice: Number(parseFloat(salePriceStr || '1').toFixed(2)) || 1,
+        cost: Math.round(parseFloat(costStr) * 100) / 100 || 1,
+        internalShipping: Math.round(parseFloat(internalShippingStr) * 100) / 100 || 0,
+        processingCharges: parseFloat(processingChargesStr) || 0,
+        margin: parseFloat(marginStr) || 0,
+        processingAmount: Math.round(parseFloat(processingAmountStr) * 100) / 100 || 0,
+        marginAmount: Math.round(parseFloat(marginAmountStr) * 100) / 100 || 0,
+        netCost: Math.round(parseFloat(netCostStr) * 100) / 100 || 0,
+        minimumSalePrice: Math.round(parseFloat(minimumSalePriceStr) * 100) / 100 || 0,
+        salePrice: Math.round(parseFloat(salePriceStr) * 100) / 100 || 1,
         regularPrice: regularPriceStr ? Number(parseFloat(regularPriceStr).toFixed(2)) : null,
         mapPrice,
         mapPriceHistory,

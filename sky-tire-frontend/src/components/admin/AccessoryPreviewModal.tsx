@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 'lucide-react';
 import Link from 'next/link';
 import { Accessory } from '@/redux/types/accessoryTypes';
 import { SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
+import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface AccessoryPreviewModalProps {
   open: boolean;
@@ -21,6 +22,16 @@ const getImageUrl = (path: string) => {
 };
 
 export default function AccessoryPreviewModal({ open, onClose, accessory }: AccessoryPreviewModalProps) {
+  const pricing = useMemo(() => {
+    if (!accessory) return null;
+    return calculateTireNetCostPricing(
+      accessory.cost,
+      accessory.internalShipping ?? 0,
+      accessory.processingCharges ?? 0,
+      accessory.margin ?? 0
+    );
+  }, [accessory]);
+
   if (!open || !accessory) return null;
 
   const specs = (accessory.specifications || {}) as Record<string, string>;
@@ -295,7 +306,15 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="Regular Price" value={accessory.regularPrice != null ? `$${accessory.regularPrice.toFixed(2)}` : null} />
+                <InfoRow label="Sale Price" value={`$${accessory.salePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="Unit Cost" value={`$${accessory.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Internal Shipping" value={`$${(accessory.internalShipping ?? 0).toFixed(2)}`} />
+                <InfoRow label="Processing Charges" value={`${accessory.processingCharges ?? 0}%`} />
+                <InfoRow label="Margin" value={`${accessory.margin ?? 0}%`} />
+                <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
+                <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
+                <InfoRow label="Minimum Sale Price" value={`$${pricing?.minimumSalePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="MAP Price" value={accessory.mapPrice > 0 ? `$${accessory.mapPrice.toFixed(2)}` : null} />
                 <InfoRow label="Shipping Cost" value={`$${accessory.shippingCost.toFixed(2)}`} />
                 <InfoRow label="Handling Fee" value={`$${accessory.handlingFee.toFixed(2)}`} />

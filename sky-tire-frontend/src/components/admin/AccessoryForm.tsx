@@ -8,7 +8,7 @@ import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import {
   ArrowLeft, Loader2, UploadCloud, X, Calculator, ChevronDown, Check, Settings2, Plus,
 } from 'lucide-react';
-import { calculatePricing } from '@/utils/pricing';
+import { calculateTireNetCostPricing, calculateSaleMarkupPercentage, isSalePriceBelowRecommended } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
@@ -92,8 +92,11 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     description: '',
     sourceId: '',
     stock: '0',
-    cost: '1',
-    salePrice: '1',
+    cost: '0',
+    internalShipping: '0',
+    processingCharges: '0',
+    margin: '0',
+    salePrice: '0',
     regularPrice: '',
     mapPrice: '',
     shippingCost: '0',
@@ -168,8 +171,11 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
           description: item.description || '',
           sourceId: item.sourceId || '',
           stock: String(item.stock ?? 0),
-          cost: String(item.cost ?? 1),
-          salePrice: String(item.salePrice ?? 1),
+          cost: item.cost != null ? Number(item.cost).toFixed(2) : '1',
+          internalShipping: item.internalShipping != null ? Number(item.internalShipping).toFixed(2) : '0',
+          processingCharges: item.processingCharges != null ? String(item.processingCharges) : '0',
+          margin: item.margin != null ? String(item.margin) : '0',
+          salePrice: item.salePrice != null ? Number(item.salePrice).toFixed(2) : '1',
           regularPrice: item.regularPrice != null ? String(item.regularPrice) : '',
           mapPrice: item.mapPrice != null ? String(item.mapPrice) : '',
           shippingCost: String(item.shippingCost ?? 0),
@@ -208,13 +214,20 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   }, [editAccessoryId, activeDuplicateId]);
 
   const pricing = useMemo(() => {
-    return calculatePricing(
+    return calculateTireNetCostPricing(
       Number(formData.cost),
-      Number(formData.shippingCost),
-      Number(formData.salePrice),
-      3.5
+      Number(formData.internalShipping),
+      Number(formData.processingCharges),
+      Number(formData.margin)
     );
-  }, [formData.cost, formData.shippingCost, formData.salePrice]);
+  }, [formData.cost, formData.internalShipping, formData.processingCharges, formData.margin]);
+
+  const saleMarkupPercentage = useMemo(() => {
+    return calculateSaleMarkupPercentage(Number(formData.salePrice), pricing.netCost);
+  }, [formData.salePrice, pricing.netCost]);
+
+  const processingChargesLabel = formData.processingCharges || '0';
+  const marginLabel = formData.margin || '0';
 
   const getImageUrl = (path: string) => {
     if (path.startsWith('http') || path.startsWith('blob:')) return path;
@@ -261,11 +274,19 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     const costNum = parseFloat(formData.cost) || 0;
     const saleNum = parseFloat(formData.salePrice) || 0;
     const mapNum = parseFloat(formData.mapPrice) || 0;
+    const tirePricing = calculateTireNetCostPricing(
+      costNum,
+      parseFloat(formData.internalShipping) || 0,
+      parseFloat(formData.processingCharges) || 0,
+      parseFloat(formData.margin) || 0
+    );
 
     if (stockNum <= 0) return toast.error('Stock must be greater than 0');
     if (costNum <= 0) return toast.error('Cost is required');
     if (saleNum <= 0) return toast.error('Sale Price is required');
-    if (saleNum < costNum) return toast.error('Sale price must be greater than or equal to cost');
+    if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+      return toast.error('Sale Price cannot be lower than the Recommended Sale Price.');
+    }
     if (mapNum > 0 && saleNum < mapNum) return toast.error('Sale price must be greater than or equal to MAP price');
 
     const totalImages = existingImages.length + imageFiles.length;
@@ -297,6 +318,14 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     else setPublishLoading(true);
 
     try {
+      const costNum = parseFloat(formData.cost) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(formData.internalShipping) || 0,
+        parseFloat(formData.processingCharges) || 0,
+        parseFloat(formData.margin) || 0
+      );
+
       const submitData = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (typeof value === 'boolean') {
@@ -305,6 +334,10 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
           submitData.append(key, String(value ?? ''));
         }
       });
+      submitData.set('processingAmount', String(tirePricing.processingAmount));
+      submitData.set('marginAmount', String(tirePricing.marginAmount));
+      submitData.set('netCost', String(tirePricing.netCost));
+      submitData.set('minimumSalePrice', String(tirePricing.minimumSalePrice));
       submitData.set('status', finalStatus);
       submitData.append('keywords', keywordArray.join(';'));
       submitData.append('specifications', JSON.stringify(specifications));
@@ -676,8 +709,8 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
         {/* Source Stock & Cost + Pricing */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <div className="space-y-4">
-            <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Source Stock & Cost</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Source Stock</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative w-full" ref={sourceDropdownRef}>
                 <div className="flex items-center justify-between mb-1.5 px-1">
                   <label className="text-[14px] font-medium text-gray-400 uppercase tracking-wider">Select a Source</label>
@@ -719,62 +752,111 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
                 {formData.stock && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stock</label>}
                 <input type="number" placeholder="Stock" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
               </div>
-              <div className="relative w-full mt-[28px]">
-                {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost</label>}
-                <input type="number" step="0.01" placeholder="Cost" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-blue-600" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onBlur={(e) => setFormData({ ...formData, cost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
-              </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-2">
-            <h3 className="text-[18px] font-bold text-[#1e2a4a]">Pricing Details</h3>
+          <div className="space-y-8 pt-2">
+            <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Pricing Details</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative w-full">
+                {formData.cost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Cost ($)</label>}
+                <input type="number" placeholder="Cost ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-blue-600" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
+              <div className="relative w-full">
+                {formData.internalShipping && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Internal Shipping ($)</label>}
+                <input type="number" placeholder="Internal Shipping ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.internalShipping} onChange={(e) => setFormData({ ...formData, internalShipping: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="relative w-full">
-                {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price</label>}
-                <input type="number" step="0.01" placeholder="Sale Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, salePrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
-                {pricing.recommendedSalePrice && Number(formData.salePrice) < parseFloat(pricing.recommendedSalePrice) && (
-                  <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
-                    Recommended sale price is: ${pricing.recommendedSalePrice} (23% markup)
+                {formData.processingCharges && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Processing Charges (%)</label>}
+                <input type="number" placeholder="Processing Charges (%)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.processingCharges} onChange={(e) => setFormData({ ...formData, processingCharges: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
+              <div className="relative w-full">
+                <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Processing Amount ($)</label>
+                <input type="text" readOnly value={`$${pricing.processingAmount.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+              </div>
+              <div className="relative w-full">
+                <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Net Cost ($)</label>
+                <input type="text" readOnly value={`$${pricing.netCost.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="relative w-full">
+                {formData.margin && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Margin (%)</label>}
+                <input type="number" placeholder="Margin (%)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.margin} onChange={(e) => setFormData({ ...formData, margin: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
+              <div className="relative w-full">
+                <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Margin Amount ($)</label>
+                <input type="text" readOnly value={`$${pricing.marginAmount.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+              </div>
+              <div className="relative w-full">
+                <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Minimum Sale Price ($)</label>
+                <input type="text" readOnly value={`$${pricing.minimumSalePrice.toFixed(2)}`} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold cursor-not-allowed" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="relative w-full">
+                {formData.salePrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Sale Price ($)</label>}
+                <input type="number" placeholder="Sale Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none font-bold text-green-600" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+                <p className="mt-1 text-[13px] font-medium text-orange-500 italic">
+                  Recommended Sale Price: ${pricing.minimumSalePrice.toFixed(2)}
+                </p>
+                {Number(formData.salePrice) > 0 && isSalePriceBelowRecommended(Number(formData.salePrice), pricing.minimumSalePrice) && (
+                  <p className="mt-1 text-[13px] font-medium text-red-500">
+                    Sale Price cannot be lower than the Recommended Sale Price.
                   </p>
+                )}
+                {saleMarkupPercentage && (
+                  <div className={`mt-1 text-[11px] font-bold uppercase tracking-wider ${parseFloat(saleMarkupPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
+                    Markup: {saleMarkupPercentage}%
+                  </div>
                 )}
               </div>
               <div className="relative w-full">
-                {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Map Price</label>}
-                <input type="number" step="0.01" placeholder="Map Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, mapPrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
+                {formData.mapPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">MAP Price ($)</label>}
+                <input type="number" placeholder="MAP Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.mapPrice} onChange={(e) => setFormData({ ...formData, mapPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
               </div>
               <div className="relative w-full">
-                {formData.regularPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Regular Price</label>}
-                <input type="number" step="0.01" placeholder="Regular Price" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} onBlur={(e) => setFormData({ ...formData, regularPrice: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
+                {formData.regularPrice && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Regular Price ($)</label>}
+                <input type="number" placeholder="Regular Price ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.regularPrice} onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="relative w-full">
-                {formData.shippingCost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping</label>}
-                <input type="number" step="0.01" placeholder="Shipping" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} onBlur={(e) => setFormData({ ...formData, shippingCost: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
-              </div>
-              <div className="relative w-full">
-                {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee</label>}
-                <input type="number" step="0.01" placeholder="Handling Fee" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onBlur={(e) => setFormData({ ...formData, handlingFee: e.target.value ? Number(e.target.value).toFixed(2) : '' })} />
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
-            <div>
-              <p className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                <Calculator className="h-3 w-3 text-gray-400" /> Processing Amount (3.5%)
-              </p>
-              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.processingAmount.toFixed(2)}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative w-full">
+                {formData.shippingCost && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Cost ($)</label>}
+                <input type="number" placeholder="Shipping Cost ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingCost} onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
+              <div className="relative w-full">
+                {formData.handlingFee && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Handling Fee ($)</label>}
+                <input type="number" placeholder="Handling Fee ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
+              </div>
             </div>
-            <div>
-              <p className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Cost</p>
-              <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.netCost.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">Markup %</p>
-              <p className={`text-[18px] font-black ${pricing.marginPercentage && parseFloat(pricing.marginPercentage) < 0 ? 'text-red-500' : 'text-blue-600'}`}>
-                {pricing.marginPercentage ? `${pricing.marginPercentage}%` : '0.00%'}
-              </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+              <div>
+                <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  <Calculator className="h-3 w-3" /> Processing Amount ({processingChargesLabel}%)
+                </p>
+                <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.processingAmount.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Cost</p>
+                <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.netCost.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Margin Amount ({marginLabel}%)</p>
+                <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.marginAmount.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Minimum Sale Price</p>
+                <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.minimumSalePrice.toFixed(2)}</p>
+              </div>
             </div>
           </div>
         </div>
