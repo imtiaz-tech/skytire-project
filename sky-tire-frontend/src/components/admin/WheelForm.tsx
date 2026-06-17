@@ -99,6 +99,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     backSpacing: '',
     centerBore: '',
     shippingWeight: '',
+    shippingDimensions: '',
     description: '',
     invOrderType: '',
     stock: '0',
@@ -178,6 +179,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
           backSpacing: wheel.backSpacing ? String(wheel.backSpacing) : '',
           centerBore: wheel.centerBore || '',
           shippingWeight: wheel.shippingWeight || '',
+          shippingDimensions: wheel.shippingDimensions || '',
           description: wheel.description || '',
           invOrderType: wheel.invOrderType || '',
           stock: String(wheel.stock || 0),
@@ -783,6 +785,10 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
             <div className="relative w-full">
               {formData.shippingWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Weight</label>}
               <input type="text" placeholder="Shipping Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingWeight} onChange={(e) => setFormData({ ...formData, shippingWeight: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
+              <input type="text" placeholder="Shipping Dimensions" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingDimensions} onChange={(e) => setFormData({ ...formData, shippingDimensions: e.target.value })} />
             </div>
             <div className="relative w-full">
               {formData.lugCount && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Lug Count</label>}

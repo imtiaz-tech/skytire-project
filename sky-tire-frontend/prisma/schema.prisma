@@ -317,6 +317,7 @@ model Wheel {
   backSpacing          Float?
   centerBore           String?
   shippingWeight       String
+  shippingDimensions   String?
   images               String[]          // Array of paths/URLs uploaded directly to the server
   description          String?
   invOrderType         String?

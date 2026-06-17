@@ -224,6 +224,7 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
                   <InfoRow label="Style" value={wheel.style} />
                   <InfoRow label="Backspacing" value={wheel.backSpacing} />
                   <InfoRow label="Weight" value={wheel.shippingWeight ? `${wheel.shippingWeight} lbs` : null} />
+                  <InfoRow label="Shipping Dimensions" value={wheel.shippingDimensions} />
                 </div>
               </div>
             </div>

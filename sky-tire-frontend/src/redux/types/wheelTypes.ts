@@ -22,6 +22,7 @@ export interface Wheel {
   hubBore: string | null;
   constructionType: string | null;
   shippingWeight: string | null;
+  shippingDimensions?: string | null;
   images: string[];
   description: string | null;
   features: string[];

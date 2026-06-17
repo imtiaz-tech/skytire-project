@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
     const backSpacingStr = formData.get('backSpacing') as string;
     const centerBore = formData.get('centerBore') as string;
     const shippingWeight = formData.get('shippingWeight') as string;
+    const shippingDimensions = formData.get('shippingDimensions') as string;
     const description = formData.get('description') as string;
     const invOrderType = formData.get('invOrderType') as string;
     
@@ -230,6 +231,7 @@ export async function POST(request: NextRequest) {
         backSpacing: backSpacingStr ? parseFloat(backSpacingStr) : null,
         centerBore: centerBore || null,
         shippingWeight: shippingWeight || '',
+        shippingDimensions: shippingDimensions || null,
         images: allImages,
         description: description || null,
         invOrderType: invOrderType || null,
