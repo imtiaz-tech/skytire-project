@@ -69,6 +69,10 @@ model Brand {
   coverPhoto  String?
   description String?
   models      TireModel[]
+  wheels      Wheel[]
+  wireWheels  WireWheel[]
+  boltOnWireWheels BoltOnWireWheel[]
+  accessories Accessory[]
 
   @@index([brandName])
 }
@@ -76,11 +80,18 @@ model Brand {
 model Tire {
   id                  String           @id @default(cuid())
   modelId             String
-  sku                 String           @unique
+  sku                 String?           @unique
   alternatePartNumber String?
   upcNo               String?
   stock               Int              @default(0)
   cost                Float            @default(0)
+  internalShipping    Float            @default(0)
+  processingCharges   Float            @default(0)
+  margin              Float            @default(0)
+  processingAmount    Float            @default(0)
+  marginAmount        Float            @default(0)
+  netCost             Float            @default(0)
+  minimumSalePrice    Float            @default(0)
   salePrice           Float            @default(0)
   regularPrice        Float            @default(0)
   mapPrice            Float            @default(0)
@@ -94,7 +105,7 @@ model Tire {
   feedbackScore       Int?             @default(0)
   
   // Fields moved from TireSize
-  tireSize            String
+  tireSize            String?
   tireWidth           String?
   aspectRatio         String?
   rimDiameter         String?
@@ -113,6 +124,7 @@ model Tire {
   features            String[]
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
+  publishStatus       PublishStatus @default(PUBLISHED)
   isActive            Boolean       @default(true)
 
   model               TireModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
@@ -130,6 +142,10 @@ model InventorySource {
   id        String   @id @default(cuid())
   source    String   @unique
   tires     Tire[]
+  wheels    Wheel[]
+  wireWheels WireWheel[]
+  boltOnWireWheels BoltOnWireWheel[]
+  accessories Accessory[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -264,4 +280,255 @@ enum BrandCategory {
 enum BlogStatus {
   DRAFT
   PUBLISHED
+}
+
+enum PublishStatus {
+  PUBLISHED
+  DRAFT
+}
+
+model Wheel {
+  id                   String            @id @default(cuid())
+  sku                  String            @unique
+  productName          String
+  brandId              String?
+  brandVariant         String            @default("")
+  displayStyleNo       String?
+  finish               String?
+  slug                 String            @unique
+  oldSlugs             String[]          @default([])
+  wheelSize            String
+  
+  // Model details directly inside Wheel table
+  style                String?           // E.g., Luxury, Off-road, Sport, Mesh
+  
+  // New requested fields
+  alternatePartNumber  String?
+  upcNo                String?
+  lugCount             Int?
+
+  // Split measurement fields
+  boltPatternInches    String?
+  boltPatternMM        String?
+  loadRatingKg         String?
+  loadRatingLbs        String?
+
+  offset               String
+  backSpacing          Float?
+  centerBore           String?
+  shippingWeight       String
+  images               String[]          // Array of paths/URLs uploaded directly to the server
+  description          String?
+  invOrderType         String?
+  stock                Int               @default(0)
+  cost                 Float             @default(0)
+  internalShipping     Float             @default(0)
+  processingCharges    Float             @default(0)
+  margin               Float             @default(0)
+  processingAmount     Float             @default(0)
+  marginAmount         Float             @default(0)
+  netCost              Float             @default(0)
+  minimumSalePrice     Float             @default(0)
+  salePrice            Float             @default(0)
+  regularPrice         Float             @default(0)
+  mapPrice             Float             @default(0)
+  shippingCost         Float             @default(0)
+  handlingFee          Float             @default(0)
+  isFeatured           Boolean           @default(false)
+  keywords             String?
+  metaDescription      String?
+  seoTitle             String?
+  isVisible            Boolean           @default(true)
+  category             String            @default("none")
+  status               String            @default("draft") // draft or published
+  isActive             Boolean           @default(true)  // active or inactive
+
+  // Sky Wheel Score (0-10)
+  finishDurabilityScore   Int?            @default(0)
+  fitmentPrecisionScore   Int?            @default(0)
+  impactResistanceScore   Int?            @default(0)
+  feedbackScore           Int?            @default(0)
+
+  // Relations setup
+  brand                Brand?            @relation(fields: [brandId], references: [id])
+  sources              InventorySource[] // Implicit Many-to-Many with your existing table
+
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([brandId])
+  @@index([sku])
+}
+
+model WireWheel {
+  id                    String            @id @default(cuid())
+  images                String[]
+  knockOffs             Json?             // Structure: image, name, price, chipOption, chips[] (image, name)
+  floatingCaps          Json?             // Structure: image, name, price
+  name                  String
+  description           String?
+  sku                   String            @unique
+  size                  String
+  finish                String?
+  countryOfOrigin       String?
+  brandId               String?
+  sourceId              String?
+  stock                 Int               @default(0)
+  cost                  Float             @default(0)
+  internalShipping      Float             @default(0)
+  processingCharges     Float             @default(0)
+  margin                Float             @default(0)
+  processingAmount      Float             @default(0)
+  marginAmount          Float             @default(0)
+  netCost               Float             @default(0)
+  minimumSalePrice      Float             @default(0)
+  salePrice             Float             @default(0)
+  mapPrice              Float             @default(0)
+  regularPrice          Float             @default(0)
+  shippingCost          Float             @default(0)
+  handlingFee           Float             @default(0)
+  packageInclude        String?
+  knockOffOption        String?
+  options               String?
+  boltPattern           String?
+  accessories           String?
+  backSpacing           Float?
+  spoke                 Int?
+  spokeStyle            String?
+  offset                String?
+  staggeredFitment      Boolean           @default(false)
+  keywords              String?
+  seoTitle              String?
+  metaDescription       String?
+  
+  // Wire Wheel Scores (0-10)
+  platingDepthScore     Int?              @default(0)
+  sealingIntegrityScore Int?              @default(0)
+  spokeTensionScore     Int?              @default(0)
+  feedbackScore         Int?              @default(0)
+
+  status                String            @default("draft") // draft or published
+  isVisible             Boolean           @default(true)
+  isActive              Boolean           @default(true)
+  slug                  String            @unique
+  oldSlugs              String[]          @default([])
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  brand                 Brand?            @relation(fields: [brandId], references: [id])
+  source                InventorySource?  @relation(fields: [sourceId], references: [id])
+
+  @@index([brandId])
+  @@index([sku])
+  @@index([slug])
+}
+
+model BoltOnWireWheel {
+  id                    String            @id @default(cuid())
+  images                String[]
+  knockOffs             Json?             // Structure: image, name, price, chipOption, chips[] (image, name)
+  floatingCaps          Json?             // Structure: image, name, price
+  name                  String
+  description           String?
+  sku                   String            @unique
+  size                  String
+  finish                String?
+  countryOfOrigin       String?
+  brandId               String?
+  sourceId              String?
+  stock                 Int               @default(0)
+  cost                  Float             @default(0)
+  internalShipping      Float             @default(0)
+  processingCharges     Float             @default(0)
+  margin                Float             @default(0)
+  processingAmount      Float             @default(0)
+  marginAmount          Float             @default(0)
+  netCost               Float             @default(0)
+  minimumSalePrice      Float             @default(0)
+  salePrice             Float             @default(0)
+  mapPrice              Float             @default(0)
+  regularPrice          Float             @default(0)
+  shippingCost          Float             @default(0)
+  handlingFee           Float             @default(0)
+  packageInclude        String?
+  knockOffOption        String?
+  options               String?
+  boltPattern           String?
+  accessories           String?
+  backSpacing           Float?
+  spoke                 Int?
+  spokeStyle            String?
+  offset                String?
+  staggeredFitment      Boolean           @default(false)
+  keywords              String?
+  seoTitle              String?
+  metaDescription       String?
+  
+  // Wire Wheel Scores (0-10)
+  platingDepthScore     Int?              @default(0)
+  sealingIntegrityScore Int?              @default(0)
+  spokeTensionScore     Int?              @default(0)
+  feedbackScore         Int?              @default(0)
+
+  status                String            @default("draft") // draft or published
+  isVisible             Boolean           @default(true)
+  isActive              Boolean           @default(true)
+  slug                  String            @unique
+  oldSlugs              String[]          @default([])
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  brand                 Brand?            @relation(fields: [brandId], references: [id])
+  source                InventorySource?  @relation(fields: [sourceId], references: [id])
+
+  @@index([brandId])
+  @@index([sku])
+  @@index([slug])
+}
+
+model Accessory {
+  id                    String            @id @default(cuid())
+  sku                   String            @unique
+  brandId               String?
+  category              String
+  productName           String
+  status                String            @default("draft")
+  slug                  String            @unique
+  oldSlugs              String[]          @default([])
+  packageInclude        String?
+  cost                  Float             @default(1)
+  salePrice             Float             @default(1)
+  mapPrice              Float             @default(0)
+  mapPriceHistory       Json?             @default("[]")
+  regularPrice          Float?
+  shippingCost          Float             @default(0)
+  handlingFee           Float             @default(0)
+  priceChanged          Float             @default(0)
+  sourceId              String?
+  stock                 Int               @default(0)
+  images                String[]
+  leftImage             String?
+  rightImage            String?
+  isFeatured            Boolean           @default(false)
+  isVisible             Boolean           @default(true)
+  description           String?
+  keywords              String?
+  metaDescription       String?
+  seoTitle              String?
+  specifications        Json?             @default("{}")
+  materialHardnessScore Int?
+  threadPrecisionScore  Int?
+  torqueRetentionScore  Int?
+  feedbackScore         Int?
+  overallRating         Float             @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  brand                 Brand?            @relation(fields: [brandId], references: [id])
+  source                InventorySource?  @relation(fields: [sourceId], references: [id])
+
+  @@index([sku])
+  @@index([slug])
+  @@index([category])
+  @@index([brandId])
 }

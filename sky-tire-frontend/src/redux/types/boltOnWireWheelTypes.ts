@@ -32,6 +32,13 @@ export interface BoltOnWireWheel {
   sourceId: string | null;
   stock: number;
   cost: number;
+  internalShipping?: number;
+  processingCharges?: number;
+  margin?: number;
+  processingAmount?: number;
+  marginAmount?: number;
+  netCost?: number;
+  minimumSalePrice?: number;
   salePrice: number;
   mapPrice: number;
   regularPrice: number;

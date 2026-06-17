@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 'lucide-react';
 import Link from 'next/link';
 import { BoltOnWireWheel } from '@/redux/types/boltOnWireWheelTypes';
+import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface BoltOnWireWheelPreviewModalProps {
   open: boolean;
@@ -20,6 +21,16 @@ const getImageUrl = (path: string) => {
 };
 
 export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireWheel }: BoltOnWireWheelPreviewModalProps) {
+  const pricing = useMemo(() => {
+    if (!boltOnWireWheel) return null;
+    return calculateTireNetCostPricing(
+      boltOnWireWheel.cost,
+      boltOnWireWheel.internalShipping ?? 0,
+      boltOnWireWheel.processingCharges ?? 0,
+      boltOnWireWheel.margin ?? 0
+    );
+  }, [boltOnWireWheel]);
+
   if (!open || !boltOnWireWheel) return null;
 
   const InfoRow = ({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) => (
@@ -333,7 +344,15 @@ export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireW
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="Regular Price" value={`$${boltOnWireWheel.regularPrice.toFixed(2)}`} />
+                <InfoRow label="Sale Price" value={`$${boltOnWireWheel.salePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="Unit Cost" value={`$${boltOnWireWheel.cost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Internal Shipping" value={`$${(boltOnWireWheel.internalShipping ?? 0).toFixed(2)}`} />
+                <InfoRow label="Processing Charges" value={`${boltOnWireWheel.processingCharges ?? 0}%`} />
+                <InfoRow label="Margin" value={`${boltOnWireWheel.margin ?? 0}%`} />
+                <InfoRow label="Processing Amount" value={`$${pricing?.processingAmount.toFixed(2)}`} />
+                <InfoRow label="Net Cost" value={`$${pricing?.netCost.toFixed(2)}`} color="text-blue-600 font-bold" />
+                <InfoRow label="Margin Amount" value={`$${pricing?.marginAmount.toFixed(2)}`} />
+                <InfoRow label="Minimum Sale Price" value={`$${pricing?.minimumSalePrice.toFixed(2)}`} color="text-green-600 font-bold" />
                 <InfoRow label="MAP Price" value={`$${boltOnWireWheel.mapPrice.toFixed(2)}`} />
                 <InfoRow label="Shipping Cost" value={`$${boltOnWireWheel.shippingCost.toFixed(2)}`} />
                 <InfoRow label="Handling Fee" value={`$${boltOnWireWheel.handlingFee.toFixed(2)}`} />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -130,6 +131,13 @@ export async function POST(request: NextRequest) {
     
     const stockStr = formData.get('stock') as string;
     const costStr = formData.get('cost') as string;
+    const internalShippingStr = formData.get('internalShipping') as string;
+    const processingChargesStr = formData.get('processingCharges') as string;
+    const marginStr = formData.get('margin') as string;
+    const processingAmountStr = formData.get('processingAmount') as string;
+    const marginAmountStr = formData.get('marginAmount') as string;
+    const netCostStr = formData.get('netCost') as string;
+    const minimumSalePriceStr = formData.get('minimumSalePrice') as string;
     const salePriceStr = formData.get('salePrice') as string;
     const regularPriceStr = formData.get('regularPrice') as string;
     const mapPriceStr = formData.get('mapPrice') as string;
@@ -197,6 +205,12 @@ export async function POST(request: NextRequest) {
       const saleNum = parseFloat(salePriceStr) || 0;
       const mapNum = parseFloat(mapPriceStr) || 0;
       const stockNum = parseInt(stockStr) || 0;
+      const tirePricing = calculateTireNetCostPricing(
+        costNum,
+        parseFloat(internalShippingStr) || 0,
+        parseFloat(processingChargesStr) || 0,
+        parseFloat(marginStr) || 0
+      );
 
       if (stockNum <= 0) return NextResponse.json({ error: 'Stock must be greater than 0' }, { status: 400 });
       if (costNum <= 0) return NextResponse.json({ error: 'Cost Price is required' }, { status: 400 });
@@ -204,8 +218,11 @@ export async function POST(request: NextRequest) {
       if (regularNum <= 0) return NextResponse.json({ error: 'Regular Price is required' }, { status: 400 });
       if (mapNum <= 0) return NextResponse.json({ error: 'MAP Price is required' }, { status: 400 });
 
-      if (saleNum < costNum) {
-        return NextResponse.json({ error: 'Sale price must be greater than or equal to cost' }, { status: 400 });
+      if (isSalePriceBelowRecommended(saleNum, tirePricing.minimumSalePrice)) {
+        return NextResponse.json(
+          { error: 'Sale Price cannot be lower than the Recommended Sale Price.' },
+          { status: 400 }
+        );
       }
       if (regularNum <= saleNum) {
         return NextResponse.json({ error: 'Regular price must be greater than sale price' }, { status: 400 });
@@ -354,12 +371,19 @@ export async function POST(request: NextRequest) {
         brandId: brandId || null,
         sourceId: finalSourceId || null,
         stock: parseInt(stockStr) || 0,
-        cost: Number(parseFloat(costStr).toFixed(2)) || 0,
-        salePrice: Number(parseFloat(salePriceStr).toFixed(2)) || 0,
-        regularPrice: Number(parseFloat(regularPriceStr).toFixed(2)) || 0,
-        mapPrice: Number(parseFloat(mapPriceStr).toFixed(2)) || 0,
-        shippingCost: Number(parseFloat(shippingCostStr).toFixed(2)) || 0,
-        handlingFee: Number(parseFloat(handlingFeeStr).toFixed(2)) || 0,
+        cost: Math.round(parseFloat(costStr) * 100) / 100 || 0,
+        internalShipping: Math.round(parseFloat(internalShippingStr) * 100) / 100 || 0,
+        processingCharges: parseFloat(processingChargesStr) || 0,
+        margin: parseFloat(marginStr) || 0,
+        processingAmount: Math.round(parseFloat(processingAmountStr) * 100) / 100 || 0,
+        marginAmount: Math.round(parseFloat(marginAmountStr) * 100) / 100 || 0,
+        netCost: Math.round(parseFloat(netCostStr) * 100) / 100 || 0,
+        minimumSalePrice: Math.round(parseFloat(minimumSalePriceStr) * 100) / 100 || 0,
+        salePrice: Math.round(parseFloat(salePriceStr) * 100) / 100 || 0,
+        regularPrice: Math.round(parseFloat(regularPriceStr) * 100) / 100 || 0,
+        mapPrice: Math.round(parseFloat(mapPriceStr) * 100) / 100 || 0,
+        shippingCost: Math.round(parseFloat(shippingCostStr) * 100) / 100 || 0,
+        handlingFee: Math.round(parseFloat(handlingFeeStr) * 100) / 100 || 0,
         packageInclude: packageInclude || null,
         knockOffOption: knockOffOption || null,
         options: options || null,
