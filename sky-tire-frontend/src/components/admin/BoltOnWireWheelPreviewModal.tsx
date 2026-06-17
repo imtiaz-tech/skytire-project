@@ -220,6 +220,8 @@ export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireW
                   <InfoRow label="Spoke Style" value={boltOnWireWheel.spokeStyle} />
                   <InfoRow label="Finish" value={boltOnWireWheel.finish} />
                   <InfoRow label="Country of Origin" value={boltOnWireWheel.countryOfOrigin} />
+                  <InfoRow label="Wire Wheel Weight" value={boltOnWireWheel.wireWheelWeight ? `${boltOnWireWheel.wireWheelWeight} lbs` : null} />
+                  <InfoRow label="Shipping Dimensions" value={boltOnWireWheel.shippingDimensions} />
                   <InfoRow label="Options Description" value={boltOnWireWheel.options} />
                   <InfoRow label="Accessories" value={boltOnWireWheel.accessories} />
                 </div>

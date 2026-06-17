@@ -259,6 +259,8 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
     isActive: true,
     status: 'draft',
     staggeredFitment: false,
+    wireWheelWeight: '',
+    shippingDimensions: '',
   });
 
   // Fetch brands data
@@ -352,6 +354,8 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
           isActive: wheel.isActive !== false,
           status: wheel.status || 'draft',
           staggeredFitment: wheel.staggeredFitment || false,
+          wireWheelWeight: wheel.wireWheelWeight || '',
+          shippingDimensions: wheel.shippingDimensions || '',
         });
 
         if (wheel.keywords) {
@@ -1087,6 +1091,17 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
                 <option value="true">Yes</option>
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="relative w-full">
+              {formData.wireWheelWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wire Wheel Weight</label>}
+              <input type="text" placeholder="Wire Wheel Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.wireWheelWeight} onChange={(e) => setFormData({ ...formData, wireWheelWeight: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
+              <input type="text" placeholder="Shipping Dimensions" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingDimensions} onChange={(e) => setFormData({ ...formData, shippingDimensions: e.target.value })} />
             </div>
           </div>
         </div>

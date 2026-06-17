@@ -159,6 +159,8 @@ export async function POST(request: NextRequest) {
     const seoTitle = formData.get('seoTitle') as string;
     const metaDescription = formData.get('metaDescription') as string;
     const staggeredFitmentStr = formData.get('staggeredFitment') as string;
+    const wireWheelWeight = formData.get('wireWheelWeight') as string;
+    const shippingDimensions = formData.get('shippingDimensions') as string;
     
     const platingDepthScoreStr = formData.get('platingDepthScore') as string;
     const sealingIntegrityScoreStr = formData.get('sealingIntegrityScore') as string;
@@ -397,6 +399,8 @@ export async function POST(request: NextRequest) {
         seoTitle: seoTitle || null,
         metaDescription: metaDescription || null,
         staggeredFitment: staggeredFitmentStr === 'true',
+        wireWheelWeight: wireWheelWeight || null,
+        shippingDimensions: shippingDimensions || null,
         platingDepthScore: platingDepthScoreStr ? parseInt(platingDepthScoreStr) : 0,
         sealingIntegrityScore: sealingIntegrityScoreStr ? parseInt(sealingIntegrityScoreStr) : 0,
         spokeTensionScore: spokeTensionScoreStr ? parseInt(spokeTensionScoreStr) : 0,

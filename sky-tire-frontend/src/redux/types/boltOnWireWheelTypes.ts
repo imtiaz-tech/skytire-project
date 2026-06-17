@@ -57,6 +57,8 @@ export interface BoltOnWireWheel {
   seoTitle: string | null;
   metaDescription: string | null;
   staggeredFitment?: boolean;
+  wireWheelWeight?: string | null;
+  shippingDimensions?: string | null;
   
   platingDepthScore: number;
   sealingIntegrityScore: number;
