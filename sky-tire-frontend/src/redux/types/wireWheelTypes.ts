@@ -53,6 +53,9 @@ export interface WireWheel {
   spoke: number | null;
   spokeStyle: string | null;
   offset: string | null;
+  staggeredFitment?: boolean;
+  wireWheelWeight?: string | null;
+  shippingDimensions?: string | null;
   keywords: string | null;
   seoTitle: string | null;
   metaDescription: string | null;

@@ -220,6 +220,8 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
                   <InfoRow label="Spoke Style" value={wireWheel.spokeStyle} />
                   <InfoRow label="Finish" value={wireWheel.finish} />
                   <InfoRow label="Country of Origin" value={wireWheel.countryOfOrigin} />
+                  <InfoRow label="Wire Wheel Weight" value={wireWheel.wireWheelWeight ? `${wireWheel.wireWheelWeight} lbs` : null} />
+                  <InfoRow label="Shipping Dimensions" value={wireWheel.shippingDimensions} />
                   <InfoRow label="Options Description" value={wireWheel.options} />
                   <InfoRow label="Accessories" value={wireWheel.accessories} />
                 </div>

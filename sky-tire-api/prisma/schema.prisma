@@ -398,6 +398,8 @@ model WireWheel {
   spokeStyle            String?
   offset                String?
   staggeredFitment      Boolean           @default(false)
+  wireWheelWeight       String?
+  shippingDimensions    String?
   keywords              String?
   seoTitle              String?
   metaDescription       String?
