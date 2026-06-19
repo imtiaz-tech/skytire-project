@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { Shipping, ShippingCategory, ShippingState } from '@/redux/types/shippingTypes';
+import {
+  Shipping,
+  ShippingCategory,
+  ShippingAccessoryCategory,
+  ShippingState,
+} from '@/redux/types/shippingTypes';
 
 const initialState: ShippingState = {
   shippings: [],
@@ -9,6 +14,16 @@ const initialState: ShippingState = {
   total: 0,
   pages: 0,
   currentPage: 1,
+};
+
+export type ShippingPayload = {
+  size?: string | null;
+  accessoryCategory?: ShippingAccessoryCategory | null;
+  weight: number;
+  length: number;
+  width: number;
+  height: number;
+  shippingRate: number;
 };
 
 export const fetchShippings = createAsyncThunk(
@@ -35,15 +50,7 @@ export const fetchShippings = createAsyncThunk(
 export const createShipping = createAsyncThunk(
   'shipping/createShipping',
   async (
-    data: {
-      category: ShippingCategory;
-      size: string;
-      weight: number;
-      length: number;
-      width: number;
-      height: number;
-      shippingRate: number;
-    },
+    data: ShippingPayload & { category: ShippingCategory },
     { rejectWithValue },
   ) => {
     try {
@@ -61,20 +68,7 @@ export const createShipping = createAsyncThunk(
 export const updateShipping = createAsyncThunk(
   'shipping/updateShipping',
   async (
-    {
-      id,
-      data,
-    }: {
-      id: string;
-      data: {
-        size: string;
-        weight: number;
-        length: number;
-        width: number;
-        height: number;
-        shippingRate: number;
-      };
-    },
+    { id, data }: { id: string; data: ShippingPayload },
     { rejectWithValue },
   ) => {
     try {

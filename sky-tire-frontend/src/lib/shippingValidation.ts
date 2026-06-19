@@ -1,15 +1,24 @@
-import { ShippingCategory } from '@/redux/types/shippingTypes';
+import {
+  ShippingCategory,
+  ShippingAccessoryCategory,
+} from '@/redux/types/shippingTypes';
+import {
+  ACCESSORY_ENUM_TO_LABEL,
+  isShippingAccessoryCategory,
+} from '@/constants/shippingAccessoryCategories';
 
 export const SHIPPING_CATEGORIES: ShippingCategory[] = [
   'TIRE',
   'WHEEL',
   'WIRE_WHEEL',
   'BOLT_ON_WIRE_WHEEL',
+  'ACCESSORY',
 ];
 
 export interface ShippingInput {
   category?: string;
   size?: string;
+  accessoryCategory?: string;
   weight?: unknown;
   length?: unknown;
   width?: unknown;
@@ -32,17 +41,7 @@ export function parsePositiveNumber(value: unknown, fieldName: string): number |
   return num;
 }
 
-export function validateShippingInput(data: ShippingInput, isUpdate = false) {
-  const errors: string[] = [];
-
-  if (!isUpdate && (!data.category || !isValidShippingCategory(data.category))) {
-    errors.push('Valid category is required');
-  }
-
-  if (!data.size || !String(data.size).trim()) {
-    errors.push('Size is required');
-  }
-
+function validateNumericFields(data: ShippingInput, errors: string[]) {
   const weight = parsePositiveNumber(data.weight, 'Weight');
   if (typeof weight === 'string') errors.push(weight);
 
@@ -58,20 +57,64 @@ export function validateShippingInput(data: ShippingInput, isUpdate = false) {
   const shippingRate = parsePositiveNumber(data.shippingRate, 'Shipping rate');
   if (typeof shippingRate === 'string') errors.push(shippingRate);
 
+  return { weight, length, width, height, shippingRate };
+}
+
+export function validateShippingInput(data: ShippingInput, isUpdate = false) {
+  const errors: string[] = [];
+  const category = data.category as ShippingCategory | undefined;
+
+  if (!isUpdate && (!category || !isValidShippingCategory(category))) {
+    errors.push('Valid category is required');
+  }
+
+  const numeric = validateNumericFields(data, errors);
+
   if (errors.length > 0) {
     return { valid: false as const, errors };
+  }
+
+  const resolvedCategory = category!;
+
+  if (resolvedCategory === 'ACCESSORY') {
+    if (!data.accessoryCategory || !isShippingAccessoryCategory(data.accessoryCategory)) {
+      errors.push('Valid accessory category is required');
+    }
+  } else if (!data.size || !String(data.size).trim()) {
+    errors.push('Size is required');
+  }
+
+  if (errors.length > 0) {
+    return { valid: false as const, errors };
+  }
+
+  if (resolvedCategory === 'ACCESSORY') {
+    return {
+      valid: true as const,
+      data: {
+        category: resolvedCategory,
+        size: null,
+        accessoryCategory: data.accessoryCategory as ShippingAccessoryCategory,
+        weight: numeric.weight as number,
+        length: numeric.length as number,
+        width: numeric.width as number,
+        height: numeric.height as number,
+        shippingRate: numeric.shippingRate as number,
+      },
+    };
   }
 
   return {
     valid: true as const,
     data: {
-      category: data.category as ShippingCategory,
+      category: resolvedCategory,
       size: String(data.size).trim(),
-      weight: weight as number,
-      length: length as number,
-      width: width as number,
-      height: height as number,
-      shippingRate: shippingRate as number,
+      accessoryCategory: null,
+      weight: numeric.weight as number,
+      length: numeric.length as number,
+      width: numeric.width as number,
+      height: numeric.height as number,
+      shippingRate: numeric.shippingRate as number,
     },
   };
 }
@@ -82,9 +125,19 @@ export function buildShippingSearchWhere(category: ShippingCategory, search: str
     return { category };
   }
 
-  const orConditions: Record<string, unknown>[] = [
-    { size: { contains: trimmed, mode: 'insensitive' } },
-  ];
+  const orConditions: Record<string, unknown>[] = [];
+
+  if (category === 'ACCESSORY') {
+    const matchedEnums = Object.entries(ACCESSORY_ENUM_TO_LABEL)
+      .filter(([, label]) => label.toLowerCase().includes(trimmed.toLowerCase()))
+      .map(([enumVal]) => enumVal);
+
+    if (matchedEnums.length > 0) {
+      orConditions.push({ accessoryCategory: { in: matchedEnums } });
+    }
+  } else {
+    orConditions.push({ size: { contains: trimmed, mode: 'insensitive' } });
+  }
 
   const num = parseFloat(trimmed);
   if (!Number.isNaN(num)) {
@@ -95,6 +148,10 @@ export function buildShippingSearchWhere(category: ShippingCategory, search: str
       { height: num },
       { shippingRate: num },
     );
+  }
+
+  if (orConditions.length === 0) {
+    return { category };
   }
 
   return {

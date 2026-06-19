@@ -4,7 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { X, Loader2, Truck } from 'lucide-react';
 import { useAppDispatch } from '@/redux/hooks';
 import { createShipping, updateShipping } from '@/features/shipping/slice';
-import { Shipping, ShippingCategory, ShippingFormData } from '@/redux/types/shippingTypes';
+import {
+  Shipping,
+  ShippingCategory,
+  ShippingFormData,
+} from '@/redux/types/shippingTypes';
+import { SHIPPING_ACCESSORY_OPTIONS } from '@/constants/shippingAccessoryCategories';
 import toast from 'react-hot-toast';
 
 interface ShippingFormModalProps {
@@ -12,12 +17,13 @@ interface ShippingFormModalProps {
   onClose: () => void;
   onSuccess: () => void;
   category: ShippingCategory;
+  isAccessoryMode: boolean;
   editRecord?: Shipping | null;
-  duplicateRecord?: Shipping | null;
 }
 
 const emptyForm = (): ShippingFormData => ({
   size: '',
+  accessoryCategory: '',
   weight: '',
   length: '',
   width: '',
@@ -30,22 +36,24 @@ export default function ShippingFormModal({
   onClose,
   onSuccess,
   category,
+  isAccessoryMode,
   editRecord,
-  duplicateRecord,
 }: ShippingFormModalProps) {
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState<ShippingFormData>(emptyForm());
   const [submitting, setSubmitting] = useState(false);
 
   const isEdit = Boolean(editRecord);
+  const saveCategory: ShippingCategory = isAccessoryMode ? 'ACCESSORY' : category;
 
   useEffect(() => {
     if (!open) return;
 
-    const source = editRecord || duplicateRecord;
+    const source = editRecord;
     if (source) {
       setFormData({
-        size: source.size,
+        size: source.size || '',
+        accessoryCategory: source.accessoryCategory || '',
         weight: String(source.weight),
         length: String(source.length),
         width: String(source.width),
@@ -55,12 +63,19 @@ export default function ShippingFormModal({
     } else {
       setFormData(emptyForm());
     }
-  }, [open, editRecord, duplicateRecord]);
+  }, [open, isAccessoryMode, editRecord]);
 
   if (!open) return null;
 
+  const categoryLabel = isAccessoryMode ? 'Accessories' : category.replace(/_/g, ' ');
+
   const validateForm = () => {
-    if (!formData.size.trim()) return toast.error('Size is required');
+    if (isAccessoryMode) {
+      if (!formData.accessoryCategory) return toast.error('Accessory category is required');
+    } else if (!formData.size.trim()) {
+      return toast.error('Size is required');
+    }
+
     const fields = [
       { value: formData.weight, label: 'Weight' },
       { value: formData.length, label: 'Length' },
@@ -82,7 +97,9 @@ export default function ShippingFormModal({
     if (validateForm() !== true) return;
 
     const payload = {
-      size: formData.size.trim(),
+      ...(isAccessoryMode
+        ? { accessoryCategory: formData.accessoryCategory }
+        : { size: formData.size.trim() }),
       weight: parseFloat(formData.weight),
       length: parseFloat(formData.length),
       width: parseFloat(formData.width),
@@ -96,7 +113,7 @@ export default function ShippingFormModal({
         await dispatch(updateShipping({ id: editRecord.id, data: payload })).unwrap();
         toast.success('Shipping record updated successfully');
       } else {
-        await dispatch(createShipping({ category, ...payload })).unwrap();
+        await dispatch(createShipping({ category: saveCategory, ...payload })).unwrap();
         toast.success('Shipping record created successfully');
       }
       onSuccess();
@@ -115,7 +132,7 @@ export default function ShippingFormModal({
         className="absolute inset-0 bg-[#1e2a4a]/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={onClose}
       />
-      <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl shadow-blue-900/10 overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+      <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl shadow-blue-900/10 animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
         <div className="p-8 border-b border-gray-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-[#1e2a4a] rounded-2xl flex items-center justify-center text-white">
@@ -123,9 +140,9 @@ export default function ShippingFormModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-[#1e2a4a]">
-                {isEdit ? 'Edit Shipping' : duplicateRecord ? 'Duplicate Shipping' : 'Add Shipping'}
+                {isEdit ? 'Edit Shipping' : 'Add Shipping'}
               </h2>
-              <p className="text-sm text-gray-400 font-medium">Category: {category.replace(/_/g, ' ')}</p>
+              <p className="text-sm text-gray-400 font-medium">Category: {categoryLabel}</p>
             </div>
           </div>
           <button
@@ -140,19 +157,51 @@ export default function ShippingFormModal({
         <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full md:col-span-2">
-              {formData.size && (
-                <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
-                  Size
-                </label>
+              {isAccessoryMode ? (
+                <>
+                  <label
+                    htmlFor="accessoryCategory"
+                    className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10"
+                  >
+                    Accessory Category
+                  </label>
+                  <select
+                    id="accessoryCategory"
+                    className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 appearance-none cursor-pointer"
+                    value={formData.accessoryCategory}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        accessoryCategory: e.target.value as ShippingFormData['accessoryCategory'],
+                      })
+                    }
+                    required
+                  >
+                    <option value="">Select Accessory Category</option>
+                    {SHIPPING_ACCESSORY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : (
+                <>
+                  {formData.size && (
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
+                      Size
+                    </label>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Size"
+                    className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
+                    value={formData.size}
+                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                    required
+                  />
+                </>
               )}
-              <input
-                type="text"
-                placeholder="Size"
-                className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
-                value={formData.size}
-                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                required
-              />
             </div>
 
             <div className="relative w-full">

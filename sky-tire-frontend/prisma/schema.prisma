@@ -550,21 +550,31 @@ enum ShippingCategory {
   WHEEL
   WIRE_WHEEL
   BOLT_ON_WIRE_WHEEL
+  ACCESSORY
+}
+
+enum ShippingAccessoryCategory {
+  LOWRIDER_ADAPTERS
+  LOWRIDER_KNOCK_OFFS
+  LOWRIDER_TOOLS
 }
 
 model Shipping {
-  id           String           @id @default(cuid())
-  category     ShippingCategory
-  size         String
-  weight       Float
-  length       Float
-  width        Float
-  height       Float
-  shippingRate Float
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id                String                     @id @default(cuid())
+  category          ShippingCategory
+  size              String?
+  accessoryCategory ShippingAccessoryCategory?
+  weight            Float
+  length            Float
+  width             Float
+  height            Float
+  shippingRate      Float
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
 
   @@unique([category, size])
+  @@unique([accessoryCategory])
   @@index([category])
   @@index([size])
+  @@index([accessoryCategory])
 }

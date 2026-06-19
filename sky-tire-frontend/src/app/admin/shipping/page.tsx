@@ -1,16 +1,28 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Search, Loader2, Plus, Edit2, Trash2, Copy, Truck } from 'lucide-react';
+import { Search, Loader2, Plus, Edit2, Trash2, Truck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchShippings, deleteShipping } from '@/features/shipping/slice';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import ShippingFormModal from '@/components/admin/ShippingFormModal';
-import { Shipping, ShippingCategory, SHIPPING_TAB_LABELS } from '@/redux/types/shippingTypes';
+import {
+  Shipping,
+  ShippingCategory,
+  SHIPPING_TAB_LABELS,
+  isAccessoryShippingCategory,
+} from '@/redux/types/shippingTypes';
+import { ACCESSORY_ENUM_TO_LABEL } from '@/constants/shippingAccessoryCategories';
 import toast from 'react-hot-toast';
 
-const TABS: ShippingCategory[] = ['TIRE', 'WHEEL', 'WIRE_WHEEL', 'BOLT_ON_WIRE_WHEEL'];
+const TABS: ShippingCategory[] = [
+  'TIRE',
+  'WHEEL',
+  'WIRE_WHEEL',
+  'BOLT_ON_WIRE_WHEEL',
+  'ACCESSORY',
+];
 
 export default function ShippingPage() {
   const dispatch = useAppDispatch();
@@ -24,10 +36,11 @@ export default function ShippingPage() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<Shipping | null>(null);
-  const [duplicateRecord, setDuplicateRecord] = useState<Shipping | null>(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
+
+  const isAccessoryTab = isAccessoryShippingCategory(activeTab);
 
   const loadShippings = useCallback(() => {
     dispatch(fetchShippings({ category: activeTab, page, limit, search }));
@@ -52,19 +65,11 @@ export default function ShippingPage() {
 
   const openAddModal = () => {
     setEditRecord(null);
-    setDuplicateRecord(null);
     setIsFormOpen(true);
   };
 
   const openEditModal = (record: Shipping) => {
     setEditRecord(record);
-    setDuplicateRecord(null);
-    setIsFormOpen(true);
-  };
-
-  const openDuplicateModal = (record: Shipping) => {
-    setEditRecord(null);
-    setDuplicateRecord(record);
     setIsFormOpen(true);
   };
 
@@ -90,6 +95,20 @@ export default function ShippingPage() {
 
   const formatDimensions = (record: Shipping) =>
     `${record.length} × ${record.width} × ${record.height}`;
+
+  const formatCreatedDate = (date?: string) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getAccessoryCategoryLabel = (record: Shipping) =>
+    record.accessoryCategory ? ACCESSORY_ENUM_TO_LABEL[record.accessoryCategory] : '—';
+
+  const columnCount = isAccessoryTab ? 8 : 5;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -134,7 +153,11 @@ export default function ShippingPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
               <input
                 type="text"
-                placeholder="Search size, weight, dimensions, or shipping rate..."
+                placeholder={
+                  isAccessoryTab
+                    ? 'Search accessory category, weight, dimensions, or shipping rate...'
+                    : 'Search size, weight, dimensions, or shipping rate...'
+                }
                 className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-base focus:ring-2 focus:ring-[#1e2a4a]/5 focus:border-[#1e2a4a] transition-all font-medium"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -158,17 +181,32 @@ export default function ShippingPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Size</th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Weight</th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Dimensions (L × W × H)</th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Shipping Rate</th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em] text-right">Actions</th>
+                {isAccessoryTab ? (
+                  <>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Accessory Category</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Weight</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Length</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Width</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Height</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Shipping Rate</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Created Date</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em] text-right">Actions</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Size</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Weight</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Dimensions (L × W × H)</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em]">Shipping Rate</th>
+                    <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-[0.08em] text-right">Actions</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={columnCount} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin" />
                       <p className="text-gray-400 text-sm font-medium">Loading shipping records...</p>
@@ -177,10 +215,48 @@ export default function ShippingPage() {
                 </tr>
               ) : shippings.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={columnCount} className="px-6 py-20 text-center">
                     <p className="text-gray-400 font-semibold">No shipping records found</p>
                   </td>
                 </tr>
+              ) : isAccessoryTab ? (
+                shippings.map((record) => (
+                  <tr key={record.id} className="hover:bg-gray-50/50 transition-all">
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] font-bold text-[#1e2a4a]">
+                      {getAccessoryCategoryLabel(record)}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] text-gray-600">{record.weight}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] text-gray-600">{record.length}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] text-gray-600">{record.width}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] text-gray-600">{record.height}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] font-bold text-green-600">
+                      ${record.shippingRate.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-[15px] text-gray-600">
+                      {formatCreatedDate(record.createdAt)}
+                    </td>
+                    <td className="px-6 py-5 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(record)}
+                          className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
+                          title="Edit"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(record.id)}
+                          className="w-10 h-10 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all shadow-sm"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : (
                 shippings.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50/50 transition-all">
@@ -198,14 +274,6 @@ export default function ShippingPage() {
                     </td>
                     <td className="px-6 py-5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openDuplicateModal(record)}
-                          className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all shadow-sm"
-                          title="Duplicate"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
                         <button
                           type="button"
                           onClick={() => openEditModal(record)}
@@ -243,12 +311,13 @@ export default function ShippingPage() {
       </div>
 
       <ShippingFormModal
+        key={activeTab}
         open={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSuccess={loadShippings}
         category={activeTab}
+        isAccessoryMode={isAccessoryTab}
         editRecord={editRecord}
-        duplicateRecord={duplicateRecord}
       />
 
       <ConfirmModal

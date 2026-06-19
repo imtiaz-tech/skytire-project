@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createAccessory, updateAccessory } from '@/features/accessories/slice';
@@ -16,6 +16,7 @@ import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import ManageBrandsModal from './ManageBrandsModal';
 import { ACCESSORY_CATEGORIES, SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
 import { AccessorySpecifications } from '@/redux/types/accessoryTypes';
+import { useAccessoryShippingAutoFill } from '@/hooks/useShippingAutoFill';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -111,6 +112,19 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     isVisible: true,
     isFeatured: false,
     status: 'draft',
+  });
+
+  const { handleCategorySelect } = useAccessoryShippingAutoFill({
+    onApplySpecs: useCallback((fields) => {
+      setSpecifications((prev) => ({
+        ...prev,
+        weight: fields.weight,
+        shippingDimensions: fields.shippingDimensions,
+      }));
+    }, []),
+    onApplyInternalShipping: useCallback((value) => {
+      setFormData((prev) => ({ ...prev, internalShipping: value }));
+    }, []),
   });
 
   useEffect(() => {
@@ -691,7 +705,11 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
                   {ACCESSORY_CATEGORIES.map((cat) => (
                     <div
                       key={cat}
-                      onClick={() => { setFormData({ ...formData, category: cat }); setIsCategoryDropdownOpen(false); }}
+                      onClick={() => {
+                        setFormData({ ...formData, category: cat });
+                        setIsCategoryDropdownOpen(false);
+                        handleCategorySelect(cat);
+                      }}
                       className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
                         formData.category === cat ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
                       }`}

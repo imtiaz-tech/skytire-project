@@ -1,7 +1,12 @@
 import { useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { ShippingCategory } from '@/redux/types/shippingTypes';
-import { lookupShippingBySize, mapShippingToProductFields } from '@/utils/shipping';
+import { accessoryLabelToEnum, isAutoFillAccessoryCategory } from '@/constants/shippingAccessoryCategories';
+import {
+  lookupShippingBySize,
+  lookupShippingByAccessoryCategory,
+  mapShippingToProductFields,
+} from '@/utils/shipping';
 
 type WeightField = 'tireWeight' | 'shippingWeight' | 'wireWheelWeight';
 
@@ -53,4 +58,44 @@ export function useShippingAutoFill({ category, weightField, onApply }: UseShipp
   );
 
   return { handleSizeBlur, handleSizeChange };
+}
+
+interface UseAccessoryShippingAutoFillOptions {
+  onApplySpecs: (fields: { weight: string; shippingDimensions: string }) => void;
+  onApplyInternalShipping: (value: string) => void;
+}
+
+export function useAccessoryShippingAutoFill({
+  onApplySpecs,
+  onApplyInternalShipping,
+}: UseAccessoryShippingAutoFillOptions) {
+  const applyAccessoryShippingLookup = useCallback(
+    async (categoryLabel: string) => {
+      if (!isAutoFillAccessoryCategory(categoryLabel)) return;
+
+      const enumVal = accessoryLabelToEnum(categoryLabel);
+      if (!enumVal) return;
+
+      const record = await lookupShippingByAccessoryCategory(enumVal);
+      if (!record) return;
+
+      const mapped = mapShippingToProductFields(record);
+      onApplySpecs({
+        weight: mapped.weight,
+        shippingDimensions: mapped.shippingDimensions,
+      });
+      onApplyInternalShipping(mapped.internalShipping);
+      toast.success('Shipping details auto-filled');
+    },
+    [onApplySpecs, onApplyInternalShipping],
+  );
+
+  const handleCategorySelect = useCallback(
+    (categoryLabel: string) => {
+      void applyAccessoryShippingLookup(categoryLabel);
+    },
+    [applyAccessoryShippingLookup],
+  );
+
+  return { handleCategorySelect };
 }

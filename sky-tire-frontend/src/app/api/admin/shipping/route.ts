@@ -56,25 +56,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 });
     }
 
-    const { category, size, weight, length, width, height, shippingRate } = validation.data;
+    const { category, size, accessoryCategory, weight, length, width, height, shippingRate } =
+      validation.data;
 
-    const existing = await prisma.shipping.findUnique({
-      where: {
-        category_size: { category, size },
-      },
-    });
+    if (category === 'ACCESSORY') {
+      const existing = await prisma.shipping.findUnique({
+        where: { accessoryCategory: accessoryCategory! },
+      });
 
-    if (existing) {
-      return NextResponse.json(
-        { error: `Size "${size}" already exists for this category` },
-        { status: 400 },
-      );
+      if (existing) {
+        return NextResponse.json(
+          { error: 'A shipping configuration already exists for this accessory category' },
+          { status: 400 },
+        );
+      }
+    } else {
+      const existing = await prisma.shipping.findFirst({
+        where: {
+          category,
+          size: { equals: size!, mode: 'insensitive' },
+        },
+      });
+
+      if (existing) {
+        return NextResponse.json(
+          { error: `Size "${size}" already exists for this category` },
+          { status: 400 },
+        );
+      }
     }
 
     const shipping = await prisma.shipping.create({
       data: {
         category,
         size,
+        accessoryCategory,
         weight,
         length,
         width,
@@ -88,7 +104,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating shipping record:', error);
     if ((error as { code?: string }).code === 'P2002') {
       return NextResponse.json(
-        { error: 'Size already exists for this category' },
+        { error: 'A shipping configuration already exists for this category' },
         { status: 400 },
       );
     }
