@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createBoltOnWireWheel, updateBoltOnWireWheel } from '@/features/bolt-on-wire-wheels/slice';
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import ManageBrandsModal from './ManageBrandsModal';
+import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -261,6 +262,14 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
     staggeredFitment: false,
     wireWheelWeight: '',
     shippingDimensions: '',
+  });
+
+  const { handleSizeBlur, handleSizeChange } = useShippingAutoFill({
+    category: 'BOLT_ON_WIRE_WHEEL',
+    weightField: 'wireWheelWeight',
+    onApply: useCallback((fields) => {
+      setFormData((prev) => ({ ...prev, ...fields }));
+    }, []),
   });
 
   // Fetch brands data
@@ -1074,7 +1083,11 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div className="relative w-full">
               <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Size</label>
-              <input type="text" placeholder="Size (e.g. 13x7, 20x8)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} required />
+              <input type="text" placeholder="Size (e.g. 13x7, 20x8)" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all outline-none" value={formData.size} onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, size: value });
+                handleSizeChange(value);
+              }} onBlur={(e) => handleSizeBlur(e.target.value)} required />
             </div>
             <div className="relative w-full">
               <label className="absolute -top-2.5 left-3 bg-white px-1.5 text-[12px] font-medium text-gray-400 z-10">Finish</label>

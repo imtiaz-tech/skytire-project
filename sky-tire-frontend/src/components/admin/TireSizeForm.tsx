@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createTire, updateTire } from '@/redux/slices/tiresSlice';
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import TireFieldsSection from './TireFieldsSection';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
+import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
 
 interface TireSizeFormProps {
   editTireId?: string;
@@ -118,6 +119,14 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     feedbackScore: '',
     sourceIds: [] as string[],
     publishStatus: 'PUBLISHED',
+  });
+
+  const { handleSizeBlur, handleSizeChange } = useShippingAutoFill({
+    category: 'TIRE',
+    weightField: 'tireWeight',
+    onApply: useCallback((fields) => {
+      setFormData((prev) => ({ ...prev, ...fields }));
+    }, []),
   });
 
   useEffect(() => {
@@ -477,7 +486,12 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
                 placeholder="Tire Size (e.g. 225/45R17)" 
                 className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 outline-none" 
                 value={formData.tireSize} 
-                onChange={(e) => setFormData({ ...formData, tireSize: e.target.value })} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, tireSize: value });
+                  handleSizeChange(value);
+                }}
+                onBlur={(e) => handleSizeBlur(e.target.value)}
               />
             </div>
           </div>

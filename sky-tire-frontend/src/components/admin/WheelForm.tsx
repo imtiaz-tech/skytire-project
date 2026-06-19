@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWheel, updateWheel } from '@/redux/slices/wheelsSlice';
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import ManageBrandsModal from './ManageBrandsModal';
+import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -125,6 +126,14 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     fitmentPrecisionScore: '',
     impactResistanceScore: '',
     feedbackScore: '',
+  });
+
+  const { handleSizeBlur, handleSizeChange } = useShippingAutoFill({
+    category: 'WHEEL',
+    weightField: 'shippingWeight',
+    onApply: useCallback((fields) => {
+      setFormData((prev) => ({ ...prev, ...fields }));
+    }, []),
   });
 
   const fetchBrands = async () => {
@@ -643,6 +652,56 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
             </div>
           </div>
         </div>
+        {/* Section 5: Wheel Details */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Wheel Details</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative w-full">
+              {formData.finish && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Finish</label>}
+              <input type="text" placeholder="Finish" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.finish} onChange={(e) => setFormData({ ...formData, finish: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.wheelSize && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wheel Size</label>}
+              <input type="text" placeholder="Wheel Size" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.wheelSize} onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, wheelSize: value });
+                handleSizeChange(value);
+              }} onBlur={(e) => handleSizeBlur(e.target.value)} required />
+            </div>
+            <div className="relative w-full">
+              {formData.style && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wheel Style</label>}
+              <input type="text" placeholder="Wheel Style" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative w-full">
+              {formData.centerBore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Center Bore</label>}
+              <input type="text" placeholder="Center Bore" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.centerBore} onChange={(e) => setFormData({ ...formData, centerBore: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.boltPatternInches && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Bolt Pattern (Inches)</label>}
+              <input type="text" placeholder="Bolt Pattern (Inches) e.g. 5x4.75" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.boltPatternInches} onChange={(e) => handleBoltPatternInchesChange(e.target.value)} />
+            </div>
+            <div className="relative w-full">
+              {formData.boltPatternMM && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Bolt Pattern (MM)</label>}
+              <input type="text" placeholder="Bolt Pattern (MM) e.g. 5x120.65" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.boltPatternMM} onChange={(e) => setFormData({ ...formData, boltPatternMM: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.shippingWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Weight</label>}
+              <input type="text" placeholder="Shipping Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingWeight} onChange={(e) => setFormData({ ...formData, shippingWeight: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
+              <input type="text" placeholder="Shipping Dimensions" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingDimensions} onChange={(e) => setFormData({ ...formData, shippingDimensions: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.lugCount && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Lug Count</label>}
+              <input type="number" placeholder="Lug Count" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.lugCount} onChange={(e) => setFormData({ ...formData, lugCount: e.target.value })} />
+            </div>
+          </div>
+        </div>
 
         {/* Section 4: Pricing Details */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
@@ -746,53 +805,6 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
             <div>
               <p className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-1">Minimum Sale Price</p>
               <p className="text-[18px] font-bold text-[#1e2a4a]">${pricing.minimumSalePrice.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 5: Wheel Details */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Wheel Details</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="relative w-full">
-              {formData.finish && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Finish</label>}
-              <input type="text" placeholder="Finish" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.finish} onChange={(e) => setFormData({ ...formData, finish: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.wheelSize && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wheel Size</label>}
-              <input type="text" placeholder="Wheel Size" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.wheelSize} onChange={(e) => setFormData({ ...formData, wheelSize: e.target.value })} required />
-            </div>
-            <div className="relative w-full">
-              {formData.style && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Wheel Style</label>}
-              <input type="text" placeholder="Wheel Style" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="relative w-full">
-              {formData.centerBore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Center Bore</label>}
-              <input type="text" placeholder="Center Bore" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.centerBore} onChange={(e) => setFormData({ ...formData, centerBore: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.boltPatternInches && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Bolt Pattern (Inches)</label>}
-              <input type="text" placeholder="Bolt Pattern (Inches) e.g. 5x4.75" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.boltPatternInches} onChange={(e) => handleBoltPatternInchesChange(e.target.value)} />
-            </div>
-            <div className="relative w-full">
-              {formData.boltPatternMM && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Bolt Pattern (MM)</label>}
-              <input type="text" placeholder="Bolt Pattern (MM) e.g. 5x120.65" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.boltPatternMM} onChange={(e) => setFormData({ ...formData, boltPatternMM: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.shippingWeight && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Weight</label>}
-              <input type="text" placeholder="Shipping Weight" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingWeight} onChange={(e) => setFormData({ ...formData, shippingWeight: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.shippingDimensions && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Shipping Dimensions</label>}
-              <input type="text" placeholder="Shipping Dimensions" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.shippingDimensions} onChange={(e) => setFormData({ ...formData, shippingDimensions: e.target.value })} />
-            </div>
-            <div className="relative w-full">
-              {formData.lugCount && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Lug Count</label>}
-              <input type="number" placeholder="Lug Count" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.lugCount} onChange={(e) => setFormData({ ...formData, lugCount: e.target.value })} />
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import blogCategoriesReducer from './slices/blogCategoriesSlice';
 import tireModelsReducer from './slices/tireModelsSlice';
 import tireSizesReducer from './slices/tireSizesSlice';
 import inventorySourcesReducer from './slices/inventorySourcesSlice';
+import shippingReducer from '../features/shipping/slice';
 
 
 export const store = configureStore({
@@ -31,6 +32,7 @@ export const store = configureStore({
     tireModels: tireModelsReducer,
     tireSizes: tireSizesReducer,
     inventorySources: inventorySourcesReducer,
+    shipping: shippingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

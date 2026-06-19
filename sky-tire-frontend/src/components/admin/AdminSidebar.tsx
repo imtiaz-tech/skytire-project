@@ -19,6 +19,7 @@ import {
   Tags,
   Cpu,
   Database,
+  Truck,
 } from 'lucide-react';
 
 const navItems = [
@@ -29,6 +30,7 @@ const navItems = [
   { label: 'Wire Wheels', href: '/admin/wire-wheels', icon: Disc3 },
   { label: 'Bolt-On Wire Wheels', href: '/admin/bolt-on-wire-wheels', icon: Disc3 },
   { label: 'Accessories', href: '/admin/accessories', icon: Wrench },
+  { label: 'Shipping', href: '/admin/shipping', icon: Truck },
   { label: 'Brands', href: '/admin/brands', icon: Star },
   { label: 'Tires', href: '/admin/tires', icon: CircleDot },
   { label: 'Tires Models', href: '/admin/tire-models', icon: Tags },
