@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ShippingCategory, ShippingAccessoryCategory } from '@/redux/types/shippingTypes';
+import { ShippingCategory } from '@/redux/types/shippingTypes';
 
 export function formatShippingDimensions(length: number, width: number, height: number): string {
   return `${length}x${width}x${height}`;
@@ -30,12 +30,15 @@ export async function lookupShippingBySize(
   }
 }
 
-export async function lookupShippingByAccessoryCategory(
-  accessoryCategory: ShippingAccessoryCategory,
+export async function lookupShippingByAccessoryCategoryName(
+  categoryName: string,
 ): Promise<ShippingLookupResult | null> {
+  const trimmed = categoryName.trim();
+  if (!trimmed) return null;
+
   try {
     const response = await axios.get('/api/admin/shipping/lookup', {
-      params: { category: 'ACCESSORY', accessoryCategory },
+      params: { category: 'ACCESSORY', accessoryCategoryName: trimmed },
     });
     return response.data ?? null;
   } catch {

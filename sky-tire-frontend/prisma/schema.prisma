@@ -553,28 +553,30 @@ enum ShippingCategory {
   ACCESSORY
 }
 
-enum ShippingAccessoryCategory {
-  LOWRIDER_ADAPTERS
-  LOWRIDER_KNOCK_OFFS
-  LOWRIDER_TOOLS
+model AccessoryCategory {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  shippings Shipping[]
 }
 
 model Shipping {
-  id                String                     @id @default(cuid())
-  category          ShippingCategory
-  size              String?
-  accessoryCategory ShippingAccessoryCategory?
-  weight            Float
-  length            Float
-  width             Float
-  height            Float
-  shippingRate      Float
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
+  id                  String             @id @default(cuid())
+  category            ShippingCategory
+  size                String?
+  accessoryCategoryId String?            @unique
+  accessoryCategory   AccessoryCategory? @relation(fields: [accessoryCategoryId], references: [id])
+  weight              Float
+  length              Float
+  width               Float
+  height              Float
+  shippingRate        Float
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   @@unique([category, size])
-  @@unique([accessoryCategory])
   @@index([category])
   @@index([size])
-  @@index([accessoryCategory])
+  @@index([accessoryCategoryId])
 }

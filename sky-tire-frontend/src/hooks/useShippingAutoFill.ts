@@ -1,10 +1,9 @@
 import { useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { ShippingCategory } from '@/redux/types/shippingTypes';
-import { accessoryLabelToEnum, isAutoFillAccessoryCategory } from '@/constants/shippingAccessoryCategories';
 import {
   lookupShippingBySize,
-  lookupShippingByAccessoryCategory,
+  lookupShippingByAccessoryCategoryName,
   mapShippingToProductFields,
 } from '@/utils/shipping';
 
@@ -70,13 +69,11 @@ export function useAccessoryShippingAutoFill({
   onApplyInternalShipping,
 }: UseAccessoryShippingAutoFillOptions) {
   const applyAccessoryShippingLookup = useCallback(
-    async (categoryLabel: string) => {
-      if (!isAutoFillAccessoryCategory(categoryLabel)) return;
+    async (categoryName: string) => {
+      const trimmed = categoryName.trim();
+      if (!trimmed) return;
 
-      const enumVal = accessoryLabelToEnum(categoryLabel);
-      if (!enumVal) return;
-
-      const record = await lookupShippingByAccessoryCategory(enumVal);
+      const record = await lookupShippingByAccessoryCategoryName(trimmed);
       if (!record) return;
 
       const mapped = mapShippingToProductFields(record);
@@ -91,8 +88,8 @@ export function useAccessoryShippingAutoFill({
   );
 
   const handleCategorySelect = useCallback(
-    (categoryLabel: string) => {
-      void applyAccessoryShippingLookup(categoryLabel);
+    (categoryName: string) => {
+      void applyAccessoryShippingLookup(categoryName);
     },
     [applyAccessoryShippingLookup],
   );

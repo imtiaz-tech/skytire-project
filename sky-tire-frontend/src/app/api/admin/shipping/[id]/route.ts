@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateShippingInput } from '@/lib/shippingValidation';
-import { isShippingAccessoryCategory } from '@/constants/shippingAccessoryCategories';
 
 export async function GET(
   _request: NextRequest,
@@ -10,7 +9,10 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const shipping = await prisma.shipping.findUnique({ where: { id } });
+    const shipping = await prisma.shipping.findUnique({
+      where: { id },
+      include: { accessoryCategory: true },
+    });
 
     if (!shipping) {
       return NextResponse.json({ error: 'Shipping record not found' }, { status: 404 });
@@ -41,7 +43,7 @@ export async function PUT(
       {
         ...body,
         category: existing.category,
-        accessoryCategory: body.accessoryCategory ?? existing.accessoryCategory,
+        accessoryCategoryId: body.accessoryCategoryId ?? existing.accessoryCategoryId,
         size: body.size ?? existing.size,
       },
       true,
@@ -51,25 +53,32 @@ export async function PUT(
       return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 });
     }
 
-    const { size, accessoryCategory, weight, length, width, height, shippingRate } =
+    const { size, accessoryCategoryId, weight, length, width, height, shippingRate } =
       validation.data;
 
     if (existing.category === 'ACCESSORY') {
-      const nextCategory =
-        body.accessoryCategory && isShippingAccessoryCategory(body.accessoryCategory)
-          ? body.accessoryCategory
-          : existing.accessoryCategory;
+      const nextCategoryId = accessoryCategoryId || existing.accessoryCategoryId;
 
-      if (nextCategory && nextCategory !== existing.accessoryCategory) {
-        const duplicate = await prisma.shipping.findUnique({
-          where: { accessoryCategory: nextCategory },
+      if (nextCategoryId) {
+        const categoryRecord = await prisma.accessoryCategory.findUnique({
+          where: { id: nextCategoryId },
         });
 
-        if (duplicate && duplicate.id !== id) {
-          return NextResponse.json(
-            { error: 'A shipping configuration already exists for this accessory category' },
-            { status: 400 },
-          );
+        if (!categoryRecord) {
+          return NextResponse.json({ error: 'Accessory category not found' }, { status: 400 });
+        }
+
+        if (nextCategoryId !== existing.accessoryCategoryId) {
+          const duplicate = await prisma.shipping.findUnique({
+            where: { accessoryCategoryId: nextCategoryId },
+          });
+
+          if (duplicate && duplicate.id !== id) {
+            return NextResponse.json(
+              { error: 'A shipping configuration already exists for this accessory category' },
+              { status: 400 },
+            );
+          }
         }
       }
     } else if (size && size !== existing.size) {
@@ -92,8 +101,8 @@ export async function PUT(
     const shipping = await prisma.shipping.update({
       where: { id },
       data: {
-        ...(existing.category === 'ACCESSORY' && accessoryCategory
-          ? { accessoryCategory }
+        ...(existing.category === 'ACCESSORY' && accessoryCategoryId
+          ? { accessoryCategoryId }
           : {}),
         ...(existing.category !== 'ACCESSORY' && size ? { size } : {}),
         weight,
@@ -101,6 +110,9 @@ export async function PUT(
         width,
         height,
         shippingRate,
+      },
+      include: {
+        accessoryCategory: true,
       },
     });
 

@@ -14,6 +14,7 @@ import tireModelsReducer from './slices/tireModelsSlice';
 import tireSizesReducer from './slices/tireSizesSlice';
 import inventorySourcesReducer from './slices/inventorySourcesSlice';
 import shippingReducer from '../features/shipping/slice';
+import accessoryCategoriesReducer from '../features/accessory-categories/slice';
 
 
 export const store = configureStore({
@@ -33,6 +34,7 @@ export const store = configureStore({
     tireSizes: tireSizesReducer,
     inventorySources: inventorySourcesReducer,
     shipping: shippingReducer,
+    accessoryCategories: accessoryCategoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

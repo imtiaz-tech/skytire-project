@@ -1,11 +1,4 @@
-import {
-  ShippingCategory,
-  ShippingAccessoryCategory,
-} from '@/redux/types/shippingTypes';
-import {
-  ACCESSORY_ENUM_TO_LABEL,
-  isShippingAccessoryCategory,
-} from '@/constants/shippingAccessoryCategories';
+import { ShippingCategory } from '@/redux/types/shippingTypes';
 
 export const SHIPPING_CATEGORIES: ShippingCategory[] = [
   'TIRE',
@@ -18,7 +11,7 @@ export const SHIPPING_CATEGORIES: ShippingCategory[] = [
 export interface ShippingInput {
   category?: string;
   size?: string;
-  accessoryCategory?: string;
+  accessoryCategoryId?: string;
   weight?: unknown;
   length?: unknown;
   width?: unknown;
@@ -77,8 +70,8 @@ export function validateShippingInput(data: ShippingInput, isUpdate = false) {
   const resolvedCategory = category!;
 
   if (resolvedCategory === 'ACCESSORY') {
-    if (!data.accessoryCategory || !isShippingAccessoryCategory(data.accessoryCategory)) {
-      errors.push('Valid accessory category is required');
+    if (!data.accessoryCategoryId || !String(data.accessoryCategoryId).trim()) {
+      errors.push('Accessory category is required');
     }
   } else if (!data.size || !String(data.size).trim()) {
     errors.push('Size is required');
@@ -94,7 +87,7 @@ export function validateShippingInput(data: ShippingInput, isUpdate = false) {
       data: {
         category: resolvedCategory,
         size: null,
-        accessoryCategory: data.accessoryCategory as ShippingAccessoryCategory,
+        accessoryCategoryId: String(data.accessoryCategoryId).trim(),
         weight: numeric.weight as number,
         length: numeric.length as number,
         width: numeric.width as number,
@@ -109,7 +102,7 @@ export function validateShippingInput(data: ShippingInput, isUpdate = false) {
     data: {
       category: resolvedCategory,
       size: String(data.size).trim(),
-      accessoryCategory: null,
+      accessoryCategoryId: null,
       weight: numeric.weight as number,
       length: numeric.length as number,
       width: numeric.width as number,
@@ -128,13 +121,9 @@ export function buildShippingSearchWhere(category: ShippingCategory, search: str
   const orConditions: Record<string, unknown>[] = [];
 
   if (category === 'ACCESSORY') {
-    const matchedEnums = Object.entries(ACCESSORY_ENUM_TO_LABEL)
-      .filter(([, label]) => label.toLowerCase().includes(trimmed.toLowerCase()))
-      .map(([enumVal]) => enumVal);
-
-    if (matchedEnums.length > 0) {
-      orConditions.push({ accessoryCategory: { in: matchedEnums } });
-    }
+    orConditions.push({
+      accessoryCategory: { name: { contains: trimmed, mode: 'insensitive' } },
+    });
   } else {
     orConditions.push({ size: { contains: trimmed, mode: 'insensitive' } });
   }

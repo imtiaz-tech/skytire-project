@@ -13,7 +13,6 @@ import {
   SHIPPING_TAB_LABELS,
   isAccessoryShippingCategory,
 } from '@/redux/types/shippingTypes';
-import { ACCESSORY_ENUM_TO_LABEL } from '@/constants/shippingAccessoryCategories';
 import toast from 'react-hot-toast';
 
 const TABS: ShippingCategory[] = [
@@ -106,7 +105,7 @@ export default function ShippingPage() {
   };
 
   const getAccessoryCategoryLabel = (record: Shipping) =>
-    record.accessoryCategory ? ACCESSORY_ENUM_TO_LABEL[record.accessoryCategory] : '—';
+    record.accessoryCategory?.name || '—';
 
   const columnCount = isAccessoryTab ? 8 : 5;
 

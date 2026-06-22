@@ -5,16 +5,15 @@ export type ShippingCategory =
   | 'BOLT_ON_WIRE_WHEEL'
   | 'ACCESSORY';
 
-export type ShippingAccessoryCategory =
-  | 'LOWRIDER_ADAPTERS'
-  | 'LOWRIDER_KNOCK_OFFS'
-  | 'LOWRIDER_TOOLS';
-
 export interface Shipping {
   id: string;
   category: ShippingCategory;
   size: string | null;
-  accessoryCategory: ShippingAccessoryCategory | null;
+  accessoryCategoryId: string | null;
+  accessoryCategory?: {
+    id: string;
+    name: string;
+  } | null;
   weight: number;
   length: number;
   width: number;
@@ -35,7 +34,7 @@ export interface ShippingState {
 
 export interface ShippingFormData {
   size: string;
-  accessoryCategory: ShippingAccessoryCategory | '';
+  accessoryCategoryId: string;
   weight: string;
   length: string;
   width: string;

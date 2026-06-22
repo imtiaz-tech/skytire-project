@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import {
-  isValidShippingCategory,
-} from '@/lib/shippingValidation';
-import { isShippingAccessoryCategory } from '@/constants/shippingAccessoryCategories';
+import { isValidShippingCategory } from '@/lib/shippingValidation';
 import { ShippingCategory } from '@/redux/types/shippingTypes';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category') || '';
   const size = (searchParams.get('size') || '').trim();
-  const accessoryCategory = searchParams.get('accessoryCategory') || '';
+  const accessoryCategoryId = searchParams.get('accessoryCategoryId') || '';
+  const accessoryCategoryName = (searchParams.get('accessoryCategoryName') || '').trim();
 
   if (!isValidShippingCategory(category)) {
     return NextResponse.json({ error: 'Valid category is required' }, { status: 400 });
@@ -18,14 +16,16 @@ export async function GET(request: NextRequest) {
 
   try {
     if (category === 'ACCESSORY') {
-      if (!accessoryCategory || !isShippingAccessoryCategory(accessoryCategory)) {
-        return NextResponse.json({ error: 'Valid accessory category is required' }, { status: 400 });
+      if (!accessoryCategoryId && !accessoryCategoryName) {
+        return NextResponse.json({ error: 'Accessory category is required' }, { status: 400 });
       }
 
       const shipping = await prisma.shipping.findFirst({
         where: {
           category: 'ACCESSORY',
-          accessoryCategory,
+          accessoryCategory: accessoryCategoryId
+            ? { id: accessoryCategoryId }
+            : { name: { equals: accessoryCategoryName, mode: 'insensitive' } },
         },
       });
 

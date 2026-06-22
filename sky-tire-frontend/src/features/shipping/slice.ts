@@ -1,11 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import {
-  Shipping,
-  ShippingCategory,
-  ShippingAccessoryCategory,
-  ShippingState,
-} from '@/redux/types/shippingTypes';
+import { Shipping, ShippingCategory, ShippingState } from '@/redux/types/shippingTypes';
 
 const initialState: ShippingState = {
   shippings: [],
@@ -18,7 +13,7 @@ const initialState: ShippingState = {
 
 export type ShippingPayload = {
   size?: string | null;
-  accessoryCategory?: ShippingAccessoryCategory | null;
+  accessoryCategoryId?: string | null;
   weight: number;
   length: number;
   width: number;

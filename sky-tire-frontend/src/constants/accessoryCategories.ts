@@ -1,10 +1,4 @@
-export const ACCESSORY_CATEGORIES = [
-  'Lowrider Adapters',
-  'Lowrider Knock Offs',
-  'Lowrider Tools',
-] as const;
-
-export type AccessoryCategory = (typeof ACCESSORY_CATEGORIES)[number];
+export type AccessoryCategory = string;
 
 export const SPECIFICATION_FIELDS = [
   { key: 'brand', label: 'Brand' },

@@ -14,9 +14,11 @@ import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import ManageBrandsModal from './ManageBrandsModal';
-import { ACCESSORY_CATEGORIES, SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
+import { SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
 import { AccessorySpecifications } from '@/redux/types/accessoryTypes';
 import { useAccessoryShippingAutoFill } from '@/hooks/useShippingAutoFill';
+import { fetchAccessoryCategories } from '@/features/accessory-categories/slice';
+import ManageAccessoryCategoriesModal from './ManageAccessoryCategoriesModal';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -73,6 +75,9 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   const brandDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
   const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
+
+  const { categories: accessoryCategories } = useAppSelector((state) => state.accessoryCategories);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -149,6 +154,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   useEffect(() => {
     fetchBrandsData();
     dispatch(fetchAllInventorySources());
+    dispatch(fetchAccessoryCategories());
   }, [dispatch]);
 
   useEffect(() => {
@@ -702,22 +708,31 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
               </button>
               {isCategoryDropdownOpen && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                  {ACCESSORY_CATEGORIES.map((cat) => (
+                  {accessoryCategories.map((cat) => (
                     <div
-                      key={cat}
+                      key={cat.id}
                       onClick={() => {
-                        setFormData({ ...formData, category: cat });
+                        setFormData({ ...formData, category: cat.name });
                         setIsCategoryDropdownOpen(false);
-                        handleCategorySelect(cat);
+                        handleCategorySelect(cat.name);
                       }}
                       className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-gray-50 text-[15px] ${
-                        formData.category === cat ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
+                        formData.category === cat.name ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-[#1e2a4a]'
                       }`}
                     >
-                      {cat}
-                      {formData.category === cat && <Check className="h-4 w-4 text-blue-600" />}
+                      {cat.name}
+                      {formData.category === cat.name && <Check className="h-4 w-4 text-blue-600" />}
                     </div>
                   ))}
+                  <div className="border-t border-gray-100 bg-white sticky bottom-0 z-10 shrink-0">
+                    <div
+                      onClick={() => { setIsCategoryDropdownOpen(false); setIsManageCategoriesOpen(true); }}
+                      className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-blue-50 text-[15px] text-[#3B5998] font-bold transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Category
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -999,6 +1014,16 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
           onBrandsUpdated={fetchBrandsData}
         />
       )}
+
+      <ManageAccessoryCategoriesModal
+        open={isManageCategoriesOpen}
+        onClose={() => setIsManageCategoriesOpen(false)}
+        onCategoriesUpdated={() => dispatch(fetchAccessoryCategories())}
+        onCategoryCreated={(_id, categoryName) => {
+          setFormData((prev) => ({ ...prev, category: categoryName }));
+          handleCategorySelect(categoryName);
+        }}
+      />
     </div>
   );
 }

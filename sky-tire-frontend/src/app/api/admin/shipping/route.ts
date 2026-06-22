@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          accessoryCategory: true,
+        },
       }),
       prisma.shipping.count({ where }),
     ]);
@@ -56,12 +59,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 });
     }
 
-    const { category, size, accessoryCategory, weight, length, width, height, shippingRate } =
+    const { category, size, accessoryCategoryId, weight, length, width, height, shippingRate } =
       validation.data;
 
     if (category === 'ACCESSORY') {
+      const categoryRecord = await prisma.accessoryCategory.findUnique({
+        where: { id: accessoryCategoryId! },
+      });
+
+      if (!categoryRecord) {
+        return NextResponse.json({ error: 'Accessory category not found' }, { status: 400 });
+      }
+
       const existing = await prisma.shipping.findUnique({
-        where: { accessoryCategory: accessoryCategory! },
+        where: { accessoryCategoryId: accessoryCategoryId! },
       });
 
       if (existing) {
@@ -90,12 +101,15 @@ export async function POST(request: NextRequest) {
       data: {
         category,
         size,
-        accessoryCategory,
+        accessoryCategoryId,
         weight,
         length,
         width,
         height,
         shippingRate,
+      },
+      include: {
+        accessoryCategory: true,
       },
     });
 
