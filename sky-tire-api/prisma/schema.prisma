@@ -580,3 +580,50 @@ model Shipping {
   @@index([size])
   @@index([accessoryCategoryId])
 }
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum CouponAppliesTo {
+  ALL
+  SPECIFIC_PRODUCTS
+  SPECIFIC_BRANDS
+  OVERALL
+  ALL_TIRES
+  ALL_WHEELS
+  ALL_WIRE_WHEELS
+  ALL_BOLT_ON_WIRE_WHEELS
+  ALL_BLACK_WALL_TIRES
+  ALL_WHITE_WALL_TIRES
+  ALL_ACCESSORIES
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Coupon {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  title             String
+  discountType      CouponDiscountType
+  discountValue     Float
+  appliesTo         CouponAppliesTo[]  @default([])
+  productIds        String[]           @default([])
+  brandIds          String[]           @default([])
+  minQuantity       Int?
+  minOrderPrice     Float?
+  userUsageLimit    Int?
+  couponUsageLimit  Int?
+  startDate         DateTime
+  endDate           DateTime?
+  status            CouponStatus       @default(ACTIVE)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([code])
+  @@index([status])
+}
