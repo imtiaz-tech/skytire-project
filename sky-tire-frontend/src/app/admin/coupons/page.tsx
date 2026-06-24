@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Loader2, Plus, Edit2, Trash2, Ticket } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchCoupons, deleteCoupon } from '@/features/coupons/slice';
-import { formatAppliesToLabels } from '@/constants/couponOptions';
+import { formatAppliesToLabels, formatStackingRules } from '@/constants/couponOptions';
 import { Coupon } from '@/redux/types/couponTypes';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -111,6 +111,9 @@ export default function CouponsPage() {
                   Discount
                 </th>
                 <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
+                  Stacking Rules
+                </th>
+                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
                   Applies To
                 </th>
                 <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
@@ -124,13 +127,13 @@ export default function CouponsPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={7} className="px-8 py-20 text-center">
                     <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={7} className="px-8 py-20 text-center">
                     <p className="text-gray-400 font-semibold">No coupons found</p>
                   </td>
                 </tr>
@@ -141,6 +144,9 @@ export default function CouponsPage() {
                     <td className="px-6 py-4 text-gray-600">{coupon.title}</td>
                     <td className="px-6 py-4 text-gray-600">
                       {formatDiscount(coupon.discountType, coupon.discountValue)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 text-sm max-w-xs">
+                      {formatStackingRules(coupon)}
                     </td>
                     <td className="px-6 py-4 text-gray-600 text-sm max-w-xs">
                       {formatAppliesToLabels(coupon.appliesTo)}
@@ -159,7 +165,7 @@ export default function CouponsPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={`/admin/coupons/edit/${coupon.id}`}
+                          href={``}
                           className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all"
                         >
                           <Edit2 className="h-4 w-4" />
@@ -167,7 +173,7 @@ export default function CouponsPage() {
                         <button
                           onClick={() => {
                             setCouponToDelete(coupon.id);
-                            setIsDeleteModalOpen(true);
+                            // setIsDeleteModalOpen(true);
                           }}
                           className="w-10 h-10 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all"
                         >

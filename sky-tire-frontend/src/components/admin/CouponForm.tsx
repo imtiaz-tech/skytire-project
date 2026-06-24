@@ -4,32 +4,28 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createCoupon, updateCoupon } from '@/features/coupons/slice';
+import { validateCouponFields, CouponFieldErrors } from '@/lib/couponValidation';
 import { Coupon } from '@/redux/types/couponTypes';
 import {
   APPLIES_TO_GROUPS,
   ALL_APPLIES_TO_VALUES,
   CouponAppliesTo,
   DISCOUNT_TYPE_OPTIONS,
+  STACKING_RULE_OPTIONS,
+  StackingRuleKey,
   generateCouponCode,
 } from '@/constants/couponOptions';
+import CouponSpecificProductsPanel from '@/components/admin/coupon/CouponSpecificProductsPanel';
+import CouponSpecificBrandsPanel from '@/components/admin/coupon/CouponSpecificBrandsPanel';
+import {
+  emptyBrandSelections,
+  emptyProductSelections,
+} from '@/types/couponSelections';
 import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 
 interface CouponFormProps {
   editCoupon?: Coupon;
-}
-
-interface LookupProduct {
-  id: string;
-  label: string;
-  type: string;
-}
-
-interface LookupBrand {
-  id: string;
-  brandName: string;
-  category: string;
 }
 
 const defaultForm = {
@@ -37,9 +33,13 @@ const defaultForm = {
   title: '',
   discountType: 'percentage' as const,
   discountValue: '',
+  combineWithOtherCoupons: false,
+  combineWithFinancing: false,
+  combineWithFreeShipping: false,
+  exclusiveCoupon: false,
   appliesTo: [] as CouponAppliesTo[],
-  productIds: [] as string[],
-  brandIds: [] as string[],
+  productSelections: emptyProductSelections(),
+  brandSelections: emptyBrandSelections(),
   minQuantity: '',
   minOrderPrice: '',
   userUsageLimit: '',
@@ -54,10 +54,7 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(defaultForm);
-  const [products, setProducts] = useState<LookupProduct[]>([]);
-  const [brands, setBrands] = useState<LookupBrand[]>([]);
-  const [productSearch, setProductSearch] = useState('');
-  const [brandSearch, setBrandSearch] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<CouponFieldErrors>({});
 
   useEffect(() => {
     if (editCoupon) {
@@ -66,11 +63,15 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
         title: editCoupon.title,
         discountType: editCoupon.discountType,
         discountValue: String(editCoupon.discountValue),
+        combineWithOtherCoupons: editCoupon.combineWithOtherCoupons,
+        combineWithFinancing: editCoupon.combineWithFinancing,
+        combineWithFreeShipping: editCoupon.combineWithFreeShipping,
+        exclusiveCoupon: editCoupon.exclusiveCoupon,
         appliesTo: Array.isArray(editCoupon.appliesTo)
           ? editCoupon.appliesTo
           : [editCoupon.appliesTo as CouponAppliesTo],
-        productIds: editCoupon.productIds,
-        brandIds: editCoupon.brandIds,
+        productSelections: editCoupon.productSelections,
+        brandSelections: editCoupon.brandSelections,
         minQuantity: editCoupon.minQuantity != null ? String(editCoupon.minQuantity) : '',
         minOrderPrice: editCoupon.minOrderPrice != null ? String(editCoupon.minOrderPrice) : '',
         userUsageLimit:
@@ -84,42 +85,32 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
     }
   }, [editCoupon]);
 
-  useEffect(() => {
-    if (formData.appliesTo.includes('specific_products')) {
-      const fetchProducts = async () => {
-        try {
-          const res = await axios.get(
-            `/api/admin/coupons/lookup?type=products&search=${encodeURIComponent(productSearch)}`
-          );
-          setProducts(res.data);
-        } catch {
-          toast.error('Failed to load products');
-        }
-      };
-      fetchProducts();
-    }
-  }, [formData.appliesTo, productSearch]);
+  const inputClass =
+    'w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-[#1e2a4a]/10 focus:border-[#1e2a4a] transition-all';
+  const labelClass = 'block text-sm font-semibold text-gray-500 mb-1.5';
+  const errorClass = 'text-xs text-red-500 mt-1';
 
-  useEffect(() => {
-    if (formData.appliesTo.includes('specific_brands')) {
-      const fetchBrands = async () => {
-        try {
-          const res = await axios.get(
-            `/api/admin/coupons/lookup?type=brands&search=${encodeURIComponent(brandSearch)}`
-          );
-          setBrands(res.data);
-        } catch {
-          toast.error('Failed to load brands');
-        }
-      };
-      fetchBrands();
+  const fieldInputClass = (field: keyof CouponFieldErrors) =>
+    `${inputClass}${fieldErrors[field] ? ' border-red-400 focus:border-red-400 focus:ring-red-100' : ''}`;
+
+  const clearFieldError = (field: keyof CouponFieldErrors) => {
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     }
-  }, [formData.appliesTo, brandSearch]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.appliesTo.length === 0) {
-      return toast.error('Select at least one applies to option');
+
+    const errors = validateCouponFields(formData);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast.error(Object.values(errors)[0]);
+      return;
     }
 
     setLoading(true);
@@ -127,11 +118,10 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
     const payload = {
       ...formData,
       discountValue: Number(formData.discountValue),
-      minQuantity: formData.minQuantity ? Number(formData.minQuantity) : null,
-      minOrderPrice: formData.minOrderPrice ? Number(formData.minOrderPrice) : null,
-      userUsageLimit: formData.userUsageLimit ? Number(formData.userUsageLimit) : null,
-      couponUsageLimit: formData.couponUsageLimit ? Number(formData.couponUsageLimit) : null,
-      endDate: formData.endDate || null,
+      minQuantity: Number(formData.minQuantity),
+      minOrderPrice: Number(formData.minOrderPrice),
+      userUsageLimit: Number(formData.userUsageLimit),
+      couponUsageLimit: Number(formData.couponUsageLimit),
     };
 
     try {
@@ -151,7 +141,31 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
     }
   };
 
+  const toggleStackingRule = (key: StackingRuleKey) => {
+    clearFieldError('stackingRules');
+    setFormData((prev) => {
+      if (key === 'exclusiveCoupon') {
+        const next = !prev.exclusiveCoupon;
+        return {
+          ...prev,
+          exclusiveCoupon: next,
+          combineWithOtherCoupons: false,
+          combineWithFinancing: false,
+          combineWithFreeShipping: false,
+        };
+      }
+
+      const next = !prev[key];
+      return {
+        ...prev,
+        [key]: next,
+        exclusiveCoupon: next ? false : prev.exclusiveCoupon,
+      };
+    });
+  };
+
   const toggleAppliesTo = (value: CouponAppliesTo) => {
+    clearFieldError('appliesTo');
     setFormData((prev) => {
       const next = prev.appliesTo.includes(value)
         ? prev.appliesTo.filter((v) => v !== value)
@@ -159,8 +173,8 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
       return {
         ...prev,
         appliesTo: next,
-        productIds: next.includes('specific_products') ? prev.productIds : [],
-        brandIds: next.includes('specific_brands') ? prev.brandIds : [],
+        productSelections: next.includes('specific_products') ? prev.productSelections : emptyProductSelections(),
+        brandSelections: next.includes('specific_brands') ? prev.brandSelections : emptyBrandSelections(),
       };
     });
   };
@@ -169,35 +183,14 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
   const someSelected = formData.appliesTo.length > 0 && !allSelected;
 
   const toggleSelectAll = () => {
+    clearFieldError('appliesTo');
     setFormData((prev) => ({
       ...prev,
       appliesTo: allSelected ? [] : [...ALL_APPLIES_TO_VALUES],
-      productIds: allSelected ? [] : prev.productIds,
-      brandIds: allSelected ? [] : prev.brandIds,
+      productSelections: allSelected ? emptyProductSelections() : prev.productSelections,
+      brandSelections: allSelected ? emptyBrandSelections() : prev.brandSelections,
     }));
   };
-
-  const toggleProduct = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      productIds: prev.productIds.includes(id)
-        ? prev.productIds.filter((p) => p !== id)
-        : [...prev.productIds, id],
-    }));
-  };
-
-  const toggleBrand = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      brandIds: prev.brandIds.includes(id)
-        ? prev.brandIds.filter((b) => b !== id)
-        : [...prev.brandIds, id],
-    }));
-  };
-
-  const inputClass =
-    'w-full px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-base text-[#1e2a4a] focus:ring-2 focus:ring-[#1e2a4a]/10 focus:border-[#1e2a4a] transition-all';
-  const labelClass = 'block text-sm font-semibold text-gray-500 mb-1.5';
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -285,8 +278,39 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
           </div>
 
           <div className="md:col-span-2">
+            <label className={labelClass}>Stacking Rules</label>
+            <div
+              className={`border rounded-xl p-4 space-y-2 bg-white${
+                fieldErrors.stackingRules ? ' border-red-400' : ' border-gray-200'
+              }`}
+            >
+              {STACKING_RULE_OPTIONS.map((opt) => (
+                <label
+                  key={opt.key}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData[opt.key]}
+                    onChange={() => toggleStackingRule(opt.key)}
+                    className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a] focus:ring-[#1e2a4a]"
+                  />
+                  <span className="text-sm font-medium text-[#1e2a4a]">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+            {fieldErrors.stackingRules && (
+              <p className={errorClass}>{fieldErrors.stackingRules}</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
             <label className={labelClass}>Applies To</label>
-            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+            <div
+              className={`border rounded-xl overflow-hidden bg-white${
+                fieldErrors.appliesTo ? ' border-red-400' : ' border-gray-200'
+              }`}
+            >
               <label className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100/80 transition-colors">
                 <input
                   type="checkbox"
@@ -331,6 +355,7 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
                 ))}
               </div>
             </div>
+            {fieldErrors.appliesTo && <p className={errorClass}>{fieldErrors.appliesTo}</p>}
           </div>
 
           <div>
@@ -340,138 +365,126 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
               min="0"
               step="0.01"
               placeholder="Minimum Order Price"
-              className={inputClass}
+              className={fieldInputClass('minOrderPrice')}
               value={formData.minOrderPrice}
-              onChange={(e) => setFormData({ ...formData, minOrderPrice: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('minOrderPrice');
+                setFormData({ ...formData, minOrderPrice: e.target.value });
+              }}
+              required
             />
+            {fieldErrors.minOrderPrice && (
+              <p className={errorClass}>{fieldErrors.minOrderPrice}</p>
+            )}
           </div>
 
           <div>
             <label className={labelClass}>Minimum Quantity</label>
             <input
               type="number"
-              min="0"
+              min="1"
+              step="1"
               placeholder="Minimum Quantity"
-              className={inputClass}
+              className={fieldInputClass('minQuantity')}
               value={formData.minQuantity}
-              onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('minQuantity');
+                setFormData({ ...formData, minQuantity: e.target.value });
+              }}
+              required
             />
+            {fieldErrors.minQuantity && <p className={errorClass}>{fieldErrors.minQuantity}</p>}
           </div>
           <div>
             <label className={labelClass}>User Usage Limit</label>
             <input
               type="number"
-              min="0"
+              min="1"
+              step="1"
               placeholder="User Usage Limit"
-              className={inputClass}
+              className={fieldInputClass('userUsageLimit')}
               value={formData.userUsageLimit}
-              onChange={(e) => setFormData({ ...formData, userUsageLimit: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('userUsageLimit');
+                setFormData({ ...formData, userUsageLimit: e.target.value });
+              }}
+              required
             />
+            {fieldErrors.userUsageLimit && (
+              <p className={errorClass}>{fieldErrors.userUsageLimit}</p>
+            )}
           </div>
 
           <div>
             <label className={labelClass}>Coupon Usage Limit</label>
             <input
               type="number"
-              min="0"
+              min="1"
+              step="1"
               placeholder="Coupon Usage Limit"
-              className={inputClass}
+              className={fieldInputClass('couponUsageLimit')}
               value={formData.couponUsageLimit}
-              onChange={(e) => setFormData({ ...formData, couponUsageLimit: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('couponUsageLimit');
+                setFormData({ ...formData, couponUsageLimit: e.target.value });
+              }}
+              required
             />
+            {fieldErrors.couponUsageLimit && (
+              <p className={errorClass}>{fieldErrors.couponUsageLimit}</p>
+            )}
           </div>
           <div>
             <label className={labelClass}>Start Date</label>
             <input
               type="date"
-              className={inputClass}
+              className={fieldInputClass('startDate')}
               value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('startDate');
+                clearFieldError('endDate');
+                setFormData({ ...formData, startDate: e.target.value });
+              }}
               required
             />
+            {fieldErrors.startDate && <p className={errorClass}>{fieldErrors.startDate}</p>}
           </div>
           <div>
             <label className={labelClass}>End Date</label>
             <input
               type="date"
-              className={inputClass}
+              className={fieldInputClass('endDate')}
               value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('endDate');
+                setFormData({ ...formData, endDate: e.target.value });
+              }}
+              required
             />
+            {fieldErrors.endDate && <p className={errorClass}>{fieldErrors.endDate}</p>}
           </div>
         </div>
 
         {formData.appliesTo.includes('specific_products') && (
-          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-            <label className={labelClass}>Select Products</label>
-            <input
-              type="text"
-              placeholder="Search products..."
-              className={inputClass}
-              value={productSearch}
-              onChange={(e) => setProductSearch(e.target.value)}
-            />
-            <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2">
-              {products.length === 0 ? (
-                <p className="text-sm text-gray-400 p-2">No products found</p>
-              ) : (
-                products.map((product) => (
-                  <label
-                    key={product.id}
-                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.productIds.includes(product.id)}
-                      onChange={() => toggleProduct(product.id)}
-                    />
-                    <span>{product.label}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            {formData.productIds.length > 0 && (
-              <p className="text-xs text-gray-500">{formData.productIds.length} product(s) selected</p>
-            )}
-          </div>
+          <CouponSpecificProductsPanel
+            selections={formData.productSelections}
+            onChange={(productSelections) =>
+              setFormData((prev) => ({ ...prev, productSelections }))
+            }
+            error={fieldErrors.productIds}
+            onClearError={() => clearFieldError('productIds')}
+          />
         )}
 
         {formData.appliesTo.includes('specific_brands') && (
-          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-            <label className={labelClass}>Select Brands</label>
-            <input
-              type="text"
-              placeholder="Search brands..."
-              className={inputClass}
-              value={brandSearch}
-              onChange={(e) => setBrandSearch(e.target.value)}
-            />
-            <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2">
-              {brands.length === 0 ? (
-                <p className="text-sm text-gray-400 p-2">No brands found</p>
-              ) : (
-                brands.map((brand) => (
-                  <label
-                    key={brand.id}
-                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.brandIds.includes(brand.id)}
-                      onChange={() => toggleBrand(brand.id)}
-                    />
-                    <span>
-                      {brand.brandName}{' '}
-                      <span className="text-gray-400 capitalize">({brand.category})</span>
-                    </span>
-                  </label>
-                ))
-              )}
-            </div>
-            {formData.brandIds.length > 0 && (
-              <p className="text-xs text-gray-500">{formData.brandIds.length} brand(s) selected</p>
-            )}
-          </div>
+          <CouponSpecificBrandsPanel
+            selections={formData.brandSelections}
+            onChange={(brandSelections) =>
+              setFormData((prev) => ({ ...prev, brandSelections }))
+            }
+            error={fieldErrors.brandIds}
+            onClearError={() => clearFieldError('brandIds')}
+          />
         )}
 
         <div className="flex items-center justify-between pt-4">

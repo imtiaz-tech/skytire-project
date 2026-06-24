@@ -4,7 +4,6 @@ export type CouponAppliesTo =
   | 'all'
   | 'specific_products'
   | 'specific_brands'
-  | 'overall'
   | 'all_tires'
   | 'all_wheels'
   | 'all_wire_wheels'
@@ -20,6 +19,27 @@ export const DISCOUNT_TYPE_OPTIONS: { value: CouponDiscountType; label: string }
   { value: 'fixed', label: 'Fixed' },
 ];
 
+export const STACKING_RULE_OPTIONS = [
+  { key: 'combineWithOtherCoupons', label: 'Can be Combined With Other Coupons' },
+  { key: 'combineWithFinancing', label: 'Can be Combined With Financing' },
+  { key: 'combineWithFreeShipping', label: 'Can be Combined With Free Shipping' },
+  { key: 'exclusiveCoupon', label: 'Exclusive Coupon' },
+] as const;
+
+export type StackingRuleKey = (typeof STACKING_RULE_OPTIONS)[number]['key'];
+
+export function formatStackingRules(coupon: {
+  combineWithOtherCoupons: boolean;
+  combineWithFinancing: boolean;
+  combineWithFreeShipping: boolean;
+  exclusiveCoupon: boolean;
+}): string {
+  const active = STACKING_RULE_OPTIONS.filter(
+    (opt) => coupon[opt.key as StackingRuleKey]
+  ).map((opt) => opt.label);
+  return active.length > 0 ? active.join(', ') : 'None';
+}
+
 export const APPLIES_TO_GROUPS: {
   label: string;
   options: { value: CouponAppliesTo; label: string }[];
@@ -27,7 +47,6 @@ export const APPLIES_TO_GROUPS: {
   {
     label: 'General Options',
     options: [
-      { value: 'overall', label: 'Overall' },
       { value: 'all', label: 'All Products' },
       { value: 'specific_brands', label: 'Specific Brands' },
       { value: 'specific_products', label: 'Specific Products' },

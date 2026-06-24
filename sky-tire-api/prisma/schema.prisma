@@ -590,7 +590,6 @@ enum CouponAppliesTo {
   ALL
   SPECIFIC_PRODUCTS
   SPECIFIC_BRANDS
-  OVERALL
   ALL_TIRES
   ALL_WHEELS
   ALL_WIRE_WHEELS
@@ -611,9 +610,15 @@ model Coupon {
   title             String
   discountType      CouponDiscountType
   discountValue     Float
+  combineWithOtherCoupons  Boolean            @default(false)
+  combineWithFinancing     Boolean            @default(false)
+  combineWithFreeShipping  Boolean            @default(false)
+  exclusiveCoupon          Boolean            @default(false)
   appliesTo         CouponAppliesTo[]  @default([])
   productIds        String[]           @default([])
   brandIds          String[]           @default([])
+  productSelections Json               @default("{}")
+  brandSelections   Json               @default("{}")
   minQuantity       Int?
   minOrderPrice     Float?
   userUsageLimit    Int?

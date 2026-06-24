@@ -2,7 +2,12 @@ import {
   CouponAppliesTo,
   CouponDiscountType,
   CouponStatus,
+  StackingRuleKey,
 } from '@/constants/couponOptions';
+import {
+  CouponBrandSelections,
+  CouponProductSelections,
+} from '@/types/couponSelections';
 
 export interface Coupon {
   id: string;
@@ -10,9 +15,15 @@ export interface Coupon {
   title: string;
   discountType: CouponDiscountType;
   discountValue: number;
+  combineWithOtherCoupons: boolean;
+  combineWithFinancing: boolean;
+  combineWithFreeShipping: boolean;
+  exclusiveCoupon: boolean;
   appliesTo: CouponAppliesTo[];
   productIds: string[];
   brandIds: string[];
+  productSelections: CouponProductSelections;
+  brandSelections: CouponBrandSelections;
   minQuantity: number | null;
   minOrderPrice: number | null;
   userUsageLimit: number | null;
@@ -33,19 +44,4 @@ export interface CouponsState {
   currentPage: number;
 }
 
-export interface CouponFormData {
-  code: string;
-  title: string;
-  discountType: CouponDiscountType;
-  discountValue: string;
-  appliesTo: CouponAppliesTo[];
-  productIds: string[];
-  brandIds: string[];
-  minQuantity: string;
-  minOrderPrice: string;
-  userUsageLimit: string;
-  couponUsageLimit: string;
-  startDate: string;
-  endDate: string;
-  status: CouponStatus;
-}
+export type { StackingRuleKey };
