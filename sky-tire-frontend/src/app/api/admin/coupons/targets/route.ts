@@ -32,7 +32,13 @@ export async function GET(request: NextRequest) {
         orderBy: { brandName: 'asc' },
         take: 200,
       });
-      return NextResponse.json(brands);
+      return NextResponse.json(
+        brands.map((b) => ({
+          id: b.id,
+          label: b.brandName,
+          category: b.category,
+        }))
+      );
     }
 
     if (step === 'tire-models') {
