@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
@@ -29,15 +29,22 @@ function CheckboxList({
   items,
   selected,
   onToggle,
+  onSelectAll,
   loading,
   emptyText,
+  selectAllLabel = 'Select All',
 }: {
   items: LookupItem[];
   selected: string[];
   onToggle: (id: string) => void;
+  onSelectAll?: () => void;
   loading: boolean;
   emptyText: string;
+  selectAllLabel?: string;
 }) {
+  const allSelected = items.length > 0 && items.every((item) => selected.includes(item.id));
+  const someSelected = items.some((item) => selected.includes(item.id)) && !allSelected;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-6">
@@ -48,22 +55,39 @@ function CheckboxList({
   if (items.length === 0) {
     return <p className="text-sm text-gray-400 p-2">{emptyText}</p>;
   }
+
   return (
-    <div className="max-h-40 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2">
-      {items.map((item) => (
-        <label
-          key={item.id}
-          className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
-        >
+    <div className="border border-gray-100 rounded-lg overflow-hidden">
+      {onSelectAll && (
+        <label className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border-b border-gray-100 cursor-pointer hover:bg-gray-100/80 transition-colors">
           <input
             type="checkbox"
-            checked={selected.includes(item.id)}
-            onChange={() => onToggle(item.id)}
+            checked={allSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = someSelected;
+            }}
+            onChange={onSelectAll}
             className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
           />
-          <span>{item.label}</span>
+          <span className="text-sm font-semibold text-[#1e2a4a]">{selectAllLabel}</span>
         </label>
-      ))}
+      )}
+      <div className="max-h-40 overflow-y-auto space-y-1 p-2">
+        {items.map((item) => (
+          <label
+            key={item.id}
+            className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(item.id)}
+              onChange={() => onToggle(item.id)}
+              className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
+            />
+            <span>{item.label}</span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
@@ -85,6 +109,7 @@ export default function CouponSpecificBrandsPanel({
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingSizes, setLoadingSizes] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const skipModelAutoSelect = useRef(false);
 
   const tireSel = selections.tires;
   const wheelSel = selections.wheels;
@@ -131,7 +156,22 @@ export default function CouponSpecificBrandsPanel({
         const res = await axios.get(
           `/api/admin/coupons/targets?step=tire-models&brandIds=${tireSel.brandIds.join(',')}`
         );
-        setModels(res.data);
+        const fetchedModels: LookupItem[] = res.data;
+        setModels(fetchedModels);
+
+        if (!skipModelAutoSelect.current && tireSel.modelIds.length === 0) {
+          const allModelIds = fetchedModels.map((m) => m.id);
+          onClearError?.();
+          onChange({
+            ...selections,
+            tires: {
+              ...tireSel,
+              modelIds: allModelIds,
+              tireIds: [],
+            },
+          });
+        }
+        skipModelAutoSelect.current = false;
       } catch {
         toast.error('Failed to load tire models');
       } finally {
@@ -139,6 +179,7 @@ export default function CouponSpecificBrandsPanel({
       }
     };
     fetchModels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, tireSel.brandIds]);
 
   useEffect(() => {
@@ -277,6 +318,40 @@ export default function CouponSpecificBrandsPanel({
     onChange({ ...selections, accessories: { ...accessorySel, ...patch } });
   };
 
+  const toggleSelectAllBrands = () => {
+    onClearError?.();
+    const allIds = brands.map((b) => b.id);
+    const allSelected = allIds.length > 0 && allIds.every((id) => activeBrandIds.includes(id));
+
+    if (activeTab === 'tires') {
+      updateTires({
+        brandIds: allSelected ? [] : allIds,
+        modelIds: [],
+        tireIds: [],
+      });
+    } else if (activeTab === 'wheels') {
+      updateProductBrand('wheels', {
+        brandIds: allSelected ? [] : allIds,
+        productIds: [],
+      });
+    } else if (activeTab === 'wire_wheels') {
+      updateProductBrand('wire_wheels', {
+        brandIds: allSelected ? [] : allIds,
+        productIds: [],
+      });
+    } else if (activeTab === 'bolt_on_wire_wheels') {
+      updateProductBrand('bolt_on_wire_wheels', {
+        brandIds: allSelected ? [] : allIds,
+        productIds: [],
+      });
+    } else {
+      updateAccessories({
+        brandIds: allSelected ? [] : allIds,
+        categories: [],
+      });
+    }
+  };
+
   const toggleBrand = (id: string) => {
     onClearError?.();
     if (activeTab === 'tires') {
@@ -312,10 +387,18 @@ export default function CouponSpecificBrandsPanel({
   };
 
   const toggleModel = (id: string) => {
+    skipModelAutoSelect.current = true;
     const next = tireSel.modelIds.includes(id)
       ? tireSel.modelIds.filter((v) => v !== id)
       : [...tireSel.modelIds, id];
     updateTires({ modelIds: next, tireIds: [] });
+  };
+
+  const toggleSelectAllModels = () => {
+    skipModelAutoSelect.current = true;
+    const allIds = models.map((m) => m.id);
+    const allSelected = allIds.length > 0 && allIds.every((id) => tireSel.modelIds.includes(id));
+    updateTires({ modelIds: allSelected ? [] : allIds, tireIds: [] });
   };
 
   const toggleTireSize = (id: string) => {
@@ -323,6 +406,12 @@ export default function CouponSpecificBrandsPanel({
       ? tireSel.tireIds.filter((v) => v !== id)
       : [...tireSel.tireIds, id];
     updateTires({ tireIds: next });
+  };
+
+  const toggleSelectAllTireSizes = () => {
+    const allIds = sizes.map((s) => s.id);
+    const allSelected = allIds.length > 0 && allIds.every((id) => tireSel.tireIds.includes(id));
+    updateTires({ tireIds: allSelected ? [] : allIds });
   };
 
   const toggleProductSize = (key: 'wheels' | 'wire_wheels' | 'bolt_on_wire_wheels', id: string) => {
@@ -333,11 +422,27 @@ export default function CouponSpecificBrandsPanel({
     updateProductBrand(key, { productIds: next });
   };
 
+  const toggleSelectAllProductSizes = (
+    key: 'wheels' | 'wire_wheels' | 'bolt_on_wire_wheels',
+    items: LookupItem[],
+    selected: string[]
+  ) => {
+    const allIds = items.map((s) => s.id);
+    const allSelected = allIds.length > 0 && allIds.every((id) => selected.includes(id));
+    updateProductBrand(key, { productIds: allSelected ? [] : allIds });
+  };
+
   const toggleCategory = (id: string) => {
     const next = accessorySel.categories.includes(id)
       ? accessorySel.categories.filter((v) => v !== id)
       : [...accessorySel.categories, id];
     updateAccessories({ categories: next });
+  };
+
+  const toggleSelectAllCategories = () => {
+    const allIds = categories.map((c) => c.id);
+    const allSelected = allIds.length > 0 && allIds.every((id) => accessorySel.categories.includes(id));
+    updateAccessories({ categories: allSelected ? [] : allIds });
   };
 
   const sizeLabel =
@@ -377,8 +482,10 @@ export default function CouponSpecificBrandsPanel({
           items={brands}
           selected={activeBrandIds}
           onToggle={toggleBrand}
+          onSelectAll={toggleSelectAllBrands}
           loading={loadingBrands}
           emptyText="No brands found"
+          selectAllLabel="Select All Brands"
         />
       </div>
 
@@ -389,8 +496,10 @@ export default function CouponSpecificBrandsPanel({
             items={models}
             selected={tireSel.modelIds}
             onToggle={toggleModel}
+            onSelectAll={toggleSelectAllModels}
             loading={loadingModels}
             emptyText="No models found for selected brands"
+            selectAllLabel="Select All Models"
           />
         </div>
       )}
@@ -409,8 +518,10 @@ export default function CouponSpecificBrandsPanel({
             items={sizes}
             selected={tireSel.tireIds}
             onToggle={toggleTireSize}
+            onSelectAll={toggleSelectAllTireSizes}
             loading={loadingSizes}
             emptyText="No sizes found for selected models"
+            selectAllLabel="Select All Sizes"
           />
         </div>
       )}
@@ -429,8 +540,12 @@ export default function CouponSpecificBrandsPanel({
             items={sizes}
             selected={wheelSel.productIds}
             onToggle={(id) => toggleProductSize('wheels', id)}
+            onSelectAll={() =>
+              toggleSelectAllProductSizes('wheels', sizes, wheelSel.productIds)
+            }
             loading={loadingSizes}
             emptyText="No wheel sizes found for selected brands"
+            selectAllLabel="Select All Sizes"
           />
         </div>
       )}
@@ -449,8 +564,12 @@ export default function CouponSpecificBrandsPanel({
             items={sizes}
             selected={wireSel.productIds}
             onToggle={(id) => toggleProductSize('wire_wheels', id)}
+            onSelectAll={() =>
+              toggleSelectAllProductSizes('wire_wheels', sizes, wireSel.productIds)
+            }
             loading={loadingSizes}
             emptyText="No wire wheel sizes found for selected brands"
+            selectAllLabel="Select All Sizes"
           />
         </div>
       )}
@@ -469,8 +588,12 @@ export default function CouponSpecificBrandsPanel({
             items={sizes}
             selected={boltSel.productIds}
             onToggle={(id) => toggleProductSize('bolt_on_wire_wheels', id)}
+            onSelectAll={() =>
+              toggleSelectAllProductSizes('bolt_on_wire_wheels', sizes, boltSel.productIds)
+            }
             loading={loadingSizes}
             emptyText="No bolt-on wire wheel sizes found for selected brands"
+            selectAllLabel="Select All Sizes"
           />
         </div>
       )}
@@ -489,8 +612,10 @@ export default function CouponSpecificBrandsPanel({
             items={categories}
             selected={accessorySel.categories}
             onToggle={toggleCategory}
+            onSelectAll={toggleSelectAllCategories}
             loading={loadingCategories}
             emptyText="No categories found for selected brands"
+            selectAllLabel="Select All Categories"
           />
         </div>
       )}
