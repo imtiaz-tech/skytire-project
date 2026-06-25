@@ -5,6 +5,7 @@ import { Search, Loader2, Plus, Edit2, Trash2, Ticket } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchCoupons, deleteCoupon } from '@/features/coupons/slice';
 import { formatAppliesToLabels, formatStackingRules } from '@/constants/couponOptions';
+import { roundCurrency } from '@/utils/pricing';
 import { Coupon } from '@/redux/types/couponTypes';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -49,9 +50,10 @@ export default function CouponsPage() {
   };
 
   const formatDiscount = (type: string, value: number) => {
-    if (type === 'percentage') return `${value}%`;
+    const rounded = roundCurrency(value);
+    if (type === 'percentage') return `${rounded}%`;
     if (type === 'free_shipping') return 'Free Shipping';
-    return `$${value.toFixed(2)}`;
+    return `$${rounded.toFixed(2)}`;
   };
 
   return (

@@ -3,6 +3,7 @@ import {
   CouponDiscountType,
   CouponStatus,
 } from '@/constants/couponOptions';
+import { roundCurrency } from '@/utils/pricing';
 import {
   countProductSelections,
   flattenBrandIds,
@@ -89,6 +90,12 @@ export type CouponFieldErrors = Partial<
 
 function isEmpty(value: unknown): boolean {
   return value == null || value === '';
+}
+
+function parseCurrencyValue(value: unknown): number {
+  const num = Number(value);
+  if (Number.isNaN(num)) return NaN;
+  return roundCurrency(num);
 }
 
 function parseBoolean(value: unknown): boolean {
@@ -195,6 +202,9 @@ export function serializeCoupon(coupon: {
 
   return {
     ...coupon,
+    discountValue: roundCurrency(coupon.discountValue),
+    minOrderPrice:
+      coupon.minOrderPrice != null ? roundCurrency(coupon.minOrderPrice) : null,
     discountType: REVERSE_DISCOUNT_TYPE[coupon.discountType],
     appliesTo: coupon.appliesTo.map((v) => REVERSE_APPLIES_TO[v]),
     status: REVERSE_STATUS[coupon.status],
@@ -253,7 +263,7 @@ export function validateCouponFields(body: CouponInput): CouponFieldErrors {
   } else if (isEmpty(body.discountValue)) {
     errors.discountValue = 'Discount value is required';
   } else {
-    const discountValue = Number(body.discountValue);
+    const discountValue = parseCurrencyValue(body.discountValue);
     if (Number.isNaN(discountValue)) {
       errors.discountValue = 'Discount value must be a valid number';
     } else if (discountValue <= 0) {
@@ -354,7 +364,7 @@ export function buildCouponData(body: CouponInput) {
   const discountValue =
     body.discountType === 'free_shipping'
       ? 0
-      : Number(body.discountValue);
+      : parseCurrencyValue(body.discountValue);
 
   return {
     code,
@@ -372,7 +382,7 @@ export function buildCouponData(body: CouponInput) {
     productIds: appliesTo.includes('SPECIFIC_PRODUCTS') ? flattenProductSelections(productSelections) : [],
     brandIds: appliesTo.includes('SPECIFIC_BRANDS') ? flattenBrandIds(brandSelections) : [],
     minQuantity: Number(body.minQuantity),
-    minOrderPrice: Number(body.minOrderPrice),
+    minOrderPrice: parseCurrencyValue(body.minOrderPrice),
     userUsageLimit: Number(body.userUsageLimit),
     couponUsageLimit: Number(body.couponUsageLimit),
     startDate: new Date(body.startDate),

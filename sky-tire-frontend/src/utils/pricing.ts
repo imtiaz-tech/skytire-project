@@ -20,6 +20,8 @@ export interface TireNetCostCalculationResult {
 const roundCurrency = (value: number): number =>
   Math.round((Number(value) || 0) * 100) / 100;
 
+export { roundCurrency };
+
 export const isSalePriceBelowRecommended = (
   salePrice: number,
   minimumSalePrice: number

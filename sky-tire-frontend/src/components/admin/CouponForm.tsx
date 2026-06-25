@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createCoupon, updateCoupon } from '@/features/coupons/slice';
 import { validateCouponFields, CouponFieldErrors } from '@/lib/couponValidation';
+import { roundCurrency } from '@/utils/pricing';
 import { Coupon } from '@/redux/types/couponTypes';
 import {
   APPLIES_TO_GROUPS,
@@ -66,7 +67,7 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
         title: editCoupon.title,
         automaticInstantRebate: editCoupon.automaticInstantRebate ?? false,
         discountType: editCoupon.discountType,
-        discountValue: String(editCoupon.discountValue),
+        discountValue: String(roundCurrency(editCoupon.discountValue)),
         combineWithOtherCoupons: editCoupon.combineWithOtherCoupons,
         combineWithFinancing: editCoupon.combineWithFinancing,
         combineWithFreeShipping: editCoupon.combineWithFreeShipping,
@@ -78,7 +79,10 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
         productSelections: editCoupon.productSelections,
         brandSelections: editCoupon.brandSelections,
         minQuantity: editCoupon.minQuantity != null ? String(editCoupon.minQuantity) : '',
-        minOrderPrice: editCoupon.minOrderPrice != null ? String(editCoupon.minOrderPrice) : '',
+        minOrderPrice:
+          editCoupon.minOrderPrice != null
+            ? String(roundCurrency(editCoupon.minOrderPrice))
+            : '',
         userUsageLimit:
           editCoupon.userUsageLimit != null ? String(editCoupon.userUsageLimit) : '',
         couponUsageLimit:
@@ -122,9 +126,9 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
 
     const payload = {
       ...formData,
-      discountValue: Number(formData.discountValue),
+      discountValue: roundCurrency(Number(formData.discountValue)),
       minQuantity: Number(formData.minQuantity),
-      minOrderPrice: Number(formData.minOrderPrice),
+      minOrderPrice: roundCurrency(Number(formData.minOrderPrice)),
       userUsageLimit: Number(formData.userUsageLimit),
       couponUsageLimit: Number(formData.couponUsageLimit),
     };
@@ -327,7 +331,7 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step={formData.discountType === 'fixed' ? '1' : '0.01'}
                 placeholder="Discount Value"
                 className={fieldInputClass('discountValue')}
                 value={formData.discountValue}
@@ -335,6 +339,18 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
                   clearFieldError('discountValue');
                   setFormData({ ...formData, discountValue: e.target.value });
                 }}
+                onBlur={(e) => {
+                  const rounded = roundCurrency(Number(e.target.value));
+                  if (!Number.isNaN(rounded) && e.target.value !== '') {
+                    setFormData((prev) => ({
+                      ...prev,
+                      discountValue: Number.isInteger(rounded)
+                        ? String(rounded)
+                        : rounded.toFixed(2),
+                    }));
+                  }
+                }}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 required
               />
               {fieldErrors.discountValue && (
@@ -464,6 +480,18 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
                 clearFieldError('minOrderPrice');
                 setFormData({ ...formData, minOrderPrice: e.target.value });
               }}
+              onBlur={(e) => {
+                const rounded = roundCurrency(Number(e.target.value));
+                if (!Number.isNaN(rounded) && e.target.value !== '') {
+                  setFormData((prev) => ({
+                    ...prev,
+                    minOrderPrice: Number.isInteger(rounded)
+                      ? String(rounded)
+                      : rounded.toFixed(2),
+                  }));
+                }
+              }}
+              onWheel={(e) => (e.target as HTMLInputElement).blur()}
               required
             />
             {fieldErrors.minOrderPrice && (
