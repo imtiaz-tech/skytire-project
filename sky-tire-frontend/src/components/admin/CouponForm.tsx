@@ -261,6 +261,7 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
                   }}
                   required
                 />
+                
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
