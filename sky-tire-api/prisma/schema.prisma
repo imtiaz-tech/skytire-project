@@ -584,6 +584,7 @@ model Shipping {
 enum CouponDiscountType {
   PERCENTAGE
   FIXED
+  FREE_SHIPPING
 }
 
 enum CouponAppliesTo {
@@ -608,12 +609,14 @@ model Coupon {
   id                String             @id @default(cuid())
   code              String             @unique
   title             String
+  automaticInstantRebate Boolean       @default(false)
   discountType      CouponDiscountType
   discountValue     Float
   combineWithOtherCoupons  Boolean            @default(false)
   combineWithFinancing     Boolean            @default(false)
   combineWithFreeShipping  Boolean            @default(false)
   exclusiveCoupon          Boolean            @default(false)
+  geographicRestrictions   String[]           @default([])
   appliesTo         CouponAppliesTo[]  @default([])
   productIds        String[]           @default([])
   brandIds          String[]           @default([])

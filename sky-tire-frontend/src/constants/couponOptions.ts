@@ -1,4 +1,4 @@
-export type CouponDiscountType = 'percentage' | 'fixed';
+export type CouponDiscountType = 'percentage' | 'fixed' | 'free_shipping';
 
 export type CouponAppliesTo =
   | 'all'
@@ -17,6 +17,7 @@ export type CouponStatus = 'active' | 'inactive';
 export const DISCOUNT_TYPE_OPTIONS: { value: CouponDiscountType; label: string }[] = [
   { value: 'percentage', label: 'Percentage' },
   { value: 'fixed', label: 'Fixed' },
+  { value: 'free_shipping', label: 'Free Shipping' },
 ];
 
 export const STACKING_RULE_OPTIONS = [

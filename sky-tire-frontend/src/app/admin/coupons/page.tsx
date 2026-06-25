@@ -48,8 +48,11 @@ export default function CouponsPage() {
     }
   };
 
-  const formatDiscount = (type: string, value: number) =>
-    type === 'percentage' ? `${value}%` : `$${value.toFixed(2)}`;
+  const formatDiscount = (type: string, value: number) => {
+    if (type === 'percentage') return `${value}%`;
+    if (type === 'free_shipping') return 'Free Shipping';
+    return `$${value.toFixed(2)}`;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

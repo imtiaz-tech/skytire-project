@@ -13,12 +13,14 @@ export interface Coupon {
   id: string;
   code: string;
   title: string;
+  automaticInstantRebate: boolean;
   discountType: CouponDiscountType;
   discountValue: number;
   combineWithOtherCoupons: boolean;
   combineWithFinancing: boolean;
   combineWithFreeShipping: boolean;
   exclusiveCoupon: boolean;
+  geographicRestrictions: string[];
   appliesTo: CouponAppliesTo[];
   productIds: string[];
   brandIds: string[];

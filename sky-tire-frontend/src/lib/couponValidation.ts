@@ -26,6 +26,7 @@ import {
 const DISCOUNT_TYPE_MAP: Record<CouponDiscountType, PrismaDiscountType> = {
   percentage: 'PERCENTAGE',
   fixed: 'FIXED',
+  free_shipping: 'FREE_SHIPPING',
 };
 
 const APPLIES_TO_MAP: Record<CouponAppliesTo, PrismaAppliesTo> = {
@@ -44,6 +45,7 @@ const APPLIES_TO_MAP: Record<CouponAppliesTo, PrismaAppliesTo> = {
 const REVERSE_DISCOUNT_TYPE: Record<PrismaDiscountType, CouponDiscountType> = {
   PERCENTAGE: 'percentage',
   FIXED: 'fixed',
+  FREE_SHIPPING: 'free_shipping',
 };
 
 const REVERSE_APPLIES_TO: Record<PrismaAppliesTo, CouponAppliesTo> = {
@@ -78,6 +80,7 @@ export type CouponFieldErrors = Partial<
     | 'minOrderPrice'
     | 'userUsageLimit'
     | 'couponUsageLimit'
+    | 'geographicRestrictions'
     | 'startDate'
     | 'endDate',
     string
@@ -151,12 +154,14 @@ export function serializeCoupon(coupon: {
   id: string;
   code: string;
   title: string;
+  automaticInstantRebate: boolean;
   discountType: PrismaDiscountType;
   discountValue: number;
   combineWithOtherCoupons: boolean;
   combineWithFinancing: boolean;
   combineWithFreeShipping: boolean;
   exclusiveCoupon: boolean;
+  geographicRestrictions: string[];
   appliesTo: PrismaAppliesTo[];
   productIds: string[];
   brandIds: string[];
@@ -203,14 +208,16 @@ export function serializeCoupon(coupon: {
 }
 
 export interface CouponInput {
-  code: string;
+  code?: string;
   title: string;
+  automaticInstantRebate?: boolean;
   discountType: string;
   discountValue: number | string;
   combineWithOtherCoupons?: boolean;
   combineWithFinancing?: boolean;
   combineWithFreeShipping?: boolean;
   exclusiveCoupon?: boolean;
+  geographicRestrictions?: string[];
   appliesTo: string[];
   productSelections?: CouponProductSelections;
   brandSelections?: CouponBrandSelections;
@@ -227,17 +234,23 @@ export interface CouponInput {
 
 export function validateCouponFields(body: CouponInput): CouponFieldErrors {
   const errors: CouponFieldErrors = {};
+  const automaticInstantRebate = parseBoolean(body.automaticInstantRebate);
+  const discountType = body.discountType;
 
-  if (!body.code?.trim()) {
-    errors.code = 'Coupon code is required';
-  } else if (!/^[A-Z0-9_-]+$/.test(body.code.trim().toUpperCase())) {
-    errors.code = 'Coupon code can only contain letters, numbers, hyphens, and underscores';
+  if (!automaticInstantRebate) {
+    if (!body.code?.trim()) {
+      errors.code = 'Coupon code is required';
+    } else if (!/^[A-Z0-9_-]+$/.test(body.code.trim().toUpperCase())) {
+      errors.code = 'Coupon code can only contain letters, numbers, hyphens, and underscores';
+    }
   }
 
   if (!body.title?.trim()) errors.title = 'Title is required';
   if (!toPrismaDiscountType(body.discountType)) errors.discountType = 'Invalid discount type';
 
-  if (isEmpty(body.discountValue)) {
+  if (discountType === 'free_shipping') {
+    // No discount value required for free shipping
+  } else if (isEmpty(body.discountValue)) {
     errors.discountValue = 'Discount value is required';
   } else {
     const discountValue = Number(body.discountValue);
@@ -245,7 +258,7 @@ export function validateCouponFields(body: CouponInput): CouponFieldErrors {
       errors.discountValue = 'Discount value must be a valid number';
     } else if (discountValue <= 0) {
       errors.discountValue = 'Discount value must be greater than 0';
-    } else if (body.discountType === 'percentage' && discountValue > 100) {
+    } else if (discountType === 'percentage' && discountValue > 100) {
       errors.discountValue = 'Percentage discount cannot exceed 100';
     }
   }
@@ -326,19 +339,34 @@ export function buildCouponData(body: CouponInput) {
   const appliesTo = toPrismaAppliesToList(body.appliesTo);
   const discountType = toPrismaDiscountType(body.discountType)!;
   const exclusive = parseBoolean(body.exclusiveCoupon);
+  const automaticInstantRebate = parseBoolean(body.automaticInstantRebate);
   const productSelections = parseProductSelections(body.productSelections);
   const brandSelections = parseBrandSelections(body.brandSelections);
+  const geographicRestrictions = Array.isArray(body.geographicRestrictions)
+    ? body.geographicRestrictions.map(String)
+    : [];
+
+  let code = body.code?.trim().toUpperCase() ?? '';
+  if (automaticInstantRebate && !code) {
+    code = `REBATE-${Date.now().toString(36).toUpperCase()}`;
+  }
+
+  const discountValue =
+    body.discountType === 'free_shipping'
+      ? 0
+      : Number(body.discountValue);
 
   return {
-    code: body.code.trim().toUpperCase(),
+    code,
     title: body.title.trim(),
+    automaticInstantRebate,
     discountType,
-    discountValue: Number(body.discountValue),
+    discountValue,
     combineWithOtherCoupons: exclusive ? false : parseBoolean(body.combineWithOtherCoupons),
     combineWithFinancing: exclusive ? false : parseBoolean(body.combineWithFinancing),
     combineWithFreeShipping: exclusive ? false : parseBoolean(body.combineWithFreeShipping),
     exclusiveCoupon: exclusive,
-    appliesTo,
+    geographicRestrictions,
     productSelections: appliesTo.includes('SPECIFIC_PRODUCTS') ? productSelections : emptyProductSelections(),
     brandSelections: appliesTo.includes('SPECIFIC_BRANDS') ? brandSelections : emptyBrandSelections(),
     productIds: appliesTo.includes('SPECIFIC_PRODUCTS') ? flattenProductSelections(productSelections) : [],

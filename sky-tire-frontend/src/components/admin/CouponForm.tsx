@@ -17,6 +17,7 @@ import {
 } from '@/constants/couponOptions';
 import CouponSpecificProductsPanel from '@/components/admin/coupon/CouponSpecificProductsPanel';
 import CouponSpecificBrandsPanel from '@/components/admin/coupon/CouponSpecificBrandsPanel';
+import CouponGeographicRestrictionPanel from '@/components/admin/coupon/CouponGeographicRestrictionPanel';
 import {
   emptyBrandSelections,
   emptyProductSelections,
@@ -31,12 +32,14 @@ interface CouponFormProps {
 const defaultForm = {
   code: generateCouponCode(),
   title: '',
+  automaticInstantRebate: false,
   discountType: 'percentage' as const,
   discountValue: '',
   combineWithOtherCoupons: false,
   combineWithFinancing: false,
   combineWithFreeShipping: false,
   exclusiveCoupon: false,
+  geographicRestrictions: [] as string[],
   appliesTo: [] as CouponAppliesTo[],
   productSelections: emptyProductSelections(),
   brandSelections: emptyBrandSelections(),
@@ -61,12 +64,14 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
       setFormData({
         code: editCoupon.code,
         title: editCoupon.title,
+        automaticInstantRebate: editCoupon.automaticInstantRebate ?? false,
         discountType: editCoupon.discountType,
         discountValue: String(editCoupon.discountValue),
         combineWithOtherCoupons: editCoupon.combineWithOtherCoupons,
         combineWithFinancing: editCoupon.combineWithFinancing,
         combineWithFreeShipping: editCoupon.combineWithFreeShipping,
         exclusiveCoupon: editCoupon.exclusiveCoupon,
+        geographicRestrictions: editCoupon.geographicRestrictions ?? [],
         appliesTo: Array.isArray(editCoupon.appliesTo)
           ? editCoupon.appliesTo
           : [editCoupon.appliesTo as CouponAppliesTo],
@@ -141,25 +146,22 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
     }
   };
 
-  const toggleStackingRule = (key: StackingRuleKey) => {
+  const setStackingRule = (key: StackingRuleKey, value: boolean) => {
     clearFieldError('stackingRules');
     setFormData((prev) => {
       if (key === 'exclusiveCoupon') {
-        const next = !prev.exclusiveCoupon;
         return {
           ...prev,
-          exclusiveCoupon: next,
-          combineWithOtherCoupons: false,
-          combineWithFinancing: false,
-          combineWithFreeShipping: false,
+          exclusiveCoupon: value,
+          combineWithOtherCoupons: value ? false : prev.combineWithOtherCoupons,
+          combineWithFinancing: value ? false : prev.combineWithFinancing,
+          combineWithFreeShipping: value ? false : prev.combineWithFreeShipping,
         };
       }
-
-      const next = !prev[key];
       return {
         ...prev,
-        [key]: next,
-        exclusiveCoupon: next ? false : prev.exclusiveCoupon,
+        [key]: value,
+        exclusiveCoupon: value ? false : prev.exclusiveCoupon,
       };
     });
   };
@@ -222,26 +224,55 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
           </div>
 
           <div>
-            <label className={labelClass}>Coupon Code</label>
-            <div className="relative">
+            <label className={labelClass}>Automatic Instant Rebate</label>
+            <label className="flex items-center gap-3 px-4 py-3.5 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
               <input
-                type="text"
-                placeholder="Coupon Code"
-                className={`${inputClass} pr-12 uppercase`}
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                required
+                type="checkbox"
+                checked={formData.automaticInstantRebate}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setFormData((prev) => ({
+                    ...prev,
+                    automaticInstantRebate: checked,
+                    code: checked ? '' : prev.code || generateCouponCode(),
+                  }));
+                  clearFieldError('code');
+                }}
+                className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
               />
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#1e2a4a] transition-colors"
-                title="Generate code"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            </div>
+              <span className="text-sm font-medium text-[#1e2a4a]">
+                Enable automatic instant rebate (no code required)
+              </span>
+            </label>
           </div>
+
+          {!formData.automaticInstantRebate && (
+            <div className="md:col-span-2">
+              <label className={labelClass}>Coupon Code</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Coupon Code"
+                  className={`${fieldInputClass('code')} pr-12 uppercase`}
+                  value={formData.code}
+                  onChange={(e) => {
+                    clearFieldError('code');
+                    setFormData({ ...formData, code: e.target.value.toUpperCase() });
+                  }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#1e2a4a] transition-colors"
+                  title="Generate code"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
+              {fieldErrors.code && <p className={errorClass}>{fieldErrors.code}</p>}
+            </div>
+          )}
 
           <div>
             <label className={labelClass}>Discount Type</label>
@@ -252,6 +283,8 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
                 setFormData({
                   ...formData,
                   discountType: e.target.value as typeof formData.discountType,
+                  discountValue:
+                    e.target.value === 'free_shipping' ? '0' : formData.discountValue,
                 })
               }
             >
@@ -263,45 +296,80 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
             </select>
           </div>
 
-          <div>
-            <label className={labelClass}>Discount Value</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Discount Value"
-              className={inputClass}
-              value={formData.discountValue}
-              onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
-              required
-            />
-          </div>
+          {formData.discountType !== 'free_shipping' && (
+            <div>
+              <label className={labelClass}>Discount Value</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Discount Value"
+                className={fieldInputClass('discountValue')}
+                value={formData.discountValue}
+                onChange={(e) => {
+                  clearFieldError('discountValue');
+                  setFormData({ ...formData, discountValue: e.target.value });
+                }}
+                required
+              />
+              {fieldErrors.discountValue && (
+                <p className={errorClass}>{fieldErrors.discountValue}</p>
+              )}
+            </div>
+          )}
 
           <div className="md:col-span-2">
             <label className={labelClass}>Stacking Rules</label>
             <div
-              className={`border rounded-xl p-4 space-y-2 bg-white${
+              className={`border rounded-xl divide-y divide-gray-100 bg-white${
                 fieldErrors.stackingRules ? ' border-red-400' : ' border-gray-200'
               }`}
             >
               {STACKING_RULE_OPTIONS.map((opt) => (
-                <label
+                <div
                   key={opt.key}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="flex items-center justify-between gap-4 px-4 py-3"
                 >
-                  <input
-                    type="checkbox"
-                    checked={formData[opt.key]}
-                    onChange={() => toggleStackingRule(opt.key)}
-                    className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a] focus:ring-[#1e2a4a]"
-                  />
                   <span className="text-sm font-medium text-[#1e2a4a]">{opt.label}</span>
-                </label>
+                  <div className="flex items-center gap-4 shrink-0">
+                    <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+                      <input
+                        type="radio"
+                        name={opt.key}
+                        checked={formData[opt.key] === true}
+                        onChange={() => setStackingRule(opt.key, true)}
+                        className="text-[#1e2a4a]"
+                      />
+                      Yes
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+                      <input
+                        type="radio"
+                        name={opt.key}
+                        checked={formData[opt.key] === false}
+                        onChange={() => setStackingRule(opt.key, false)}
+                        className="text-[#1e2a4a]"
+                      />
+                      No
+                    </label>
+                  </div>
+                </div>
               ))}
             </div>
             {fieldErrors.stackingRules && (
               <p className={errorClass}>{fieldErrors.stackingRules}</p>
             )}
+          </div>
+
+          <div className="md:col-span-2">
+            <CouponGeographicRestrictionPanel
+              selected={formData.geographicRestrictions}
+              onChange={(geographicRestrictions) =>
+                setFormData((prev) => ({ ...prev, geographicRestrictions }))
+              }
+              error={fieldErrors.geographicRestrictions}
+              onClearError={() => clearFieldError('geographicRestrictions')}
+            />
           </div>
 
           <div className="md:col-span-2">

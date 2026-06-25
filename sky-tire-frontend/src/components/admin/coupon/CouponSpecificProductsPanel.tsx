@@ -58,8 +58,26 @@ export default function CouponSpecificProductsPanel({
     onChange({ ...selections, [activeTab]: next });
   };
 
+  const toggleSelectAll = () => {
+    onClearError?.();
+    const visibleIds = items.map((item) => item.id);
+    const current = selections[activeTab];
+    const allVisibleSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => current.includes(id));
+
+    const next = allVisibleSelected
+      ? current.filter((id) => !visibleIds.includes(id))
+      : Array.from(new Set([...current, ...visibleIds]));
+
+    onChange({ ...selections, [activeTab]: next });
+  };
+
   const selectedCount = selections[activeTab].length;
   const totalSelected = Object.values(selections).reduce((sum, arr) => sum + arr.length, 0);
+  const allVisibleSelected =
+    items.length > 0 && items.every((item) => selections[activeTab].includes(item.id));
+  const someVisibleSelected =
+    items.some((item) => selections[activeTab].includes(item.id)) && !allVisibleSelected;
 
   return (
     <div
@@ -90,29 +108,45 @@ export default function CouponSpecificProductsPanel({
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <div className="max-h-56 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2 min-h-[120px]">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-[#1e2a4a]" />
-          </div>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-gray-400 p-2">No products found</p>
-        ) : (
-          items.map((item) => (
-            <label
-              key={item.id}
-              className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
-            >
-              <input
-                type="checkbox"
-                checked={selections[activeTab].includes(item.id)}
-                onChange={() => toggleItem(item.id)}
-                className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
-              />
-              <span>{item.label}</span>
-            </label>
-          ))
+      <div className="border border-gray-100 rounded-lg overflow-hidden min-h-[120px]">
+        {!loading && items.length > 0 && (
+          <label className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border-b border-gray-100 cursor-pointer hover:bg-gray-100/80 transition-colors">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = someVisibleSelected;
+              }}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
+            />
+            <span className="text-sm font-semibold text-[#1e2a4a]">Select All Products</span>
+          </label>
         )}
+        <div className="max-h-56 overflow-y-auto space-y-1 p-2">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-[#1e2a4a]" />
+            </div>
+          ) : items.length === 0 ? (
+            <p className="text-sm text-gray-400 p-2">No products found</p>
+          ) : (
+            items.map((item) => (
+              <label
+                key={item.id}
+                className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selections[activeTab].includes(item.id)}
+                  onChange={() => toggleItem(item.id)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
+                />
+                <span>{item.label}</span>
+              </label>
+            ))
+          )}
+        </div>
       </div>
 
       {selectedCount > 0 && (
