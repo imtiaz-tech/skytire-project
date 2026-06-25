@@ -377,6 +377,7 @@ export function buildCouponData(body: CouponInput) {
     combineWithFreeShipping: exclusive ? false : parseBoolean(body.combineWithFreeShipping),
     exclusiveCoupon: exclusive,
     geographicRestrictions,
+    appliesTo,
     productSelections: appliesTo.includes('SPECIFIC_PRODUCTS') ? productSelections : emptyProductSelections(),
     brandSelections: appliesTo.includes('SPECIFIC_BRANDS') ? brandSelections : emptyBrandSelections(),
     productIds: appliesTo.includes('SPECIFIC_PRODUCTS') ? flattenProductSelections(productSelections) : [],

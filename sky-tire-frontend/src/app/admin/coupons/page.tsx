@@ -56,6 +56,18 @@ export default function CouponsPage() {
     return `$${rounded.toFixed(2)}`;
   };
 
+  const formatDate = (date: string | null) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const thClass =
+    'px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between mt-15">
@@ -103,42 +115,31 @@ export default function CouponsPage() {
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-max text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Discount
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Stacking Rules
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Applies To
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-5 text-[13px] font-bold text-gray-400 uppercase tracking-wider text-right">
-                  Actions
-                </th>
+                <th className={thClass}>Code</th>
+                <th className={thClass}>Title</th>
+                <th className={thClass}>Discount</th>
+                <th className={thClass}>Stacking Rules</th>
+                <th className={thClass}>Applies To</th>
+                <th className={thClass}>Expiry Date</th>
+                <th className={thClass}>Usage Limit</th>
+                <th className={thClass}>Coupon Usage Limit</th>
+                <th className={thClass}>Status</th>
+                <th className={`${thClass} text-right`}>Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-20 text-center">
+                  <td colSpan={10} className="px-8 py-20 text-center">
                     <Loader2 className="h-8 w-8 text-[#1e2a4a] animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-20 text-center">
+                  <td colSpan={10} className="px-8 py-20 text-center">
                     <p className="text-gray-400 font-semibold">No coupons found</p>
                   </td>
                 </tr>
@@ -156,6 +157,15 @@ export default function CouponsPage() {
                     <td className="px-6 py-4 text-gray-600 text-sm max-w-xs">
                       {formatAppliesToLabels(coupon.appliesTo)}
                     </td>
+                    <td className="px-6 py-4 text-gray-600 text-sm whitespace-nowrap">
+                      {formatDate(coupon.endDate)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 text-sm">
+                      {coupon.userUsageLimit ?? '—'}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 text-sm">
+                      {coupon.couponUsageLimit ?? '—'}
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${
@@ -170,7 +180,7 @@ export default function CouponsPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={``}
+                          href={`/admin/coupons/edit/${coupon.id}`}
                           className="w-10 h-10 bg-gray-50 text-[#1e2a4a] rounded-full flex items-center justify-center hover:bg-[#1e2a4a] hover:text-white transition-all"
                         >
                           <Edit2 className="h-4 w-4" />
@@ -178,7 +188,7 @@ export default function CouponsPage() {
                         <button
                           onClick={() => {
                             setCouponToDelete(coupon.id);
-                            // setIsDeleteModalOpen(true);
+                            setIsDeleteModalOpen(true);
                           }}
                           className="w-10 h-10 bg-red-50 text-[#FF5A5F] rounded-full flex items-center justify-center hover:bg-[#FF5A5F] hover:text-white transition-all"
                         >
