@@ -223,27 +223,51 @@ export default function CouponForm({ editCoupon }: CouponFormProps) {
             />
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <label className={labelClass}>Automatic Instant Rebate</label>
-            <label className="flex items-center gap-3 px-4 py-3.5 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
-              <input
-                type="checkbox"
-                checked={formData.automaticInstantRebate}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setFormData((prev) => ({
-                    ...prev,
-                    automaticInstantRebate: checked,
-                    code: checked ? '' : prev.code || generateCouponCode(),
-                  }));
-                  clearFieldError('code');
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a]"
-              />
-              <span className="text-sm font-medium text-[#1e2a4a]">
-                Enable automatic instant rebate (no code required)
-              </span>
-            </label>
+            <div className="border border-gray-200 rounded-xl bg-white">
+              <div className="flex items-center justify-between gap-4 px-4 py-3">
+                <span className="text-sm font-medium text-[#1e2a4a]">
+                  Enable automatic instant rebate (no code required)
+                </span>
+                <div className="flex items-center gap-4 shrink-0">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+                    <input
+                      type="radio"
+                      name="automaticInstantRebate"
+                      checked={formData.automaticInstantRebate === true}
+                      onChange={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          automaticInstantRebate: true,
+                          code: '',
+                        }));
+                        clearFieldError('code');
+                      }}
+                      className="text-[#1e2a4a]"
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+                    <input
+                      type="radio"
+                      name="automaticInstantRebate"
+                      checked={formData.automaticInstantRebate === false}
+                      onChange={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          automaticInstantRebate: false,
+                          code: prev.code || generateCouponCode(),
+                        }));
+                        clearFieldError('code');
+                      }}
+                      className="text-[#1e2a4a]"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           {!formData.automaticInstantRebate && (
