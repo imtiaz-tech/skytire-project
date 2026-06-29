@@ -14,6 +14,7 @@ import {
   Star,
   Package,
   Ticket,
+  Megaphone,
   ChevronLeft,
   FileText,
   Tags,
@@ -37,6 +38,7 @@ const navItems = [
   { label: 'Inventory Sources', href: '/admin/inventory-sources', icon: Database },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { label: 'Promo Bars', href: '/admin/promo-bars', icon: Megaphone },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
   { label: 'AI Prompts', href: '/admin/ai-prompts', icon: Cpu },
 ];

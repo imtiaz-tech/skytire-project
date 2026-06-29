@@ -635,3 +635,34 @@ model Coupon {
   @@index([code])
   @@index([status])
 }
+
+enum PromoBarLinkType {
+  INTERNAL
+  EXTERNAL
+}
+
+model PromoBarSettings {
+  id            String   @id @default("global")
+  autoplayDelay Int      @default(3000)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PromoBar {
+  id           String           @id @default(cuid())
+  text         String
+  boldText     String
+  bgColor      String           @default("#f2f3ee")
+  textColor    String           @default("black")
+  boldColor    String           @default("black")
+  link         String
+  linkType     PromoBarLinkType @default(INTERNAL)
+  openInNewTab Boolean          @default(false)
+  isActive     Boolean          @default(true)
+  order        Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+}
