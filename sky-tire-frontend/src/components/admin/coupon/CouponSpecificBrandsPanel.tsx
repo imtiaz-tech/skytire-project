@@ -100,6 +100,7 @@ export default function CouponSpecificBrandsPanel({
 }: CouponSpecificBrandsPanelProps) {
   const [activeTab, setActiveTab] = useState<CouponCategoryKey>(DEFAULT_COUPON_CATEGORY);
   const [brandSearch, setBrandSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
   const [sizeSearch, setSizeSearch] = useState('');
   const [brands, setBrands] = useState<LookupItem[]>([]);
   const [models, setModels] = useState<LookupItem[]>([]);
@@ -154,7 +155,7 @@ export default function CouponSpecificBrandsPanel({
       setLoadingModels(true);
       try {
         const res = await axios.get(
-          `/api/admin/coupons/targets?step=tire-models&brandIds=${tireSel.brandIds.join(',')}`
+          `/api/admin/coupons/targets?step=tire-models&brandIds=${tireSel.brandIds.join(',')}&search=${encodeURIComponent(modelSearch)}`
         );
         const fetchedModels: LookupItem[] = res.data;
         setModels(fetchedModels);
@@ -180,7 +181,11 @@ export default function CouponSpecificBrandsPanel({
     };
     fetchModels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, tireSel.brandIds]);
+  }, [activeTab, tireSel.brandIds, modelSearch]);
+
+  useEffect(() => {
+    setModelSearch('');
+  }, [tireSel.brandIds.join(',')]);
 
   useEffect(() => {
     if (activeTab === 'tires') {
@@ -465,6 +470,7 @@ export default function CouponSpecificBrandsPanel({
         onChange={(tab) => {
           setActiveTab(tab);
           setBrandSearch('');
+          setModelSearch('');
           setSizeSearch('');
         }}
       />
@@ -492,6 +498,13 @@ export default function CouponSpecificBrandsPanel({
       {activeTab === 'tires' && tireSel.brandIds.length > 0 && (
         <div className={sectionClass}>
           <p className={sectionTitleClass}>2. Select Tire Model(s)</p>
+          <input
+            type="text"
+            placeholder="Search models..."
+            className={inputClass}
+            value={modelSearch}
+            onChange={(e) => setModelSearch(e.target.value)}
+          />
           <CheckboxList
             items={models}
             selected={tireSel.modelIds}

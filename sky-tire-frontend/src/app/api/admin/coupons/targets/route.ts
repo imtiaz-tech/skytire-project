@@ -46,7 +46,14 @@ export async function GET(request: NextRequest) {
       const models = await prisma.tireModel.findMany({
         where: {
           brandId: { in: brandIds },
-          ...(search ? { modelName: { contains: search, mode: 'insensitive' } } : {}),
+          ...(search
+            ? {
+                OR: [
+                  { modelName: { contains: search, mode: 'insensitive' } },
+                  { brand: { brandName: { contains: search, mode: 'insensitive' } } },
+                ],
+              }
+            : {}),
         },
         select: {
           id: true,
