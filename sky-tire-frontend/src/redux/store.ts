@@ -17,6 +17,7 @@ import shippingReducer from '../features/shipping/slice';
 import accessoryCategoriesReducer from '../features/accessory-categories/slice';
 import couponsReducer from '../features/coupons/slice';
 import promoBarsReducer from '../features/promo-bars/slice';
+import rotatorReducer from '../features/rotator/slice';
 
 
 export const store = configureStore({
@@ -39,6 +40,7 @@ export const store = configureStore({
     accessoryCategories: accessoryCategoriesReducer,
     coupons: couponsReducer,
     promoBars: promoBarsReducer,
+    rotator: rotatorReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

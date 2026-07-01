@@ -666,3 +666,30 @@ model PromoBar {
   @@index([order])
   @@index([isActive])
 }
+
+model RotatorSettings {
+  id                String   @id @default("global")
+  bgGradientStart   String   @default("#1a1d22")
+  bgGradientMiddle  String   @default("#777c8e")
+  bgGradientEnd     String   @default("#1a1d22")
+  borderColor       String   @default("#0552c0")
+  textColor         String   @default("#ffffff")
+  glowColor         String   @default("#d1d8f1")
+  animationDuration Float    @default(1)
+  animationCurve    String   @default("0.68, -0.55, 0.265, 1.55")
+  stayDuration      Float    @default(3.8)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model RotatorHeadline {
+  id        String   @id @default(cuid())
+  title     String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+}
