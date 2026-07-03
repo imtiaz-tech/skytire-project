@@ -693,3 +693,20 @@ model RotatorHeadline {
   @@index([order])
   @@index([isActive])
 }
+
+model BannerSettings {
+  id                  String    @id @default("global")
+  backgroundImage     String    @default("")
+  countdownEndDate    DateTime?
+  countdownText       String    @default("ENDS IN...")
+  headlineSegments    Json      @default("[]")
+  subheadlineSegments Json      @default("[]")
+  buttonColor         String    @default("#184b99")
+  buttonText          String    @default("Shop Tires and Wheels")
+  ratingValue         Float     @default(4.8)
+  ratingText          String    @default("Rated by verified customers")
+  ratingTextColor     String    @default("#ffffff")
+  ratingBgColor       String    @default("rgba(0, 0, 0, 0.6)")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}

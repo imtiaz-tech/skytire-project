@@ -16,6 +16,7 @@ import {
   Ticket,
   Megaphone,
   RotateCw,
+  Image,
   ChevronLeft,
   FileText,
   Tags,
@@ -41,6 +42,7 @@ const navItems = [
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Promo Bars', href: '/admin/promo-bars', icon: Megaphone },
   { label: 'Rotator', href: '/admin/rotator', icon: RotateCw },
+  { label: 'Banners', href: '/admin/banner', icon: Image },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
   { label: 'AI Prompts', href: '/admin/ai-prompts', icon: Cpu },
 ];
