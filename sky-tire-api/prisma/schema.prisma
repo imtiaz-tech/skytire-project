@@ -710,3 +710,34 @@ model BannerSettings {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }
+
+enum PriceMatchProductType {
+  TIRE
+  WHEEL
+  WIRE_WHEEL
+  BOLT_ON_WIRE_WHEEL
+  ACCESSORY
+}
+
+model PriceMatchQuery {
+  id              String                @id @default(cuid())
+  productId       String
+  productType     PriceMatchProductType
+  competitorURL   String
+  competitor      String
+  competitorPrice String
+  fullName        String
+  email           String
+  phone           String
+  zipCode         String
+  isRead          Boolean               @default(false)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([productId, productType])
+  @@index([fullName])
+  @@index([email])
+  @@index([competitor])
+  @@index([createdAt])
+  @@index([isRead])
+}

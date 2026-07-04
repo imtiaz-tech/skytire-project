@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { fetchUnreadPriceMatchCount } from '@/features/price-match-queries/slice';
 import {
   LayoutDashboard,
   Users,
@@ -23,6 +24,7 @@ import {
   Cpu,
   Database,
   Truck,
+  Scale,
 } from 'lucide-react';
 
 const navItems = [
@@ -40,6 +42,7 @@ const navItems = [
   { label: 'Inventory Sources', href: '/admin/inventory-sources', icon: Database },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { label: 'Price Match Queries', href: '/admin/price-match-queries', icon: Scale, badge: 'priceMatch' as const },
   { label: 'Promo Bars', href: '/admin/promo-bars', icon: Megaphone },
   { label: 'Rotator', href: '/admin/rotator', icon: RotateCw },
   { label: 'Banners', href: '/admin/banner', icon: Image },
@@ -49,8 +52,26 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const unreadPriceMatchCount = useAppSelector((state) => state.priceMatchQueries.unreadCount);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+  useEffect(() => {
+    dispatch(fetchUnreadPriceMatchCount());
+
+    const interval = setInterval(() => {
+      dispatch(fetchUnreadPriceMatchCount());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (pathname.startsWith('/admin/price-match-queries')) {
+      dispatch(fetchUnreadPriceMatchCount());
+    }
+  }, [dispatch, pathname]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -117,20 +138,44 @@ export default function AdminSidebar() {
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
+          const badgeCount =
+            item.badge === 'priceMatch' && unreadPriceMatchCount > 0
+              ? unreadPriceMatchCount
+              : 0;
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl py-2.5 text-[15.5px] font-medium transition-all duration-150 ${
+              className={`relative flex items-center gap-3 rounded-xl py-2.5 text-[15.5px] font-medium transition-all duration-150 ${
                 isActive
                   ? 'bg-[#3B5998] text-white shadow-sm shadow-blue-200'
                   : 'text-[#3B5998] hover:bg-[#f0f3f9]'
               } ${isCollapsed ? 'justify-center px-0' : 'px-3'}`}
               title={isCollapsed ? item.label : ''}
             >
-              <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${isActive ? 'text-white' : 'text-[#8896b3]'}`} />
-              {!isCollapsed && <span className="animate-in fade-in duration-300">{item.label}</span>}
+              <span className="relative flex-shrink-0">
+                <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-white' : 'text-[#8896b3]'}`} />
+                {isCollapsed && badgeCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
+              </span>
+              {!isCollapsed && (
+                <>
+                  <span className="animate-in fade-in duration-300 flex-1">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span
+                      className={`min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center leading-none ${
+                        isActive ? 'bg-white text-red-500' : 'bg-red-500 text-white'
+                      }`}
+                    >
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
+                </>
+              )}
             </Link>
           );
         })}
