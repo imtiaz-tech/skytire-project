@@ -28,6 +28,8 @@ export async function GET(
             brandName: product.brandName,
             modelName: product.modelName,
             tireSize: product.tireSize,
+            cost: product.cost,
+            mapPrice: product.mapPrice,
             salePrice: product.salePrice,
             images: product.images,
           }

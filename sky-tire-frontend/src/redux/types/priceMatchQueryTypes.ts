@@ -7,6 +7,8 @@ export interface PriceMatchQueryProduct {
   brandName: string;
   modelName: string | null;
   tireSize: string | null;
+  cost: number;
+  mapPrice: number;
   salePrice: number;
   images: string[];
 }

@@ -107,6 +107,8 @@ function serializeQuery(
           brandName: product.brandName,
           modelName: product.modelName,
           tireSize: product.tireSize,
+          cost: product.cost,
+          mapPrice: product.mapPrice,
           salePrice: product.salePrice,
           images: product.images,
         }
@@ -145,7 +147,12 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const needsProductSort = sortBy === 'productName' || sortBy === 'brandName' || sortBy === 'salePrice';
+    const needsProductSort =
+      sortBy === 'productName' ||
+      sortBy === 'brandName' ||
+      sortBy === 'cost' ||
+      sortBy === 'mapPrice' ||
+      sortBy === 'salePrice';
 
     if (needsProductSort) {
       const allQueries = await prisma.priceMatchQuery.findMany({ where });
@@ -168,6 +175,14 @@ export async function GET(request: NextRequest) {
         } else if (sortBy === 'brandName') {
           aVal = a.product?.brandName ?? '';
           bVal = b.product?.brandName ?? '';
+        } else if (sortBy === 'cost') {
+          return sortOrder === 'asc'
+            ? (a.product?.cost ?? 0) - (b.product?.cost ?? 0)
+            : (b.product?.cost ?? 0) - (a.product?.cost ?? 0);
+        } else if (sortBy === 'mapPrice') {
+          return sortOrder === 'asc'
+            ? (a.product?.mapPrice ?? 0) - (b.product?.mapPrice ?? 0)
+            : (b.product?.mapPrice ?? 0) - (a.product?.mapPrice ?? 0);
         } else if (sortBy === 'salePrice') {
           return sortOrder === 'asc'
             ? (a.product?.salePrice ?? 0) - (b.product?.salePrice ?? 0)

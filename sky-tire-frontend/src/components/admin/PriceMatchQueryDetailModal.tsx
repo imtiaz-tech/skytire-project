@@ -98,6 +98,30 @@ export default function PriceMatchQueryDetailModal({
                     value={query.product?.tireSize ?? '—'}
                   />
                   <InfoField
+                    label="Cost"
+                    value={
+                      query.product ? (
+                        <span className="font-bold">
+                          $ {roundCurrency(query.product.cost).toFixed(2)}
+                        </span>
+                      ) : (
+                        '—'
+                      )
+                    }
+                  />
+                  <InfoField
+                    label="MAP Price"
+                    value={
+                      query.product ? (
+                        <span className="font-bold">
+                          $ {roundCurrency(query.product.mapPrice).toFixed(2)}
+                        </span>
+                      ) : (
+                        '—'
+                      )
+                    }
+                  />
+                  <InfoField
                     label="Sale Price"
                     value={
                       query.product ? (

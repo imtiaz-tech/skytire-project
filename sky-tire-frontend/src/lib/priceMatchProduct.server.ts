@@ -7,6 +7,8 @@ export interface ResolvedPriceMatchProduct {
   brandName: string;
   modelName: string | null;
   tireSize: string | null;
+  cost: number;
+  mapPrice: number;
   salePrice: number;
   images: string[];
 }
@@ -104,6 +106,8 @@ export async function resolvePriceMatchProducts(
       brandName,
       modelName,
       tireSize: tire.tireSize,
+      cost: tire.cost,
+      mapPrice: tire.mapPrice,
       salePrice: tire.salePrice,
       images: tire.model?.images ?? [],
     });
@@ -117,6 +121,8 @@ export async function resolvePriceMatchProducts(
       brandName: wheel.brand?.brandName ?? 'Unknown',
       modelName: null,
       tireSize: null,
+      cost: wheel.cost,
+      mapPrice: wheel.mapPrice,
       salePrice: wheel.salePrice,
       images: wheel.images ?? [],
     });
@@ -130,6 +136,8 @@ export async function resolvePriceMatchProducts(
       brandName: wheel.brand?.brandName ?? 'Unknown',
       modelName: null,
       tireSize: null,
+      cost: wheel.cost,
+      mapPrice: wheel.mapPrice,
       salePrice: wheel.salePrice,
       images: wheel.images ?? [],
     });
@@ -143,6 +151,8 @@ export async function resolvePriceMatchProducts(
       brandName: wheel.brand?.brandName ?? 'Unknown',
       modelName: null,
       tireSize: null,
+      cost: wheel.cost,
+      mapPrice: wheel.mapPrice,
       salePrice: wheel.salePrice,
       images: wheel.images ?? [],
     });
@@ -156,6 +166,8 @@ export async function resolvePriceMatchProducts(
       brandName: accessory.brand?.brandName ?? 'Unknown',
       modelName: null,
       tireSize: null,
+      cost: accessory.cost,
+      mapPrice: accessory.mapPrice,
       salePrice: accessory.salePrice,
       images: accessory.images ?? [],
     });

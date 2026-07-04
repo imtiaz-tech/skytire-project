@@ -17,7 +17,7 @@ import { getUploadImageUrl } from '@/lib/uploadImageUrl';
 import { roundCurrency } from '@/utils/pricing';
 import toast from 'react-hot-toast';
 
-type SortField = 'productName' | 'brandName' | 'salePrice' | 'fullName' | 'competitor' | 'createdAt';
+type SortField = 'productName' | 'brandName' | 'cost' | 'mapPrice' | 'salePrice' | 'fullName' | 'competitor' | 'createdAt';
 
 export default function PriceMatchQueriesPage() {
   const dispatch = useAppDispatch();
@@ -70,6 +70,15 @@ export default function PriceMatchQueriesPage() {
 
   const getRowTextClass = (isRead: boolean) =>
     isRead ? 'text-gray-400 font-medium' : 'text-black font-semibold';
+
+  const formatPrice = (value: number) => `$ ${roundCurrency(value).toFixed(2)}`;
+
+  const PriceCell = ({ value }: { value: number | undefined }) =>
+    value !== undefined ? (
+      <span className="text-[14px] font-bold text-[#1e2a4a]">{formatPrice(value)}</span>
+    ) : (
+      '—'
+    );
 
   const handleCloseDetail = () => {
     setIsDetailOpen(false);
@@ -153,6 +162,20 @@ export default function PriceMatchQueriesPage() {
                 </th>
                 <th
                   className={`${sortableThClass} text-right`}
+                  onClick={() => handleSort('cost')}
+                >
+                  Cost
+                  <SortIcon field="cost" />
+                </th>
+                <th
+                  className={`${sortableThClass} text-right`}
+                  onClick={() => handleSort('mapPrice')}
+                >
+                  MAP Price
+                  <SortIcon field="mapPrice" />
+                </th>
+                <th
+                  className={`${sortableThClass} text-right`}
                   onClick={() => handleSort('salePrice')}
                 >
                   Sale Price
@@ -179,13 +202,13 @@ export default function PriceMatchQueriesPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
+                  <td colSpan={9} className="px-6 py-16 text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-[#1e2a4a] mx-auto" />
                   </td>
                 </tr>
               ) : queries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-gray-400 font-medium">
+                  <td colSpan={9} className="px-6 py-16 text-center text-gray-400 font-medium">
                     No price match queries found.
                   </td>
                 </tr>
@@ -215,6 +238,12 @@ export default function PriceMatchQueriesPage() {
                       </td>
                       <td className={`px-6 py-4 text-[14px] ${rowTextClass}`}>
                         {query.product?.brandName ?? '—'}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <PriceCell value={query.product?.cost} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <PriceCell value={query.product?.mapPrice} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         {query.product ? (
