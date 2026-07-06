@@ -6,6 +6,7 @@ interface SendMailOptions {
   to: string;
   subject: string;
   html: string;
+  text?: string;
   cc?: string | string[];
   bcc?: string | string[];
 }
@@ -26,13 +27,14 @@ export class MailService {
     });
   }
 
-  async sendEmail({ to, subject, html, cc, bcc }: SendMailOptions) {
+  async sendEmail({ to, subject, html, text, cc, bcc }: SendMailOptions) {
     const from = this.configService.get<string>('SMTP_MAIL');
     const mailOptions = {
       from: `"Sky Tire" <${from}>`,
       to,
       subject,
       html,
+      text,
       cc,
       bcc,
     };

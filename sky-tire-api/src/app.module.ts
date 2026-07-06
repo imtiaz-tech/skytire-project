@@ -10,6 +10,7 @@ import { BrandsModule } from './modules/brands/brands.module';
 import { TiresModule } from './modules/tires/tires.module';
 import { BlogsModule } from './modules/blogs/blogs.module';
 import { BlogCategoriesModule } from './modules/blog-categories/blog-categories.module';
+import { PriceMatchQueriesModule } from './modules/price-match-queries/price-match-queries.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { BlogCategoriesModule } from './modules/blog-categories/blog-categories.
     TiresModule,
     BlogsModule,
     BlogCategoriesModule,
+    PriceMatchQueriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
