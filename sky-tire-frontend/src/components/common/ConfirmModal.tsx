@@ -9,9 +9,19 @@ interface ConfirmModalProps {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmLabel?: string;
+  confirmClassName?: string;
 }
 
-export default function ConfirmModal({ open, title, message, onConfirm, onCancel }: ConfirmModalProps) {
+export default function ConfirmModal({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Delete',
+  confirmClassName = 'bg-red-500 text-white hover:bg-red-600 shadow-red-200',
+}: ConfirmModalProps) {
   if (!open) return null;
 
   return (
@@ -53,9 +63,9 @@ export default function ConfirmModal({ open, title, message, onConfirm, onCancel
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-6 py-3.5 bg-red-500 text-white rounded-2xl text-sm font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-200"
+              className={`flex-1 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all shadow-lg ${confirmClassName}`}
             >
-              Delete
+              {confirmLabel}
             </button>
           </div>
         </div>

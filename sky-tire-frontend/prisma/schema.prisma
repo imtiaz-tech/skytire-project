@@ -26,6 +26,7 @@ model User {
   name                String
   blogs               Blog[]
   devices             Device[]
+  emailTemplates      EmailTemplate[]
 
   @@index([email])
   @@index([memberId])
@@ -740,4 +741,19 @@ model PriceMatchQuery {
   @@index([competitor])
   @@index([createdAt])
   @@index([isRead])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  html        String   @db.Text
+  designJson  Json
+  createdById Int?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@index([createdAt])
 }

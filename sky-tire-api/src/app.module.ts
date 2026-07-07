@@ -11,6 +11,7 @@ import { TiresModule } from './modules/tires/tires.module';
 import { BlogsModule } from './modules/blogs/blogs.module';
 import { BlogCategoriesModule } from './modules/blog-categories/blog-categories.module';
 import { PriceMatchQueriesModule } from './modules/price-match-queries/price-match-queries.module';
+import { EmailTemplatesModule } from './modules/email-templates/email-templates.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PriceMatchQueriesModule } from './modules/price-match-queries/price-mat
     BlogsModule,
     BlogCategoriesModule,
     PriceMatchQueriesModule,
+    EmailTemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
