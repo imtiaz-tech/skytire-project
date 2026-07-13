@@ -172,8 +172,6 @@ export default function CompetitorPricingPage() {
     return map;
   }, [pageProducts, scrapedData, sheetNames, hasScrapedData]);
 
-  const selectedSaleCount = selectedSkus.length;
-  const selectedRegularCount = selectedRegularSkus.length;
   const minPriceCount = Object.keys(updatedPrices).length;
   const regularPriceCount = Object.keys(updatedRegularPrices).length;
 
@@ -367,8 +365,20 @@ export default function CompetitorPricingPage() {
     void runRegularUpdate(matchedIds);
   };
 
-  const batchSaleIds = selectedSkus.slice(0, 50);
-  const batchRegularIds = selectedRegularSkus.slice(0, 50);
+  const pageRangeLabel = `1-${limit}`;
+
+  // Update only selected items on the current page (driven by rows-per-page)
+  const batchSaleIds = useMemo(
+    () => pageProducts.filter((p) => selectedSkus.includes(p.id)).map((p) => p.id),
+    [pageProducts, selectedSkus]
+  );
+  const batchRegularIds = useMemo(
+    () =>
+      pageProducts
+        .filter((p) => selectedRegularSkus.includes(p.id))
+        .map((p) => p.id),
+    [pageProducts, selectedRegularSkus]
+  );
 
   return (
     <div className="p-6 space-y-5">
@@ -493,11 +503,12 @@ export default function CompetitorPricingPage() {
         {/* Competitor controls — visible after upload */}
         {hasScrapedData && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Shared control sizing: all cells same height/width in a 4-col grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
               <select
                 value={saleCompetitorSelect}
                 onChange={(e) => setSaleCompetitorSelect(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700"
+                className="w-full h-11 min-h-[44px] border border-gray-300 rounded-lg px-3 text-sm text-gray-700 bg-white"
               >
                 <option value="">Select Competitor</option>
                 {sheetNames.map((name) => (
@@ -509,7 +520,7 @@ export default function CompetitorPricingPage() {
               <button
                 onClick={handleUpdateSaleByDropdown}
                 disabled={!saleCompetitorSelect || updating}
-                className={`px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 ${
+                className={`w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold disabled:opacity-50 ${
                   saleCompetitorSelect
                     ? 'bg-orange-500 text-white hover:bg-orange-600'
                     : 'bg-gray-200 text-gray-500'
@@ -521,7 +532,7 @@ export default function CompetitorPricingPage() {
               <select
                 value={regularCompetitorSelect}
                 onChange={(e) => setRegularCompetitorSelect(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700"
+                className="w-full h-11 min-h-[44px] border border-gray-300 rounded-lg px-3 text-sm text-gray-700 bg-white"
               >
                 <option value="">Select Competitor</option>
                 {sheetNames.map((name) => (
@@ -533,7 +544,7 @@ export default function CompetitorPricingPage() {
               <button
                 onClick={handleUpdateRegularByDropdown}
                 disabled={!regularCompetitorSelect || updating}
-                className={`px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 ${
+                className={`w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold disabled:opacity-50 ${
                   regularCompetitorSelect
                     ? 'bg-purple-600 text-white hover:bg-purple-700'
                     : 'bg-gray-200 text-gray-500'
@@ -543,42 +554,74 @@ export default function CompetitorPricingPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
               <button
                 onClick={() => dispatch(selectAllMinPrices())}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-blue-500 text-blue-600 hover:bg-blue-50"
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold border border-blue-500 text-blue-600 hover:bg-blue-50 inline-flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 shrink-0" />
                 Select All Min Prices ({minPriceCount})
               </button>
               <button
                 onClick={() => runSaleUpdate(batchSaleIds)}
                 disabled={updating || batchSaleIds.length === 0}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50"
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 inline-flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <RefreshCw className="h-4 w-4" />
-                1-50 Sale Price Update ({Math.min(selectedSaleCount, 50)})
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                {pageRangeLabel} Sale Price Update ({batchSaleIds.length})
               </button>
               <button
                 onClick={() => dispatch(selectAllRegularPrices())}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-purple-500 text-purple-600 hover:bg-purple-50"
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold border border-purple-500 text-purple-600 hover:bg-purple-50 inline-flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 shrink-0" />
                 Select All Regular Prices ({regularPriceCount})
               </button>
               <button
                 onClick={() => runRegularUpdate(batchRegularIds)}
                 disabled={updating || batchRegularIds.length === 0}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 inline-flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <RefreshCw className="h-4 w-4" />
-                1-50 Regular Price Update ({Math.min(selectedRegularCount, 50)})
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                {pageRangeLabel} Regular Price Update ({batchRegularIds.length})
               </button>
             </div>
 
-            {/* Dynamic competitor Set Regular / Set Sale buttons — one column per sheet */}
+            {/* Row: Set {Competitor} Regular Prices — same height/width cells */}
             <div
-              className="grid gap-3"
+              className="grid gap-3 items-stretch"
+              style={{
+                gridTemplateColumns: `repeat(${Math.max(sheetNames.length, 1)}, minmax(0, 1fr))`,
+              }}
+            >
+              {sheetNames.map((name) => {
+                const theme = getCompetitorTheme(name, sheetNames);
+                const short = competitorShortName(name);
+                const regularActive = activeRegularSourceCompetitor === name;
+                const anyRegularActive = !!activeRegularSourceCompetitor;
+                const regularColored = regularActive || !anyRegularActive;
+
+                return (
+                  <button
+                    key={`reg-btn-${name}`}
+                    onClick={() => {
+                      dispatch(setCompetitorRegularPrices(name));
+                      toast.success(`${short} regular prices applied`);
+                    }}
+                    className="w-full h-11 min-h-[44px] px-2 rounded-lg text-sm font-bold text-white transition-colors shadow-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                    style={{
+                      backgroundColor: regularColored ? theme.hex : '#d1d5db',
+                    }}
+                  >
+                    Set {short} Regular Prices
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Row: Set {Competitor} Sale Prices — same height/width cells */}
+            <div
+              className="grid gap-3 items-stretch"
               style={{
                 gridTemplateColumns: `repeat(${Math.max(sheetNames.length, 1)}, minmax(0, 1fr))`,
               }}
@@ -587,42 +630,23 @@ export default function CompetitorPricingPage() {
                 const theme = getCompetitorTheme(name, sheetNames);
                 const short = competitorShortName(name);
                 const saleActive = activeSaleSourceCompetitor === name;
-                const regularActive = activeRegularSourceCompetitor === name;
                 const anySaleActive = !!activeSaleSourceCompetitor;
-                const anyRegularActive = !!activeRegularSourceCompetitor;
-
-                const regularColored = regularActive || !anyRegularActive;
                 const saleColored = saleActive || !anySaleActive;
 
                 return (
-                  <div key={`btns-${name}`} className="flex flex-col gap-2 min-w-0">
-                    <button
-                      onClick={() => {
-                        dispatch(setCompetitorRegularPrices(name));
-                        toast.success(`${short} regular prices applied`);
-                      }}
-                      className={`w-full py-3 px-2 rounded-lg text-sm font-bold text-white transition-colors shadow-sm ${
-                        regularColored ? '' : 'opacity-100'
-                      }`}
-                      style={{
-                        backgroundColor: regularColored ? theme.hex : '#d1d5db',
-                      }}
-                    >
-                      Set {short} Regular Prices
-                    </button>
-                    <button
-                      onClick={() => {
-                        dispatch(setCompetitorSalePrices(name));
-                        toast.success(`${short} sale prices applied`);
-                      }}
-                      className="w-full py-3 px-2 rounded-lg text-sm font-bold text-white transition-colors shadow-sm"
-                      style={{
-                        backgroundColor: saleColored ? theme.hex : '#d1d5db',
-                      }}
-                    >
-                      Set {short} Sale Prices
-                    </button>
-                  </div>
+                  <button
+                    key={`sale-btn-${name}`}
+                    onClick={() => {
+                      dispatch(setCompetitorSalePrices(name));
+                      toast.success(`${short} sale prices applied`);
+                    }}
+                    className="w-full h-11 min-h-[44px] px-2 rounded-lg text-sm font-bold text-white transition-colors shadow-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                    style={{
+                      backgroundColor: saleColored ? theme.hex : '#d1d5db',
+                    }}
+                  >
+                    Set {short} Sale Prices
+                  </button>
                 );
               })}
             </div>
