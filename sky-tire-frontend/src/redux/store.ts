@@ -21,6 +21,7 @@ import rotatorReducer from '../features/rotator/slice';
 import bannerReducer from '../features/banner/slice';
 import priceMatchQueriesReducer from '../features/price-match-queries/slice';
 import emailTemplatesReducer from '../features/email-templates/slice';
+import competitorPricingReducer from '../features/competitor-pricing/slice';
 
 
 export const store = configureStore({
@@ -47,6 +48,7 @@ export const store = configureStore({
     banner: bannerReducer,
     priceMatchQueries: priceMatchQueriesReducer,
     emailTemplates: emailTemplatesReducer,
+    competitorPricing: competitorPricingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

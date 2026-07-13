@@ -26,6 +26,7 @@ import {
   Truck,
   Scale,
   Mail,
+  ChartColumn,
 } from 'lucide-react';
 
 const navItems = [
@@ -44,6 +45,7 @@ const navItems = [
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Price Match Queries', href: '/admin/price-match-queries', icon: Scale, badge: 'priceMatch' as const },
+  { label: 'Competitor Pricing', href: '/admin/competitor-pricing', icon: ChartColumn },
   { label: 'Email Templates', href: '/admin/email-templates', icon: Mail },
   { label: 'Promo Bars', href: '/admin/promo-bars', icon: Megaphone },
   { label: 'Rotator', href: '/admin/rotator', icon: RotateCw },

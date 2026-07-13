@@ -757,3 +757,33 @@ model EmailTemplate {
   @@index([name])
   @@index([createdAt])
 }
+
+enum CompetitorPriceUpdateType {
+  SALE
+  REGULAR
+}
+
+/** Audit log for competitor pricing bulk sale/regular updates */
+model CompetitorPriceUpdate {
+  id            String                     @id @default(cuid())
+  productId     String
+  sku           String?
+  brand         String?
+  model         String?
+  productName   String?
+  cost          Float                      @default(0)
+  salePrice     Float                      @default(0)
+  mapPrice      Float                      @default(0)
+  regularPrice  Float                      @default(0)
+  stock         Int                        @default(0)
+  previousPrice Float                      @default(0)
+  updatedPrice  Float                      @default(0)
+  competitor    String?
+  priceType     CompetitorPriceUpdateType
+  createdAt     DateTime                   @default(now())
+
+  @@index([priceType, createdAt])
+  @@index([productId])
+  @@index([createdAt])
+}
+
