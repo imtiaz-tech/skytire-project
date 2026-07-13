@@ -332,18 +332,22 @@ export default function CompetitorPricingPage() {
       toast.error('Select a competitor first');
       return;
     }
-    const ids = products.map((p) => p.id);
-    dispatch(
-      applyCompetitorToSelectedSale({
-        competitor: saleCompetitorSelect,
-        productIds: ids,
-      })
-    );
-    const matchedIds = ids.filter((id) => {
+    // Only currently selected (Yes) products may be updated
+    const selectedIds = selectedSkus.filter((id) => {
       const key = id.trim().toLowerCase();
       return (scrapedData[saleCompetitorSelect]?.[key]?.salePrice || 0) > 0;
     });
-    void runSaleUpdate(matchedIds);
+    if (selectedIds.length === 0) {
+      toast.error('No selected products with this competitor price');
+      return;
+    }
+    dispatch(
+      applyCompetitorToSelectedSale({
+        competitor: saleCompetitorSelect,
+        productIds: selectedIds,
+      })
+    );
+    void runSaleUpdate(selectedIds);
   };
 
   const handleUpdateRegularByDropdown = () => {
@@ -351,18 +355,21 @@ export default function CompetitorPricingPage() {
       toast.error('Select a competitor first');
       return;
     }
-    const ids = products.map((p) => p.id);
-    dispatch(
-      applyCompetitorToSelectedRegular({
-        competitor: regularCompetitorSelect,
-        productIds: ids,
-      })
-    );
-    const matchedIds = ids.filter((id) => {
+    const selectedIds = selectedRegularSkus.filter((id) => {
       const key = id.trim().toLowerCase();
       return (scrapedData[regularCompetitorSelect]?.[key]?.regularPrice || 0) > 0;
     });
-    void runRegularUpdate(matchedIds);
+    if (selectedIds.length === 0) {
+      toast.error('No selected products with this competitor regular price');
+      return;
+    }
+    dispatch(
+      applyCompetitorToSelectedRegular({
+        competitor: regularCompetitorSelect,
+        productIds: selectedIds,
+      })
+    );
+    void runRegularUpdate(selectedIds);
   };
 
   const pageRangeLabel = `1-${limit}`;

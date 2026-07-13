@@ -37,6 +37,7 @@ const initialState: CompetitorPricingState = {
   productsWithHistory: [],
   historyLoading: false,
   historyType: 'sale',
+  selectionsInitialized: false,
 };
 
 export const fetchCompetitorProducts = createAsyncThunk(
@@ -122,6 +123,10 @@ export const fetchPriceUpdateHistory = createAsyncThunk(
   }
 );
 
+/**
+ * One-time init after file upload: suggested prices + Yes selection for matches.
+ * Must NOT run again after the user changes Yes/No.
+ */
 function applyLowestMatches(
   products: CompetitorProduct[],
   scrapedData: ScrapedData,
@@ -175,16 +180,24 @@ const competitorPricingSlice = createSlice({
     ) {
       state.scrapedData = action.payload.scrapedData;
       state.sheetNames = action.payload.sheetNames;
-
-      const matched = applyLowestMatches(
-        state.products,
-        action.payload.scrapedData,
-        action.payload.sheetNames
-      );
-      Object.assign(state, matched);
       state.skippedProducts = [];
       state.activeSaleSourceCompetitor = null;
       state.activeRegularSourceCompetitor = null;
+
+      // New upload → allow one-time auto Yes/No initialization
+      state.selectionsInitialized = false;
+
+      if (state.products.length > 0) {
+        Object.assign(
+          state,
+          applyLowestMatches(
+            state.products,
+            action.payload.scrapedData,
+            action.payload.sheetNames
+          )
+        );
+        state.selectionsInitialized = true;
+      }
     },
 
     clearScrapedData(state) {
@@ -199,6 +212,7 @@ const competitorPricingSlice = createSlice({
       state.skippedProducts = [];
       state.activeSaleSourceCompetitor = null;
       state.activeRegularSourceCompetitor = null;
+      state.selectionsInitialized = false;
     },
 
     setSalePrice(
@@ -211,6 +225,7 @@ const competitorPricingSlice = createSlice({
       } else {
         state.updatedPrices[productId] = price;
       }
+      // Do not change Yes/No
     },
 
     setRegularPrice(
@@ -255,14 +270,13 @@ const competitorPricingSlice = createSlice({
       }
     },
 
+    /** Explicit user action — allowed to set all selections */
     selectAllMinPrices(state) {
-      const ids = Object.keys(state.updatedPrices);
-      state.selectedSkus = [...ids];
+      state.selectedSkus = Object.keys(state.updatedPrices);
     },
 
     selectAllRegularPrices(state) {
-      const ids = Object.keys(state.updatedRegularPrices);
-      state.selectedRegularSkus = [...ids];
+      state.selectedRegularSkus = Object.keys(state.updatedRegularPrices);
     },
 
     setSaleCompetitorForProduct(
@@ -275,17 +289,12 @@ const competitorPricingSlice = createSlice({
       const matched = state.scrapedData[competitor]?.[key];
       if (matched?.salePrice > 0) {
         state.updatedPrices[productId] = matched.salePrice;
-        if (!state.selectedSkus.includes(productId)) {
-          state.selectedSkus.push(productId);
-        }
         if (matched.regularPrice > 0) {
           state.updatedRegularPrices[productId] = matched.regularPrice;
           state.selectedRegularCompetitorName[productId] = competitor;
-          if (!state.selectedRegularSkus.includes(productId)) {
-            state.selectedRegularSkus.push(productId);
-          }
         }
       }
+      // Preserve Yes/No
     },
 
     applyCompetitorToSelectedSale(
@@ -299,10 +308,8 @@ const competitorPricingSlice = createSlice({
         if (!matched || matched.salePrice <= 0) continue;
         state.updatedPrices[productId] = matched.salePrice;
         state.selectedSaleCompetitorName[productId] = competitor;
-        if (!state.selectedSkus.includes(productId)) {
-          state.selectedSkus.push(productId);
-        }
       }
+      // Preserve Yes/No
     },
 
     applyCompetitorToSelectedRegular(
@@ -316,16 +323,10 @@ const competitorPricingSlice = createSlice({
         if (!matched || matched.regularPrice <= 0) continue;
         state.updatedRegularPrices[productId] = matched.regularPrice;
         state.selectedRegularCompetitorName[productId] = competitor;
-        if (!state.selectedRegularSkus.includes(productId)) {
-          state.selectedRegularSkus.push(productId);
-        }
       }
     },
 
-    /**
-     * Apply one competitor's sale prices to all matched products.
-     * Marks this competitor as the active bulk sale source.
-     */
+    /** Apply competitor sale prices — does NOT change Yes/No */
     setCompetitorSalePrices(state, action: PayloadAction<string>) {
       const competitor = action.payload;
       if (!state.scrapedData[competitor]) return;
@@ -339,16 +340,10 @@ const competitorPricingSlice = createSlice({
 
         state.updatedPrices[product.id] = matched.salePrice;
         state.selectedSaleCompetitorName[product.id] = competitor;
-        if (!state.selectedSkus.includes(product.id)) {
-          state.selectedSkus.push(product.id);
-        }
       }
     },
 
-    /**
-     * Apply one competitor's regular prices to all matched products.
-     * Marks this competitor as the active bulk regular source.
-     */
+    /** Apply competitor regular prices — does NOT change Yes/No */
     setCompetitorRegularPrices(state, action: PayloadAction<string>) {
       const competitor = action.payload;
       if (!state.scrapedData[competitor]) return;
@@ -362,13 +357,9 @@ const competitorPricingSlice = createSlice({
 
         state.updatedRegularPrices[product.id] = matched.regularPrice;
         state.selectedRegularCompetitorName[product.id] = competitor;
-        if (!state.selectedRegularSkus.includes(product.id)) {
-          state.selectedRegularSkus.push(product.id);
-        }
       }
     },
 
-    /** Per-row: click a competitor sale price button (independent of regular). */
     selectCompetitorSaleForProduct(
       state,
       action: PayloadAction<{ productId: string; competitor: string }>
@@ -380,12 +371,9 @@ const competitorPricingSlice = createSlice({
 
       state.updatedPrices[productId] = matched.salePrice;
       state.selectedSaleCompetitorName[productId] = competitor;
-      if (!state.selectedSkus.includes(productId)) {
-        state.selectedSkus.push(productId);
-      }
+      // Preserve Yes/No
     },
 
-    /** Per-row: click a competitor regular price button (independent of sale). */
     selectCompetitorRegularForProduct(
       state,
       action: PayloadAction<{ productId: string; competitor: string }>
@@ -397,12 +385,9 @@ const competitorPricingSlice = createSlice({
 
       state.updatedRegularPrices[productId] = matched.regularPrice;
       state.selectedRegularCompetitorName[productId] = competitor;
-      if (!state.selectedRegularSkus.includes(productId)) {
-        state.selectedRegularSkus.push(productId);
-      }
+      // Preserve Yes/No
     },
 
-    // Keep aliases for Priority shortcuts
     setPrioritySalePrices(state) {
       const priority = findPrioritySheetName(state.sheetNames);
       if (!priority || !state.scrapedData[priority]) return;
@@ -413,9 +398,6 @@ const competitorPricingSlice = createSlice({
         if (!matched || matched.salePrice <= 0) continue;
         state.updatedPrices[product.id] = matched.salePrice;
         state.selectedSaleCompetitorName[product.id] = priority;
-        if (!state.selectedSkus.includes(product.id)) {
-          state.selectedSkus.push(product.id);
-        }
       }
     },
 
@@ -429,9 +411,6 @@ const competitorPricingSlice = createSlice({
         if (!matched || matched.regularPrice <= 0) continue;
         state.updatedRegularPrices[product.id] = matched.regularPrice;
         state.selectedRegularCompetitorName[product.id] = priority;
-        if (!state.selectedRegularSkus.includes(product.id)) {
-          state.selectedRegularSkus.push(product.id);
-        }
       }
     },
 
@@ -459,14 +438,13 @@ const competitorPricingSlice = createSlice({
         state.products = action.payload.products;
         state.total = action.payload.total;
 
-        // Re-apply matches if scraped data already loaded
-        if (state.sheetNames.length > 0) {
-          const matched = applyLowestMatches(
-            state.products,
-            state.scrapedData,
-            state.sheetNames
+        // Auto Yes/No ONLY once per upload — never overwrite user decisions later
+        if (state.sheetNames.length > 0 && !state.selectionsInitialized) {
+          Object.assign(
+            state,
+            applyLowestMatches(state.products, state.scrapedData, state.sheetNames)
           );
-          Object.assign(state, matched);
+          state.selectionsInitialized = true;
         }
       })
       .addCase(fetchCompetitorProducts.rejected, (state, action) => {
@@ -480,7 +458,6 @@ const competitorPricingSlice = createSlice({
         state.updating = false;
         state.skippedProducts = action.payload.skipped || [];
 
-        // Refresh local sale prices for successfully updated items
         const skippedIds = new Set(
           (action.payload.skipped || [])
             .map((s) => s.productId || s.sku)
@@ -535,7 +512,6 @@ const competitorPricingSlice = createSlice({
         state.historyLoading = false;
         const selectedType = action.payload.type || 'sale';
         state.historyType = selectedType;
-        // Keep full history on products; summary rows use latest only
         state.productsWithHistory = action.payload.products || [];
         state.priceHistory = buildLatestPriceSummaryRows(
           state.productsWithHistory,

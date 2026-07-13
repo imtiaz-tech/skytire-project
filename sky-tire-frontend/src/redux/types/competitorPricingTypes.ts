@@ -145,4 +145,10 @@ export interface CompetitorPricingState {
   productsWithHistory: ProductWithPriceHistory[];
   historyLoading: boolean;
   historyType: 'sale' | 'regular';
+
+  /**
+   * True after lowest-competitor auto-selection has run once for the current upload.
+   * Prevents re-selecting products after the user clicks Yes/No.
+   */
+  selectionsInitialized: boolean;
 }
