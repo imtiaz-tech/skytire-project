@@ -401,16 +401,22 @@ export function getLatestHistory(
 
 /**
  * Build Price Match Summary rows: one product = one row (latest history only).
+ * Never expands full audit history into multiple rows per product.
  */
 export function buildLatestPriceSummaryRows(
   products: ProductWithPriceHistory[],
   selectedType: 'sale' | 'regular'
 ): PriceUpdateHistoryRow[] {
   const rows: PriceUpdateHistoryRow[] = [];
+  const seenProductIds = new Set<string>();
 
   for (const product of products) {
+    if (seenProductIds.has(product.productId)) continue;
+
     const latest = getLatestHistory(product.priceHistory, selectedType);
     if (!latest) continue;
+
+    seenProductIds.add(product.productId);
 
     rows.push({
       id: latest.id,

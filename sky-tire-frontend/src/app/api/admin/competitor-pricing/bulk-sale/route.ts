@@ -123,6 +123,11 @@ export async function PATCH(request: NextRequest) {
       const productName = `${brand} ${model}${size ? ` ${size}` : ''}`.trim();
       const previousPrice = tire.salePrice ?? 0;
 
+      // Skip no-op updates (same price) — do not clutter history
+      if (Number(previousPrice) === Number(item.salePrice)) {
+        continue;
+      }
+
       await prisma.tire.update({
         where: { id: item.productId },
         data: { salePrice: item.salePrice },

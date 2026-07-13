@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+/** Records created within this window are treated as one bulk update batch */
+const BATCH_WINDOW_MS = 3000;
+
 /**
- * Price Match Summary data:
- * - Find products that had a price match of the given type within the date range
- * - Return each product with CURRENT pricing fields + COMPLETE priceHistory
- * - Frontend picks only the latest history entry for display/CSV
- * - Old history is never deleted or overwritten
+ * Price Match Summary — current match only (NOT full audit history).
+ *
+ * Rules:
+ * 1. Look at updates of the selected type inside the date range
+ * 2. Take the most recent update batch only (latest createdAt window)
+ * 3. One product = one row within that batch
+ * 4. Ignore no-op rows (previousPrice === updatedPrice)
+ * 5. Older history stays in the DB but is not shown
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -19,28 +25,30 @@ export async function GET(request: NextRequest) {
   try {
     const dateFilter: { gte?: Date; lte?: Date } = {};
     if (startDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      dateFilter.gte = start;
+      // Parse as local calendar date (YYYY-MM-DD from <input type="date">)
+      const [y, m, d] = startDate.split('-').map(Number);
+      dateFilter.gte = new Date(y, m - 1, d, 0, 0, 0, 0);
     }
     if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      dateFilter.lte = end;
+      const [y, m, d] = endDate.split('-').map(Number);
+      dateFilter.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
     }
 
-    // Products that had at least one update of this type in the date range
-    const matchedInRange = await prisma.competitorPriceUpdate.findMany({
+    // Newest first within date range
+    const rowsInRange = await prisma.competitorPriceUpdate.findMany({
       where: {
         priceType,
         ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
       },
-      select: { productId: true },
-      distinct: ['productId'],
+      orderBy: { createdAt: 'desc' },
     });
 
-    const productIds = matchedInRange.map((r) => r.productId);
-    if (productIds.length === 0) {
+    // Drop no-op history (same previous and updated price)
+    const meaningful = rowsInRange.filter(
+      (r) => Number(r.previousPrice) !== Number(r.updatedPrice)
+    );
+
+    if (meaningful.length === 0) {
       return NextResponse.json({
         products: [],
         type: selectedType,
@@ -48,23 +56,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Complete history for those products (same type) — do not trim to latest here
-    const allHistory = await prisma.competitorPriceUpdate.findMany({
-      where: {
-        productId: { in: productIds },
-        priceType,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Current batch = most recent update time ± few seconds
+    const latestTime = meaningful[0].createdAt.getTime();
+    const currentBatch = meaningful.filter(
+      (r) => latestTime - r.createdAt.getTime() <= BATCH_WINDOW_MS
+    );
 
-    const historyByProduct = new Map<string, typeof allHistory>();
-    for (const row of allHistory) {
-      const list = historyByProduct.get(row.productId);
-      if (list) list.push(row);
-      else historyByProduct.set(row.productId, [row]);
+    // One product = one row (first/newest in batch)
+    const latestByProduct = new Map<string, (typeof currentBatch)[number]>();
+    for (const row of currentBatch) {
+      if (!latestByProduct.has(row.productId)) {
+        latestByProduct.set(row.productId, row);
+      }
     }
 
-    // Current product snapshot from Tire table
+    const productIds = [...latestByProduct.keys()];
+
     const tires = await prisma.tire.findMany({
       where: { id: { in: productIds } },
       select: {
@@ -87,43 +94,40 @@ export async function GET(request: NextRequest) {
 
     const tireMap = new Map(tires.map((t) => [t.id, t]));
 
-    const products = productIds
-      .map((productId) => {
-        const tire = tireMap.get(productId);
-        const historyRows = historyByProduct.get(productId) || [];
-        // Prefer live tire data; fall back to last history snapshot for missing tires
-        const fallback = historyRows[0];
-        const brand =
-          tire?.model?.brand?.brandName || fallback?.brand || '';
-        const model = tire?.model?.modelName || fallback?.model || '';
-        const size = tire?.tireSize || '';
-        const productName =
-          tire
-            ? `${brand} ${model}${size ? ` ${size}` : ''}`.trim()
-            : fallback?.productName || `${brand} ${model}`.trim();
+    const products = productIds.map((productId) => {
+      const tire = tireMap.get(productId);
+      const latest = latestByProduct.get(productId)!;
+      const brand = tire?.model?.brand?.brandName || latest.brand || '';
+      const model = tire?.model?.modelName || latest.model || '';
+      const size = tire?.tireSize || '';
+      const productName =
+        tire
+          ? `${brand} ${model}${size ? ` ${size}` : ''}`.trim()
+          : latest.productName || `${brand} ${model}`.trim();
 
-        return {
-          productId,
-          sku: tire?.sku || fallback?.sku || '',
-          brand,
-          model,
-          productName,
-          cost: tire?.cost ?? fallback?.cost ?? 0,
-          salePrice: tire?.salePrice ?? fallback?.salePrice ?? 0,
-          mapPrice: tire?.mapPrice ?? fallback?.mapPrice ?? 0,
-          regularPrice: tire?.regularPrice ?? fallback?.regularPrice ?? 0,
-          stock: tire?.stock ?? fallback?.stock ?? 0,
-          priceHistory: historyRows.map((h) => ({
-            id: h.id,
-            type: h.priceType === 'REGULAR' ? 'regular' : 'sale',
-            previousPrice: h.previousPrice,
-            updatedPrice: h.updatedPrice,
-            competitor: (h.competitor || '').toLowerCase(),
-            updatedAt: h.createdAt.toISOString(),
-          })),
-        };
-      })
-      .filter((p) => p.priceHistory.length > 0);
+      return {
+        productId,
+        sku: tire?.sku || latest.sku || '',
+        brand,
+        model,
+        productName,
+        cost: tire?.cost ?? latest.cost ?? 0,
+        salePrice: tire?.salePrice ?? latest.salePrice ?? 0,
+        mapPrice: tire?.mapPrice ?? latest.mapPrice ?? 0,
+        regularPrice: tire?.regularPrice ?? latest.regularPrice ?? 0,
+        stock: tire?.stock ?? latest.stock ?? 0,
+        priceHistory: [
+          {
+            id: latest.id,
+            type: latest.priceType === 'REGULAR' ? 'regular' : 'sale',
+            previousPrice: latest.previousPrice,
+            updatedPrice: latest.updatedPrice,
+            competitor: (latest.competitor || '').toLowerCase(),
+            updatedAt: latest.createdAt.toISOString(),
+          },
+        ],
+      };
+    });
 
     return NextResponse.json({
       products,

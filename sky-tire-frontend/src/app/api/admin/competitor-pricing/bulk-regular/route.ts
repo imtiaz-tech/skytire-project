@@ -124,6 +124,11 @@ export async function PATCH(request: NextRequest) {
       const productName = `${brand} ${model}${size ? ` ${size}` : ''}`.trim();
       const previousPrice = tire.regularPrice ?? 0;
 
+      // Skip no-op updates (same price)
+      if (Number(previousPrice) === Number(item.regularPrice)) {
+        continue;
+      }
+
       await prisma.tire.update({
         where: { id: item.productId },
         data: { regularPrice: item.regularPrice },
