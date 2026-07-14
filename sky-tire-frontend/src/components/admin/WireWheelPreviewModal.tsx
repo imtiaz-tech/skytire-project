@@ -5,6 +5,7 @@ import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 
 import Link from 'next/link';
 import { WireWheel } from '@/redux/types/wireWheelTypes';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
+import { getYouTubeEmbedUrl } from '@/lib/youtube';
 
 interface WireWheelPreviewModalProps {
   open: boolean;
@@ -203,6 +204,37 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
                 </div>
               </div>
             </div>
+
+            {/* Product Videos — uploaded video first, then YouTube embed */}
+            {(wireWheel.video || wireWheel.youtubeUrl) && (
+              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
+                  <h3 className="text-[18px] font-bold text-[#1e2a4a]">Product Videos</h3>
+                </div>
+                <div className="px-8 py-6 space-y-6">
+                  {wireWheel.video && (
+                    <div className="w-full rounded-2xl overflow-hidden bg-black">
+                      <video
+                        src={getImageUrl(wireWheel.video) || undefined}
+                        controls
+                        className="w-full max-h-[420px]"
+                      />
+                    </div>
+                  )}
+                  {wireWheel.youtubeUrl && getYouTubeEmbedUrl(wireWheel.youtubeUrl) && (
+                    <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black">
+                      <iframe
+                        src={getYouTubeEmbedUrl(wireWheel.youtubeUrl) || undefined}
+                        title={`${wireWheel.name} YouTube video`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Technical Specifications Section */}
             <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">

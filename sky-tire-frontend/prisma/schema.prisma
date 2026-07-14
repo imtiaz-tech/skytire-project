@@ -365,6 +365,8 @@ model Wheel {
 model WireWheel {
   id                    String            @id @default(cuid())
   images                String[]
+  video                 String?           // Uploaded product video filename/path
+  youtubeUrl            String?           // Optional YouTube video URL
   knockOffs             Json?             // Structure: image, name, price, chipOption, chips[] (image, name)
   floatingCaps          Json?             // Structure: image, name, price
   name                  String

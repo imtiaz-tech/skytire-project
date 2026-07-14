@@ -20,6 +20,10 @@ export interface FloatingCap {
 export interface WireWheel {
   id: string;
   images: string[];
+  /** Uploaded product video filename/path (served from /uploads). */
+  video?: string | null;
+  /** Optional YouTube watch/share URL. */
+  youtubeUrl?: string | null;
   knockOffs: KnockOff | any;
   floatingCaps: FloatingCap | any;
   name: string;
