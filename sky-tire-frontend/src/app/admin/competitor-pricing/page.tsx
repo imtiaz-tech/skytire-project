@@ -29,6 +29,8 @@ import {
   setCompetitorRegularPrices,
   setCompetitorSalePrices,
   clearPriceHistory,
+  reduceSelectedRegularPrices,
+  reduceSelectedSalePrices,
   setRegularPrice,
   setSalePrice,
   setScrapedData,
@@ -57,6 +59,9 @@ import {
 import Pagination from '@/components/ui/Pagination';
 import SkippedProductsModal from '@/components/admin/competitor-pricing/SkippedProductsModal';
 import PriceHistoryModal from '@/components/admin/competitor-pricing/PriceHistoryModal';
+import ReducePriceModal, {
+  type ReduceUnit,
+} from '@/components/admin/competitor-pricing/ReducePriceModal';
 
 type SortKey =
   | 'sku'
@@ -111,6 +116,7 @@ export default function CompetitorPricingPage() {
   const [regularCompetitorSelect, setRegularCompetitorSelect] = useState('');
   const [showSkippedModal, setShowSkippedModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [reduceModal, setReduceModal] = useState<null | 'sale' | 'regular'>(null);
 
   const hasScrapedData = sheetNames.length > 0;
   const datesReady = Boolean(startDate && endDate);
@@ -591,6 +597,25 @@ export default function CompetitorPricingPage() {
               >
                 <RefreshCw className="h-4 w-4 shrink-0" />
                 {pageRangeLabel} Regular Price Update ({batchRegularIds.length})
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
+              <button
+                type="button"
+                onClick={() => setReduceModal('sale')}
+                disabled={selectedSkus.length === 0}
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold border border-orange-500 text-orange-600 hover:bg-orange-50 disabled:opacity-50"
+              >
+                Update Sale Price By Reduce ({selectedSkus.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setReduceModal('regular')}
+                disabled={selectedRegularSkus.length === 0}
+                className="w-full h-11 min-h-[44px] px-3 rounded-lg text-sm font-semibold border border-purple-500 text-purple-600 hover:bg-purple-50 disabled:opacity-50"
+              >
+                Update Regular Price By Reduce ({selectedRegularSkus.length})
               </button>
             </div>
 
@@ -1116,6 +1141,35 @@ export default function CompetitorPricingPage() {
         onClose={() => {
           setShowHistoryModal(false);
           dispatch(clearPriceHistory());
+        }}
+      />
+
+      <ReducePriceModal
+        open={reduceModal !== null}
+        title={
+          reduceModal === 'regular'
+            ? 'Update Regular Price By Reduce'
+            : 'Update Sale Price By Reduce'
+        }
+        selectedCount={
+          reduceModal === 'regular'
+            ? selectedRegularSkus.length
+            : selectedSkus.length
+        }
+        onClose={() => setReduceModal(null)}
+        onApply={(amount: number, unit: ReduceUnit) => {
+          if (reduceModal === 'regular') {
+            dispatch(reduceSelectedRegularPrices({ amount, unit }));
+            toast.success(
+              `Reduced suggested regular prices for ${selectedRegularSkus.length} product(s)`
+            );
+          } else {
+            dispatch(reduceSelectedSalePrices({ amount, unit }));
+            toast.success(
+              `Reduced suggested sale prices for ${selectedSkus.length} product(s)`
+            );
+          }
+          setReduceModal(null);
         }}
       />
     </div>

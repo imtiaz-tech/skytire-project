@@ -240,6 +240,50 @@ const competitorPricingSlice = createSlice({
       }
     },
 
+    /**
+     * Reduce suggested sale prices for currently selected (Yes) products only.
+     * Frontend-only — does not call the API.
+     */
+    reduceSelectedSalePrices(
+      state,
+      action: PayloadAction<{ amount: number; unit: 'dollars' | 'cents' }>
+    ) {
+      const { amount, unit } = action.payload;
+      if (!Number.isFinite(amount) || amount < 0) return;
+
+      const reduction = unit === 'cents' ? amount / 100 : amount;
+
+      for (const productId of state.selectedSkus) {
+        const current = state.updatedPrices[productId];
+        if (current == null || !Number.isFinite(current)) continue;
+
+        const next = Math.max(0, Number((current - reduction).toFixed(2)));
+        state.updatedPrices[productId] = next;
+      }
+    },
+
+    /**
+     * Reduce suggested regular prices for currently selected (Yes) products only.
+     * Frontend-only — does not call the API.
+     */
+    reduceSelectedRegularPrices(
+      state,
+      action: PayloadAction<{ amount: number; unit: 'dollars' | 'cents' }>
+    ) {
+      const { amount, unit } = action.payload;
+      if (!Number.isFinite(amount) || amount < 0) return;
+
+      const reduction = unit === 'cents' ? amount / 100 : amount;
+
+      for (const productId of state.selectedRegularSkus) {
+        const current = state.updatedRegularPrices[productId];
+        if (current == null || !Number.isFinite(current)) continue;
+
+        const next = Math.max(0, Number((current - reduction).toFixed(2)));
+        state.updatedRegularPrices[productId] = next;
+      }
+    },
+
     toggleSaleSelection(
       state,
       action: PayloadAction<{ productId: string; selected: boolean }>
@@ -530,6 +574,8 @@ export const {
   clearScrapedData,
   setSalePrice,
   setRegularPrice,
+  reduceSelectedSalePrices,
+  reduceSelectedRegularPrices,
   toggleSaleSelection,
   toggleRegularSelection,
   selectAllMinPrices,
