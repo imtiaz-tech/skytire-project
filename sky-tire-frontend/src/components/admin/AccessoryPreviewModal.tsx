@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Accessory } from '@/redux/types/accessoryTypes';
 import { SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
+import { getYouTubeEmbedUrl } from '@/lib/youtube';
 
 interface AccessoryPreviewModalProps {
   open: boolean;
@@ -213,6 +214,38 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
                 </div>
               </div>
             </div>
+
+            {/* Product Videos — uploaded video first, then YouTube embed */}
+            {(accessory.video || accessory.youtubeUrl) && (
+              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
+                  <h3 className="text-[18px] font-bold text-[#1e2a4a]">Product Videos</h3>
+                </div>
+                <div className="px-8 py-6 space-y-6">
+                  {accessory.video && (
+                    <div className="w-full rounded-2xl overflow-hidden bg-black">
+                      <video
+                        src={getImageUrl(accessory.video) || undefined}
+                        controls
+                        className="w-full max-h-[420px]"
+                      />
+                    </div>
+                  )}
+                  {accessory.youtubeUrl && getYouTubeEmbedUrl(accessory.youtubeUrl) && (
+                    <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black">
+                      <iframe
+                        src={getYouTubeEmbedUrl(accessory.youtubeUrl) || undefined}
+                        title={`${accessory.productName} YouTube video`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Side Images Section */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden flex flex-col">

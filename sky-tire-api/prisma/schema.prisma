@@ -319,6 +319,8 @@ model Wheel {
   shippingWeight       String
   shippingDimensions   String?
   images               String[]          // Array of paths/URLs uploaded directly to the server
+  video                String?           // Uploaded product video filename/path
+  youtubeUrl           String?           // Optional YouTube video URL
   description          String?
   invOrderType         String?
   stock                Int               @default(0)
@@ -431,6 +433,8 @@ model WireWheel {
 model BoltOnWireWheel {
   id                    String            @id @default(cuid())
   images                String[]
+  video                 String?           // Uploaded product video filename/path
+  youtubeUrl            String?           // Optional YouTube video URL
   knockOffs             Json?             // Structure: image, name, price, chipOption, chips[] (image, name)
   floatingCaps          Json?             // Structure: image, name, price
   name                  String
@@ -521,6 +525,8 @@ model Accessory {
   sourceId              String?
   stock                 Int               @default(0)
   images                String[]
+  video                 String?           // Uploaded product video filename/path
+  youtubeUrl            String?           // Optional YouTube video URL
   leftImage             String?
   rightImage            String?
   isFeatured            Boolean           @default(false)

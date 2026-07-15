@@ -50,6 +50,10 @@ export interface Accessory {
   sourceId: string | null;
   stock: number;
   images: string[];
+  /** Uploaded product video filename/path (served from /uploads). */
+  video?: string | null;
+  /** Optional YouTube watch/share URL. */
+  youtubeUrl?: string | null;
   leftImage: string | null;
   rightImage: string | null;
   isFeatured: boolean;

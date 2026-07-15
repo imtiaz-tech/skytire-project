@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { generateAccessorySlug, getUniqueAccessorySlug } from '@/lib/accessorySlug';
+import { isAllowedWireWheelVideoFile, isValidYouTubeUrl } from '@/lib/youtube';
 
 const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
@@ -186,6 +187,26 @@ export async function POST(request: NextRequest) {
     }
     const allImages = [...existingImages, ...savedImageNames];
 
+    // Optional product video (max 1) + optional YouTube URL
+    const existingVideo = ((formData.get('existingVideo') as string) || '').trim() || null;
+    const youtubeUrlRaw = ((formData.get('youtubeUrl') as string) || '').trim();
+    if (youtubeUrlRaw && !isValidYouTubeUrl(youtubeUrlRaw)) {
+      return NextResponse.json({ error: 'Please enter a valid YouTube Video URL' }, { status: 400 });
+    }
+    const youtubeUrl = youtubeUrlRaw || null;
+
+    let videoFilename: string | null = existingVideo;
+    const videoFile = formData.get('video') as File | null;
+    if (videoFile && typeof videoFile === 'object' && 'size' in videoFile && videoFile.size > 0) {
+      if (!isAllowedWireWheelVideoFile(videoFile)) {
+        return NextResponse.json(
+          { error: 'Video must be an mp4, mov, or webm file' },
+          { status: 400 }
+        );
+      }
+      videoFilename = await saveImageFile(videoFile, '-video');
+    }
+
     let leftImage = existingLeftImage || null;
     if (leftImageFile && leftImageFile.size > 0) {
       leftImage = await saveImageFile(leftImageFile, '-left');
@@ -219,6 +240,8 @@ export async function POST(request: NextRequest) {
         brandId: brandId || null,
         description: description || null,
         images: allImages,
+        video: videoFilename,
+        youtubeUrl,
         leftImage,
         rightImage,
         sourceId: sourceId || null,

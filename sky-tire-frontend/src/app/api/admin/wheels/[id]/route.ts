@@ -4,8 +4,19 @@ import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/util
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { isValidYouTubeUrl } from '@/lib/youtube';
 
 const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
+
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+
+function isAllowedVideoUpload(file: File): boolean {
+  const name = (file.name || '').toLowerCase();
+  const hasExt = ALLOWED_VIDEO_EXTENSIONS.some((ext) => name.endsWith(ext));
+  const hasMime = !file.type || ALLOWED_VIDEO_TYPES.includes(file.type);
+  return hasExt && hasMime;
+}
 
 export async function GET(
   request: NextRequest,
@@ -173,6 +184,31 @@ export async function PUT(
 
     const allImages = [...existingImages, ...newSavedImageNames];
 
+    // Optional product video (max 1) + optional YouTube URL
+    const existingVideo = ((formData.get('existingVideo') as string) || '').trim() || null;
+    const youtubeUrlRaw = ((formData.get('youtubeUrl') as string) || '').trim();
+    if (youtubeUrlRaw && !isValidYouTubeUrl(youtubeUrlRaw)) {
+      return NextResponse.json({ error: 'Please enter a valid YouTube Video URL' }, { status: 400 });
+    }
+    const youtubeUrl = youtubeUrlRaw || null;
+
+    let videoFilename: string | null = existingVideo;
+    const videoFile = formData.get('video') as File | null;
+    if (videoFile && typeof videoFile === 'object' && 'size' in videoFile && videoFile.size > 0) {
+      if (!isAllowedVideoUpload(videoFile)) {
+        return NextResponse.json(
+          { error: 'Video must be an mp4, mov, or webm file' },
+          { status: 400 }
+        );
+      }
+      const bytes = await videoFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const filename = `${Date.now()}-video-${videoFile.name.replace(/\s+/g, '-')}`;
+      const path = join(UPLOAD_DIR, filename);
+      await writeFile(path, buffer);
+      videoFilename = filename;
+    }
+
     const currentWheel = await prisma.wheel.findUnique({
       where: { id },
       include: { sources: true },
@@ -216,6 +252,8 @@ export async function PUT(
         shippingWeight: shippingWeight || '',
         shippingDimensions: shippingDimensions || null,
         images: allImages,
+        video: videoFilename,
+        youtubeUrl,
         description: description || null,
         invOrderType: invOrderType || null,
         stock: parseInt(stockStr) || 0,

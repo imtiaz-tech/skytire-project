@@ -24,6 +24,10 @@ export interface Wheel {
   shippingWeight: string | null;
   shippingDimensions?: string | null;
   images: string[];
+  /** Uploaded product video filename/path (served from /uploads). */
+  video?: string | null;
+  /** Optional YouTube watch/share URL. */
+  youtubeUrl?: string | null;
   description: string | null;
   features: string[];
   stock: number;

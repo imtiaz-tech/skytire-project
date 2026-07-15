@@ -19,6 +19,10 @@ import { AccessorySpecifications } from '@/redux/types/accessoryTypes';
 import { useAccessoryShippingAutoFill } from '@/hooks/useShippingAutoFill';
 import { fetchAccessoryCategories } from '@/features/accessory-categories/slice';
 import ManageAccessoryCategoriesModal from './ManageAccessoryCategoriesModal';
+import {
+  isAllowedWireWheelVideoFile,
+  isValidYouTubeUrl,
+} from '@/lib/youtube';
 
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 
@@ -85,6 +89,10 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
   const [rightImageFile, setRightImageFile] = useState<File | null>(null);
   const [existingLeftImage, setExistingLeftImage] = useState<string | null>(null);
   const [existingRightImage, setExistingRightImage] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [existingVideo, setExistingVideo] = useState<string | null>(null);
+  const [youtubeUrlError, setYoutubeUrlError] = useState('');
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
@@ -117,6 +125,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     isVisible: true,
     isFeatured: false,
     status: 'draft',
+    youtubeUrl: '',
   });
 
   const { handleCategorySelect } = useAccessoryShippingAutoFill({
@@ -210,11 +219,14 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
           isVisible: item.isVisible ?? true,
           isFeatured: item.isFeatured ?? false,
           status: activeDuplicateId ? 'draft' : item.status || 'draft',
+          youtubeUrl: item.youtubeUrl || '',
         });
 
         setExistingImages(item.images || []);
         setExistingLeftImage(item.leftImage || null);
         setExistingRightImage(item.rightImage || null);
+        setExistingVideo(item.video || null);
+        setVideoFile(null);
 
         if (item.keywords) {
           setKeywordArray(item.keywords.split(';').map((k: string) => k.trim()).filter(Boolean));
@@ -254,6 +266,34 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
     const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
     return `${baseUrl}/uploads/${cleanPath}`;
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!isAllowedWireWheelVideoFile(file)) {
+      toast.error('Video must be an mp4, mov, or webm file');
+      e.target.value = '';
+      return;
+    }
+    setVideoFile(file);
+    e.target.value = '';
+  };
+
+  const removeVideo = () => {
+    setVideoFile(null);
+    setExistingVideo(null);
+    if (videoInputRef.current) videoInputRef.current.value = '';
+  };
+
+  const handleYoutubeUrlChange = (value: string) => {
+    setFormData({ ...formData, youtubeUrl: value });
+    const trimmed = value.trim();
+    if (trimmed && !isValidYouTubeUrl(trimmed)) {
+      setYoutubeUrlError('Please enter a valid YouTube Video URL');
+    } else {
+      setYoutubeUrlError('');
+    }
   };
 
   const toggleSource = (id: string) => {
@@ -334,6 +374,12 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
 
     if (finalStatus === 'published' && validatePublish() !== true) return;
 
+    const trimmedYoutube = (formData.youtubeUrl || '').trim();
+    if (trimmedYoutube && !isValidYouTubeUrl(trimmedYoutube)) {
+      setYoutubeUrlError('Please enter a valid YouTube Video URL');
+      return toast.error('Please enter a valid YouTube Video URL');
+    }
+
     if (finalStatus === 'draft') setDraftLoading(true);
     else setPublishLoading(true);
 
@@ -366,6 +412,12 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
       if (existingImages.length > 0) {
         submitData.append('existingImages', JSON.stringify(existingImages));
       }
+
+      if (videoFile) {
+        submitData.append('video', videoFile);
+      }
+      submitData.append('existingVideo', existingVideo || '');
+      submitData.set('youtubeUrl', trimmedYoutube);
 
       if (leftImageFile) submitData.append('leftImage', leftImageFile);
       if (rightImageFile) submitData.append('rightImage', rightImageFile);
@@ -585,6 +637,94 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
             }}
           />
         </div>
+
+        {/* Product Videos */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Product Videos</h3>
+
+          <div className="space-y-4">
+            <h4 className="text-[15px] font-semibold text-gray-700">Upload Product Video</h4>
+            <p className="text-sm text-gray-500">Optional. One video file (mp4, mov, or webm).</p>
+
+            <div className="flex flex-wrap gap-4 items-start">
+              <div className="w-[220px] h-[140px] border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative shrink-0">
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleVideoChange}
+                />
+                <div className="flex flex-col items-center gap-1.5 px-3 text-center pointer-events-none">
+                  <UploadCloud className="h-[22px] w-[22px] text-[#8c9bb1]" />
+                  <span className="text-[#8c9bb1] font-medium text-[14px]">
+                    {videoFile || existingVideo ? 'Replace Video' : 'Upload Video'}
+                  </span>
+                </div>
+              </div>
+
+              {videoFile && (
+                <div className="relative rounded-[24px] overflow-hidden border border-gray-100 bg-black/5 w-[280px] shrink-0">
+                  <video
+                    src={URL.createObjectURL(videoFile)}
+                    controls
+                    className="w-full h-[140px] object-contain bg-black"
+                  />
+                  <div className="absolute top-2 left-2 right-10 px-2 py-1 rounded-lg bg-black/60 text-white text-xs truncate">
+                    {videoFile.name}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              {!videoFile && existingVideo && (
+                <div className="relative rounded-[24px] overflow-hidden border border-gray-100 bg-black/5 w-[280px] shrink-0">
+                  <video
+                    src={getImageUrl(existingVideo)}
+                    controls
+                    className="w-full h-[140px] object-contain bg-black"
+                  />
+                  <div className="absolute top-2 left-2 right-10 px-2 py-1 rounded-lg bg-black/60 text-white text-xs truncate">
+                    {existingVideo}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-50 pt-6 space-y-3">
+            <h4 className="text-[15px] font-semibold text-gray-700">YouTube Video URL</h4>
+            <p className="text-sm text-gray-500">Optional. Accepts youtube.com and youtu.be links.</p>
+            <div>
+              <input
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=xxxxxxxx"
+                className={`w-full px-4 py-3.5 bg-transparent border rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none ${
+                  youtubeUrlError ? 'border-red-400' : 'border-gray-200'
+                }`}
+                value={formData.youtubeUrl}
+                onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+              />
+              {youtubeUrlError && (
+                <p className="mt-1.5 text-sm text-red-500">{youtubeUrlError}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Basic Information */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <div className="flex items-center justify-end gap-6 pb-2">
