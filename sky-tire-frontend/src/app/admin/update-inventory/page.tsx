@@ -8,14 +8,13 @@ import {
   Package,
   Eye,
   EyeOff,
-  CheckCircle2,
-  XCircle,
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import InventoryUpdateSummaryDrawer from '@/components/admin/update-inventory/InventoryUpdateSummaryDrawer';
+import InventoryUpdateResultsPanel from '@/components/admin/update-inventory/InventoryUpdateResultsPanel';
 import {
   CheckedStates,
   INVENTORY_TYPE_OPTIONS,
@@ -23,7 +22,6 @@ import {
   NotFoundProduct,
   SelectedFieldsState,
   UpdatedProduct,
-  inventoryTypeLabel,
   isUpdateButtonDisabled,
   parseInventoryFile,
 } from '@/lib/updateInventory';
@@ -245,7 +243,7 @@ export default function UpdateInventoryPage() {
       toast.success(
         `Inventory updated: ${updated.length} updated, ${notFound.length} skipped`
       );
-      setSummaryOpen(true);
+      setSummaryOpen(false);
       setSavedSummary(null);
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { error?: string } }; message?: string };
@@ -259,7 +257,7 @@ export default function UpdateInventoryPage() {
     'w-full max-w-md border border-gray-200 rounded-xl px-3 py-2.5 text-[16px] bg-white focus:outline-none focus:ring-2 focus:ring-[#1e2a4a]/20 focus:border-[#1e2a4a] disabled:bg-gray-50 disabled:text-gray-400';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between mt-15 gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#1e2a4a] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
@@ -270,7 +268,7 @@ export default function UpdateInventoryPage() {
         <button
           type="button"
           onClick={loadSummary}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1e2a4a] text-[#1e2a4a] text-sm font-semibold hover:bg-[#1e2a4a] hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-500 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition-colors"
         >
           <History className="h-4 w-4" />
           View Summary
@@ -566,66 +564,13 @@ export default function UpdateInventoryPage() {
         </div>
       </div>
 
-      {/* Results on page */}
+      {/* Results on page (not modal) */}
       {hasResult && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              <h3 className="font-bold text-[#1e2a4a]">
-                Updated ({updatedProducts.length})
-              </h3>
-              <span className="text-xs text-gray-500 ml-auto">
-                {inventoryTypeLabel(lastInventoryType)}
-              </span>
-            </div>
-            <div className="max-h-64 overflow-auto text-sm space-y-1">
-              {updatedProducts.length === 0 ? (
-                <p className="text-gray-500">No products updated</p>
-              ) : (
-                updatedProducts.slice(0, 50).map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex justify-between gap-2 py-1.5 border-b border-gray-50"
-                  >
-                    <span className="font-medium text-gray-800">{p.sku}</span>
-                    <span className="text-gray-500 truncate">{p.brand || '-'}</span>
-                  </div>
-                ))
-              )}
-              {updatedProducts.length > 50 && (
-                <p className="text-xs text-gray-500 pt-2">
-                  +{updatedProducts.length - 50} more — open View Summary for full list
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <XCircle className="h-5 w-5 text-amber-600" />
-              <h3 className="font-bold text-[#1e2a4a]">
-                Skipped ({notFoundProducts.length})
-              </h3>
-            </div>
-            <div className="max-h-64 overflow-auto text-sm space-y-1">
-              {notFoundProducts.length === 0 ? (
-                <p className="text-gray-500">No products skipped</p>
-              ) : (
-                notFoundProducts.slice(0, 50).map((p, i) => (
-                  <div key={`${p.sku}-${i}`} className="py-1.5 border-b border-gray-50">
-                    <span className="font-medium text-gray-800">{p.sku}</span>
-                    <span className="text-gray-500"> — {p.reason}</span>
-                  </div>
-                ))
-              )}
-              {notFoundProducts.length > 50 && (
-                <p className="text-xs text-gray-500 pt-2">
-                  +{notFoundProducts.length - 50} more — open View Summary for full list
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+        <InventoryUpdateResultsPanel
+          updatedProducts={updatedProducts}
+          notFoundProducts={notFoundProducts}
+          inventoryType={lastInventoryType}
+        />
       )}
 
       <InventoryUpdateSummaryDrawer
@@ -633,9 +578,27 @@ export default function UpdateInventoryPage() {
         onClose={() => setSummaryOpen(false)}
         loading={summaryLoading}
         summary={savedSummary}
-        liveUpdated={hasResult && !savedSummary ? updatedProducts : undefined}
-        liveNotFound={hasResult && !savedSummary ? notFoundProducts : undefined}
-        liveInventoryType={hasResult && !savedSummary ? lastInventoryType : undefined}
+        liveUpdated={
+          savedSummary
+            ? undefined
+            : hasResult
+              ? updatedProducts
+              : undefined
+        }
+        liveNotFound={
+          savedSummary
+            ? undefined
+            : hasResult
+              ? notFoundProducts
+              : undefined
+        }
+        liveInventoryType={
+          savedSummary
+            ? undefined
+            : hasResult
+              ? lastInventoryType
+              : undefined
+        }
       />
     </div>
   );
