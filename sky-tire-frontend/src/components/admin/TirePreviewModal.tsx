@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Tire } from '@/redux/types/tireTypes';
+import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
 import {
   calculateTireNetCostPricing,
   calculateSaleMarkupPercentage,
@@ -14,6 +15,14 @@ interface TirePreviewModalProps {
   onClose: () => void;
   tire: Tire | null;
 }
+
+const getUploadUrl = (path: string) => {
+  if (!path) return null;
+  if (path.startsWith('http') || path.startsWith('blob:')) return path;
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+  const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
+  return `${baseUrl}/uploads/${cleanPath}`;
+};
 
 export default function TirePreviewModal({ open, onClose, tire }: TirePreviewModalProps) {
   const pricing = useMemo(() => {
@@ -118,6 +127,39 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
               </div>
             </div>
 
+            {/* Product Videos */}
+            {(tire.video || tire.youtubeUrl) && (
+              <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
+                  <h3 className="text-[18px] font-bold text-[#1e2a4a]">Product Videos</h3>
+                </div>
+                <div className="px-8 py-6 space-y-6">
+                  {tire.video && (
+                    <div className="w-full rounded-2xl overflow-hidden bg-black">
+                      <video
+                        src={getUploadUrl(tire.video) || undefined}
+                        controls
+                        className="w-full max-h-[420px]"
+                      />
+                    </div>
+                  )}
+                  {tire.youtubeUrl && (
+                    <div className="space-y-2">
+                      <h4 className="text-[14px] font-bold text-gray-400 uppercase tracking-wider">YouTube Video</h4>
+                      <a
+                        href={tire.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[15px] font-medium text-blue-600 hover:text-blue-700 underline break-all"
+                      >
+                        {tire.youtubeUrl}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Technical Specifications Section */}
             <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
               <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
@@ -182,6 +224,15 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
                     )) : <span className="text-gray-300 italic">No sources assigned</span>}
                   </div>
                 } />
+              </div>
+              <div className="px-8 pb-6">
+                <PreviewSourceInventoryBlock
+                  productId={tire.id}
+                  productKind="tire"
+                  mapPrice={tire.mapPrice}
+                  mapPriceHistory={tire.mapPriceHistory}
+                  sourceInventories={tire.sourceInventories}
+                />
               </div>
             </div>
 

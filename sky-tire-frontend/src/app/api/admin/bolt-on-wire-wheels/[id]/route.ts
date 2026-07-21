@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import slugify from 'slugify';
 import { isAllowedWireWheelVideoFile, isValidYouTubeUrl } from '@/lib/youtube';
+import { attachSourceInventories } from '@/lib/sourceInventory.server';
 
 const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
@@ -73,7 +74,8 @@ export async function GET(
       return NextResponse.json({ error: 'bolt-on Wire Wheel not found' }, { status: 404 });
     }
 
-    return NextResponse.json(boltOnWireWheel);
+    const withInventory = await attachSourceInventories('boltOnWheel', boltOnWireWheel);
+    return NextResponse.json(withInventory);
   } catch (error) {
     console.error('Error fetching wire wheel:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

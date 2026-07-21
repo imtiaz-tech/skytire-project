@@ -11,6 +11,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import StockCostDetailsTable from './StockCostDetailsTable';
+import type { SourceInventoryRow } from '@/lib/sourceInventory';
 import ManageBrandsModal from './ManageBrandsModal';
 import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
 import {
@@ -91,6 +93,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+  const [sourceInventories, setSourceInventories] = useState<SourceInventoryRow[]>([]);
 
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const brandDropdownRef = useRef<HTMLDivElement>(null);
@@ -390,6 +393,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
         setExistingVideo(wheel.video || null);
         setVideoFile(null);
+        setSourceInventories(wheel.sourceInventories || []);
 
         // Setup Floating Caps JSON (now array)
         if (wheel.floatingCaps) {
@@ -1314,6 +1318,7 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
                 <input type="number" placeholder="Stock" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} required />
               </div>
             </div>
+
           </div>
 
           <div className="space-y-8 pt-2">
@@ -1398,6 +1403,10 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
                 <input type="number" placeholder="Handling Fee ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
               </div>
             </div>
+
+            {editWireWheelId && sourceInventories.length > 0 && (
+              <StockCostDetailsTable rows={sourceInventories} stockZeroAsNA />
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
               <div>

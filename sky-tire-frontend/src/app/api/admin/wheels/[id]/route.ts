@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { isValidYouTubeUrl } from '@/lib/youtube';
+import { attachSourceInventories } from '@/lib/sourceInventory.server';
 
 const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
@@ -36,7 +37,8 @@ export async function GET(
       return NextResponse.json({ error: 'Wheel not found' }, { status: 404 });
     }
 
-    return NextResponse.json(wheel);
+    const withInventory = await attachSourceInventories('wheel', wheel);
+    return NextResponse.json(withInventory);
   } catch (error) {
     console.error('Error fetching wheel:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

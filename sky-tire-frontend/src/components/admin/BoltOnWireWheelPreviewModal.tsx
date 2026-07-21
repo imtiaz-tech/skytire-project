@@ -4,8 +4,8 @@ import React, { useMemo } from 'react';
 import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 'lucide-react';
 import Link from 'next/link';
 import { BoltOnWireWheel } from '@/redux/types/boltOnWireWheelTypes';
+import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
-import { getYouTubeEmbedUrl } from '@/lib/youtube';
 
 interface BoltOnWireWheelPreviewModalProps {
   open: boolean;
@@ -205,7 +205,7 @@ export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireW
               </div>
             </div>
 
-            {/* Product Videos — uploaded video first, then YouTube embed */}
+            {/* Product Videos */}
             {(boltOnWireWheel.video || boltOnWireWheel.youtubeUrl) && (
               <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
                 <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
@@ -221,15 +221,17 @@ export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireW
                       />
                     </div>
                   )}
-                  {boltOnWireWheel.youtubeUrl && getYouTubeEmbedUrl(boltOnWireWheel.youtubeUrl) && (
-                    <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black">
-                      <iframe
-                        src={getYouTubeEmbedUrl(boltOnWireWheel.youtubeUrl) || undefined}
-                        title={`${boltOnWireWheel.name} YouTube video`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
+                  {boltOnWireWheel.youtubeUrl && (
+                    <div className="space-y-2">
+                      <h4 className="text-[14px] font-bold text-gray-400 uppercase tracking-wider">YouTube Video</h4>
+                      <a
+                        href={boltOnWireWheel.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[15px] font-medium text-blue-600 hover:text-blue-700 underline break-all"
+                      >
+                        {boltOnWireWheel.youtubeUrl}
+                      </a>
                     </div>
                   )}
                 </div>
@@ -411,6 +413,15 @@ export default function BoltOnWireWheelPreviewModal({ open, onClose, boltOnWireW
                     </span>
                   ) : <span className="text-gray-300 italic">No source assigned</span>
                 } />
+              </div>
+              <div className="px-8 pb-6">
+                <PreviewSourceInventoryBlock
+                  productId={boltOnWireWheel.id}
+                  productKind="boltOnWheel"
+                  mapPrice={boltOnWireWheel.mapPrice}
+                  mapPriceHistory={(boltOnWireWheel as any).mapPriceHistory}
+                  sourceInventories={(boltOnWireWheel as any).sourceInventories}
+                />
               </div>
             </div>
 

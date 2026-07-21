@@ -6,13 +6,18 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createTire, updateTire } from '@/redux/slices/tiresSlice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import { Tire } from '@/redux/types/tireTypes';
-import { ArrowLeft, Loader2, X, Search, ChevronDown, Check, PlusCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Search, ChevronDown, Check, PlusCircle, UploadCloud } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import TireFieldsSection from './TireFieldsSection';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
+import type { SourceInventoryRow } from '@/lib/sourceInventory';
 import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
 import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
+import {
+  isAllowedWireWheelVideoFile,
+  isValidYouTubeUrl,
+} from '@/lib/youtube';
 
 interface TireSizeFormProps {
   editTireId?: string;
@@ -47,6 +52,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [sourceInventories, setSourceInventories] = useState<SourceInventoryRow[]>([]);
   const [models, setModels] = useState<{ id: string; modelName: string; brand?: { brandName: string } }[]>([]);
   const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(null);
   
@@ -63,6 +69,10 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
   const [featureArray, setFeatureArray] = useState<string[]>([]);
   const [featureInput, setFeatureInput] = useState('');
   const [isFeatureFocused, setIsFeatureFocused] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [existingVideo, setExistingVideo] = useState<string | null>(null);
+  const [youtubeUrlError, setYoutubeUrlError] = useState('');
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const featureSuggestions = [
     "Noise reduction Technology",
     "Without Noise Reduction Technology",
@@ -119,6 +129,7 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     feedbackScore: '',
     sourceIds: [] as string[],
     publishStatus: 'PUBLISHED',
+    youtubeUrl: '',
   });
 
   const { handleSizeBlur, handleSizeChange } = useShippingAutoFill({
@@ -203,7 +214,11 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           feedbackScore: String(tire.feedbackScore || 0),
           sourceIds: tire.sources?.map((s: any) => s.id) || [],
           publishStatus: tire.publishStatus || 'PUBLISHED',
+          youtubeUrl: tire.youtubeUrl || '',
         });
+        setExistingVideo(tire.video || null);
+        setVideoFile(null);
+        setSourceInventories(tire.sourceInventories || []);
 
         if (tire.keywords) {
           setKeywordArray(tire.keywords.split(';').filter(Boolean));
@@ -291,11 +306,52 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     setIsFeatureFocused(false);
   };
 
+  const getUploadUrl = (path: string) => {
+    if (path.startsWith('http') || path.startsWith('blob:')) return path;
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api').replace('/api', '');
+    const cleanPath = path.startsWith('uploads/') ? path.replace('uploads/', '') : path;
+    return `${baseUrl}/uploads/${cleanPath}`;
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!isAllowedWireWheelVideoFile(file)) {
+      toast.error('Video must be an mp4, mov, or webm file');
+      e.target.value = '';
+      return;
+    }
+    setVideoFile(file);
+    e.target.value = '';
+  };
+
+  const removeVideo = () => {
+    setVideoFile(null);
+    setExistingVideo(null);
+    if (videoInputRef.current) videoInputRef.current.value = '';
+  };
+
+  const handleYoutubeUrlChange = (value: string) => {
+    setFormData({ ...formData, youtubeUrl: value });
+    const trimmed = value.trim();
+    if (trimmed && !isValidYouTubeUrl(trimmed)) {
+      setYoutubeUrlError('Please enter a valid YouTube Video URL');
+    } else {
+      setYoutubeUrlError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent, statusOverride?: 'PUBLISHED' | 'DRAFT') => {
     e.preventDefault();
     if (!formData.modelId) return toast.error('Model must be selected');
 
     const finalStatus = statusOverride || formData.publishStatus || 'PUBLISHED';
+    const trimmedYoutube = (formData.youtubeUrl || '').trim();
+
+    if (trimmedYoutube && !isValidYouTubeUrl(trimmedYoutube)) {
+      setYoutubeUrlError('Please enter a valid YouTube Video URL');
+      return toast.error('Please enter a valid YouTube Video URL');
+    }
 
     if (finalStatus !== 'DRAFT') {
       // Required Field Validations
@@ -380,13 +436,25 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
         tractionScore: parseInt(formData.tractionScore) || 0,
         stabilityScore: parseInt(formData.stabilityScore) || 0,
         feedbackScore: parseInt(formData.feedbackScore) || 0,
+        video: existingVideo,
+        youtubeUrl: trimmedYoutube,
       };
 
+      let submitData: any = payload;
+      if (videoFile) {
+        const multipartData = new FormData();
+        multipartData.append('payload', JSON.stringify(payload));
+        multipartData.append('video', videoFile);
+        multipartData.append('existingVideo', existingVideo || '');
+        multipartData.set('youtubeUrl', trimmedYoutube);
+        submitData = multipartData;
+      }
+
       if (editTireId) {
-        await dispatch(updateTire({ id: editTireId, data: payload })).unwrap();
+        await dispatch(updateTire({ id: editTireId, data: submitData })).unwrap();
         toast.success('Tire updated successfully');
       } else {
-        await dispatch(createTire(payload)).unwrap();
+        await dispatch(createTire(submitData)).unwrap();
         toast.success('Tire created successfully');
       }
 
@@ -639,6 +707,93 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           </div>
         </div>
 
+        {/* Product Videos */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
+          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Product Videos</h3>
+
+          <div className="space-y-4">
+            <h4 className="text-[15px] font-semibold text-gray-700">Upload Product Video</h4>
+            <p className="text-sm text-gray-500">Optional. One video file (mp4, mov, or webm).</p>
+
+            <div className="flex flex-wrap gap-4 items-start">
+              <div className="w-[220px] h-[140px] border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative shrink-0">
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleVideoChange}
+                />
+                <div className="flex flex-col items-center gap-1.5 px-3 text-center pointer-events-none">
+                  <UploadCloud className="h-[22px] w-[22px] text-[#8c9bb1]" />
+                  <span className="text-[#8c9bb1] font-medium text-[14px]">
+                    {videoFile || existingVideo ? 'Replace Video' : 'Upload Video'}
+                  </span>
+                </div>
+              </div>
+
+              {videoFile && (
+                <div className="relative rounded-[24px] overflow-hidden border border-gray-100 bg-black/5 w-[280px] shrink-0">
+                  <video
+                    src={URL.createObjectURL(videoFile)}
+                    controls
+                    className="w-full h-[140px] object-contain bg-black"
+                  />
+                  <div className="absolute top-2 left-2 right-10 px-2 py-1 rounded-lg bg-black/60 text-white text-xs truncate">
+                    {videoFile.name}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              {!videoFile && existingVideo && (
+                <div className="relative rounded-[24px] overflow-hidden border border-gray-100 bg-black/5 w-[280px] shrink-0">
+                  <video
+                    src={getUploadUrl(existingVideo)}
+                    controls
+                    className="w-full h-[140px] object-contain bg-black"
+                  />
+                  <div className="absolute top-2 left-2 right-10 px-2 py-1 rounded-lg bg-black/60 text-white text-xs truncate">
+                    {existingVideo}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-50 pt-6 space-y-3">
+            <h4 className="text-[15px] font-semibold text-gray-700">YouTube Video URL</h4>
+            <p className="text-sm text-gray-500">Optional. Accepts youtube.com and youtu.be links.</p>
+            <div>
+              <input
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=xxxxxxxx"
+                className={`w-full px-4 py-3.5 bg-transparent border rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none ${
+                  youtubeUrlError ? 'border-red-400' : 'border-gray-200'
+                }`}
+                value={formData.youtubeUrl}
+                onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+              />
+              {youtubeUrlError && (
+                <p className="mt-1.5 text-sm text-red-500">{youtubeUrlError}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Section 2: Tire Specifications & Pricing */}
         <div className="space-y-8 animate-in slide-in-from-bottom duration-700">
           <div className="flex items-center gap-4 px-4">
@@ -656,6 +811,8 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             sourceDropdownRef={sourceDropdownRef}
             setIsManageSourcesOpen={setIsManageSourcesOpen}
             toggleSource={toggleSource}
+            sourceInventories={sourceInventories}
+            showStockCostDetails={Boolean(editTireId)}
           />
         </div>
 

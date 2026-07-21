@@ -1,6 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateTireNetCostPricing, isSalePriceBelowRecommended } from '@/utils/pricing';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { isAllowedWireWheelVideoFile, isValidYouTubeUrl } from '@/lib/youtube';
+
+const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
+
+async function saveUploadedVideo(file: File): Promise<string> {
+  if (!existsSync(UPLOAD_DIR)) {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+  }
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const filename = `${Date.now()}-video-${file.name.replace(/\s+/g, '-')}`;
+  const path = join(UPLOAD_DIR, filename);
+  await writeFile(path, buffer);
+  return filename;
+}
+
+async function parseTireRequest(request: NextRequest) {
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.includes('multipart/form-data')) {
+    const body = await request.json();
+    const hasYoutubeUrl = Object.prototype.hasOwnProperty.call(body, 'youtubeUrl');
+    const youtubeUrlRaw = hasYoutubeUrl ? String(body.youtubeUrl || '').trim() : undefined;
+    if (youtubeUrlRaw && !isValidYouTubeUrl(youtubeUrlRaw)) {
+      throw new Error('Please enter a valid YouTube Video URL');
+    }
+    return {
+      ...body,
+      video: Object.prototype.hasOwnProperty.call(body, 'video')
+        ? body.video ? String(body.video).trim() : null
+        : undefined,
+      youtubeUrl: hasYoutubeUrl ? youtubeUrlRaw || null : undefined,
+    };
+  }
+
+  const formData = await request.formData();
+  const payloadRaw = formData.get('payload') as string;
+  const body = payloadRaw ? JSON.parse(payloadRaw) : {};
+  const existingVideo = ((formData.get('existingVideo') as string) || '').trim() || null;
+  const youtubeUrlRaw = ((formData.get('youtubeUrl') as string) || body.youtubeUrl || '').trim();
+
+  if (youtubeUrlRaw && !isValidYouTubeUrl(youtubeUrlRaw)) {
+    throw new Error('Please enter a valid YouTube Video URL');
+  }
+
+  let videoFilename: string | null = existingVideo;
+  const videoFile = formData.get('video') as File | null;
+  if (videoFile && typeof videoFile === 'object' && 'size' in videoFile && videoFile.size > 0) {
+    if (!isAllowedWireWheelVideoFile(videoFile)) {
+      throw new Error('Video must be an mp4, mov, or webm file');
+    }
+    videoFilename = await saveUploadedVideo(videoFile);
+  }
+
+  return {
+    ...body,
+    video: videoFilename,
+    youtubeUrl: youtubeUrlRaw || null,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -93,7 +155,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await parseTireRequest(request);
 
     const {
       modelId,
@@ -115,6 +177,8 @@ export async function POST(request: NextRequest) {
       shippingCost,
       handlingFee,
       freightCharges,
+      video,
+      youtubeUrl,
       rebateAvailable,
       mileageScore,
       tractionScore,
@@ -218,6 +282,8 @@ export async function POST(request: NextRequest) {
         shippingCost: Math.round(parseFloat(shippingCost) * 100) / 100 || 0,
         handlingFee: Math.round(parseFloat(handlingFee) * 100) / 100 || 0,
         freightCharges: Math.round(parseFloat(freightCharges) * 100) / 100 || 0,
+        video: video || null,
+        youtubeUrl: youtubeUrl || null,
         rebateAvailable: !!rebateAvailable,
         mileageScore: parseInt(mileageScore) || 0,
         tractionScore: parseInt(tractionScore) || 0,
@@ -262,6 +328,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newTire);
   } catch (error) {
     console.error('Error creating tire:', error);
+    if (
+      error instanceof Error &&
+      ['Please enter a valid YouTube Video URL', 'Video must be an mp4, mov, or webm file'].includes(error.message)
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     if ((error as any).code === 'P2002') {
       return NextResponse.json({ error: 'SKU already exists' }, { status: 400 });
     }

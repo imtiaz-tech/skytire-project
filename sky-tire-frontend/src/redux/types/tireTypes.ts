@@ -27,6 +27,10 @@ export interface Tire {
   shippingCost: number;
   handlingFee: number;
   freightCharges: number;
+  /** Uploaded product video filename/path (served from /uploads). */
+  video?: string | null;
+  /** Optional YouTube watch/share URL. */
+  youtubeUrl?: string | null;
   rebateAvailable: boolean;
   mileageScore: number;
   tractionScore: number;
@@ -58,6 +62,16 @@ export interface Tire {
 
   model?: any; // Will be properly typed if needed
   sources?: InventorySource[];
+  mapPriceHistory?: { value: number; createdAt: string | number }[] | null;
+  sourceInventories?: {
+    id: string;
+    productType: string;
+    productId: string;
+    sourceId: string;
+    stock: number;
+    costHistory: { value: number; createdAt: string | number }[];
+    source?: { id: string; source: string } | null;
+  }[];
   
   createdAt: string;
   updatedAt: string;

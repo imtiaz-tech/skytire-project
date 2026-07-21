@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { generateAccessorySlug, getUniqueAccessorySlug } from '@/lib/accessorySlug';
 import { isAllowedWireWheelVideoFile, isValidYouTubeUrl } from '@/lib/youtube';
+import { attachSourceInventories } from '@/lib/sourceInventory.server';
 
 const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
@@ -48,7 +49,8 @@ export async function GET(
       return NextResponse.json({ error: 'Accessory not found' }, { status: 404 });
     }
 
-    return NextResponse.json(accessory);
+    const withInventory = await attachSourceInventories('accessory', accessory);
+    return NextResponse.json(withInventory);
   } catch (error) {
     console.error('Error fetching accessory:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

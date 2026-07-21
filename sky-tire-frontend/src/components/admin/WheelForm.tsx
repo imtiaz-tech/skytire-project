@@ -12,6 +12,8 @@ import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import ManageBrandsModal from './ManageBrandsModal';
+import StockCostDetailsTable from './StockCostDetailsTable';
+import type { SourceInventoryRow } from '@/lib/sourceInventory';
 import { useShippingAutoFill } from '@/hooks/useShippingAutoFill';
 import {
   isAllowedWireWheelVideoFile,
@@ -69,6 +71,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
+  const [sourceInventories, setSourceInventories] = useState<SourceInventoryRow[]>([]);
 
   const [activeDuplicateId, setActiveDuplicateId] = useState<string | null>(duplicateId || null);
 
@@ -238,6 +241,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
 
         setExistingVideo(wheel.video || null);
         setVideoFile(null);
+        setSourceInventories(wheel.sourceInventories || []);
       } catch (error) {
         console.error('Error loading wheel data:', error);
         toast.error('Failed to load wheel data');
@@ -793,6 +797,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               <input type="number" placeholder="Stock" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
             </div>
           </div>
+
         </div>
         {/* Section 5: Wheel Details */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
@@ -928,6 +933,10 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               <input type="number" placeholder="Handling Fee ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.handlingFee} onChange={(e) => setFormData({ ...formData, handlingFee: e.target.value })} onWheel={(e) => e.currentTarget.blur()} />
             </div>
           </div>
+
+          {editWheelId && sourceInventories.length > 0 && (
+            <StockCostDetailsTable rows={sourceInventories} stockZeroAsNA />
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
             <div>

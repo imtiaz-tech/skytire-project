@@ -8,6 +8,8 @@ import {
   isSalePriceBelowRecommended,
 } from '@/utils/pricing';
 import { InventorySource } from '@/redux/types/inventorySourceTypes';
+import StockCostDetailsTable from './StockCostDetailsTable';
+import type { SourceInventoryRow } from '@/lib/sourceInventory';
 
 interface TireFieldsSectionProps {
   formData: {
@@ -39,6 +41,8 @@ interface TireFieldsSectionProps {
   sourceDropdownRef: React.RefObject<HTMLDivElement | null>;
   setIsManageSourcesOpen: (open: boolean) => void;
   toggleSource: (id: string) => void;
+  sourceInventories?: SourceInventoryRow[];
+  showStockCostDetails?: boolean;
 }
 
 export default function TireFieldsSection({
@@ -50,6 +54,8 @@ export default function TireFieldsSection({
   sourceDropdownRef,
   setIsManageSourcesOpen,
   toggleSource,
+  sourceInventories = [],
+  showStockCostDetails = false,
 }: TireFieldsSectionProps) {
   const pricing = useMemo(() => {
     return calculateTireNetCostPricing(
@@ -234,6 +240,10 @@ export default function TireFieldsSection({
           <input type="number" placeholder="Handling Fee ($)" step="0.01" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50" value={formData.handlingFee} onChange={(e) => setFormData((prev: any) => ({ ...prev, handlingFee: e.target.value }))} onWheel={(e) => e.currentTarget.blur()} />
         </div>
       </div>
+
+      {showStockCostDetails && sourceInventories.length > 0 && (
+        <StockCostDetailsTable rows={sourceInventories} stockZeroAsNA />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
         <div>

@@ -5,8 +5,8 @@ import { X, Pencil, Package, DollarSign, Calculator, ExternalLink, Award } from 
 import Link from 'next/link';
 import { Accessory } from '@/redux/types/accessoryTypes';
 import { SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
+import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
-import { getYouTubeEmbedUrl } from '@/lib/youtube';
 
 interface AccessoryPreviewModalProps {
   open: boolean;
@@ -215,7 +215,7 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
               </div>
             </div>
 
-            {/* Product Videos — uploaded video first, then YouTube embed */}
+            {/* Product Videos */}
             {(accessory.video || accessory.youtubeUrl) && (
               <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
                 <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50">
@@ -231,15 +231,17 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
                       />
                     </div>
                   )}
-                  {accessory.youtubeUrl && getYouTubeEmbedUrl(accessory.youtubeUrl) && (
-                    <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black">
-                      <iframe
-                        src={getYouTubeEmbedUrl(accessory.youtubeUrl) || undefined}
-                        title={`${accessory.productName} YouTube video`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
+                  {accessory.youtubeUrl && (
+                    <div className="space-y-2">
+                      <h4 className="text-[14px] font-bold text-gray-400 uppercase tracking-wider">YouTube Video</h4>
+                      <a
+                        href={accessory.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[15px] font-medium text-blue-600 hover:text-blue-700 underline break-all"
+                      >
+                        {accessory.youtubeUrl}
+                      </a>
                     </div>
                   )}
                 </div>
@@ -377,6 +379,15 @@ export default function AccessoryPreviewModal({ open, onClose, accessory }: Acce
                       <span className="text-gray-300 italic">No source assigned</span>
                     )
                   }
+                />
+              </div>
+              <div className="px-8 pb-6">
+                <PreviewSourceInventoryBlock
+                  productId={accessory.id}
+                  productKind="accessory"
+                  mapPrice={accessory.mapPrice}
+                  mapPriceHistory={accessory.mapPriceHistory}
+                  sourceInventories={(accessory as any).sourceInventories}
                 />
               </div>
             </div>

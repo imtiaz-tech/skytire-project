@@ -26,6 +26,7 @@ model User {
   blogs               Blog[]
   devices             Device[]
   emailTemplates      EmailTemplate[]
+  inventoryUpdateSummaries InventoryUpdateSummary[]
 
   @@index([email])
   @@index([memberId])
@@ -95,9 +96,12 @@ model Tire {
   salePrice           Float            @default(0)
   regularPrice        Float            @default(0)
   mapPrice            Float            @default(0)
+  mapPriceHistory     Json?            @default("[]")
   shippingCost        Float            @default(0)
   handlingFee         Float            @default(0)
   freightCharges      Float            @default(0)
+  video               String?          // Uploaded product video filename/path
+  youtubeUrl          String?          // Optional YouTube video URL
   rebateAvailable     Boolean          @default(false)
   mileageScore        Int?             @default(0)
   tractionScore       Int?             @default(0)
@@ -146,8 +150,26 @@ model InventorySource {
   wireWheels WireWheel[]
   boltOnWireWheels BoltOnWireWheel[]
   accessories Accessory[]
+  productSourceInventories ProductSourceInventory[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/** Per-source stock + cost history written by Update Inventory */
+model ProductSourceInventory {
+  id          String   @id @default(cuid())
+  productType String   // tire | wheel | wireWheel | boltOnWheel | accessory
+  productId   String
+  sourceId    String
+  source      InventorySource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  stock       Int      @default(0)
+  costHistory Json     @default("[]") // [{ value: number, createdAt: string|number }] max 30
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productType, productId, sourceId])
+  @@index([productType, productId])
+  @@index([sourceId])
 }
 
 model Session {
@@ -335,6 +357,7 @@ model Wheel {
   salePrice            Float             @default(0)
   regularPrice         Float             @default(0)
   mapPrice             Float             @default(0)
+  mapPriceHistory      Json?             @default("[]")
   shippingCost         Float             @default(0)
   handlingFee          Float             @default(0)
   isFeatured           Boolean           @default(false)
@@ -389,6 +412,7 @@ model WireWheel {
   minimumSalePrice      Float             @default(0)
   salePrice             Float             @default(0)
   mapPrice              Float             @default(0)
+  mapPriceHistory       Json?             @default("[]")
   regularPrice          Float             @default(0)
   shippingCost          Float             @default(0)
   handlingFee           Float             @default(0)
@@ -456,6 +480,7 @@ model BoltOnWireWheel {
   minimumSalePrice      Float             @default(0)
   salePrice             Float             @default(0)
   mapPrice              Float             @default(0)
+  mapPriceHistory       Json?             @default("[]")
   regularPrice          Float             @default(0)
   shippingCost          Float             @default(0)
   handlingFee           Float             @default(0)
@@ -792,5 +817,18 @@ model CompetitorPriceUpdate {
   @@index([priceType, createdAt])
   @@index([productId])
   @@index([createdAt])
+}
+
+/** Singleton-style last run summary for Update Inventory */
+model InventoryUpdateSummary {
+  id               String   @id @default(cuid())
+  updatedProducts  Json     @default("[]")
+  notFoundProducts Json     @default("[]")
+  inventoryType    String?
+  timestamp        DateTime @default(now())
+  createdById      Int?
+  createdBy        User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([timestamp])
 }
 

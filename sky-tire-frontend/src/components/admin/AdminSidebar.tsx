@@ -27,6 +27,7 @@ import {
   Scale,
   Mail,
   ChartColumn,
+  RefreshCw,
 } from 'lucide-react';
 
 const navItems = [
@@ -42,6 +43,7 @@ const navItems = [
   { label: 'Tires', href: '/admin/tires', icon: CircleDot },
   { label: 'Tires Models', href: '/admin/tire-models', icon: Tags },
   { label: 'Inventory Sources', href: '/admin/inventory-sources', icon: Database },
+  { label: 'Update Inventory', href: '/admin/update-inventory', icon: RefreshCw },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { label: 'Price Match Queries', href: '/admin/price-match-queries', icon: Scale, badge: 'priceMatch' as const },
