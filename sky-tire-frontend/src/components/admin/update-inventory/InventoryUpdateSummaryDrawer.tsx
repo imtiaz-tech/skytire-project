@@ -25,6 +25,7 @@ import {
   UpdatedProductsTable,
 } from '@/components/admin/update-inventory/InventorySummaryShared';
 import InventoryChangeFilterModal from '@/components/admin/update-inventory/InventoryChangeFilterModal';
+import { useInventoryProductPreview } from '@/components/admin/update-inventory/InventoryProductPreview';
 
 type TabKey = 'updated' | 'skipped';
 
@@ -57,6 +58,7 @@ export default function InventoryUpdateSummaryDrawer({
   const notFound = liveNotFound ?? summary?.notFoundProducts ?? [];
   const inventoryType = liveInventoryType ?? summary?.inventoryType ?? null;
   const timestamp = summary?.timestamp;
+  const { openPreview, previewModals } = useInventoryProductPreview(inventoryType);
 
   useEffect(() => {
     setMounted(true);
@@ -215,7 +217,10 @@ export default function InventoryUpdateSummaryDrawer({
                   />
 
                   {tab === 'updated' ? (
-                    <UpdatedProductsTable products={visibleUpdated} />
+                    <UpdatedProductsTable
+                      products={visibleUpdated}
+                      onRowClick={(p) => openPreview(p.id)}
+                    />
                   ) : (
                     <SkippedProductsTable products={visibleSkipped} />
                   )}
@@ -230,8 +235,10 @@ export default function InventoryUpdateSummaryDrawer({
         open={Boolean(filterModal)}
         filter={filterModal}
         products={modalProducts}
+        inventoryType={inventoryType}
         onClose={() => setFilterModal(null)}
       />
+      {previewModals}
     </>,
     document.body
   );

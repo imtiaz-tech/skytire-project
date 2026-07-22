@@ -15,6 +15,7 @@ import {
   UpdatedProductsTable,
 } from '@/components/admin/update-inventory/InventorySummaryShared';
 import InventoryChangeFilterModal from '@/components/admin/update-inventory/InventoryChangeFilterModal';
+import { useInventoryProductPreview } from '@/components/admin/update-inventory/InventoryProductPreview';
 
 interface Props {
   updatedProducts: UpdatedProduct[];
@@ -32,6 +33,7 @@ export default function InventoryUpdateResultsPanel({
   const [skippedQuery, setSkippedQuery] = useState('');
   const [skippedSearch, setSkippedSearch] = useState('');
   const [filterModal, setFilterModal] = useState<UpdateFilterType | null>(null);
+  const { openPreview, previewModals } = useInventoryProductPreview(inventoryType);
 
   const filteredUpdated = useMemo(
     () => searchUpdatedProducts(updatedProducts, updatedSearch),
@@ -65,7 +67,10 @@ export default function InventoryUpdateResultsPanel({
           onSearch={() => setUpdatedSearch(updatedQuery)}
           total={filteredUpdated.length}
         />
-        <UpdatedProductsTable products={filteredUpdated} />
+        <UpdatedProductsTable
+          products={filteredUpdated}
+          onRowClick={(p) => openPreview(p.id)}
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 space-y-4">
@@ -85,8 +90,11 @@ export default function InventoryUpdateResultsPanel({
         open={Boolean(filterModal)}
         filter={filterModal}
         products={modalProducts}
+        inventoryType={inventoryType}
         onClose={() => setFilterModal(null)}
       />
+
+      {previewModals}
     </div>
   );
 }

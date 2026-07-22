@@ -14,6 +14,7 @@ interface TirePreviewModalProps {
   open: boolean;
   onClose: () => void;
   tire: Tire | null;
+  zClassName?: string;
 }
 
 const getUploadUrl = (path: string) => {
@@ -24,7 +25,12 @@ const getUploadUrl = (path: string) => {
   return `${baseUrl}/uploads/${cleanPath}`;
 };
 
-export default function TirePreviewModal({ open, onClose, tire }: TirePreviewModalProps) {
+export default function TirePreviewModal({
+  open,
+  onClose,
+  tire,
+  zClassName = 'z-[100]',
+}: TirePreviewModalProps) {
   const pricing = useMemo(() => {
     if (!tire) return null;
     const netCostPricing = calculateTireNetCostPricing(
@@ -64,7 +70,7 @@ export default function TirePreviewModal({ open, onClose, tire }: TirePreviewMod
   );
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]">
+    <div className={`fixed inset-0 ${zClassName} flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]`}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-[#1e2a4a]/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 

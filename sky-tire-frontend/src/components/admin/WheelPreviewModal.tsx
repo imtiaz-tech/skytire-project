@@ -11,6 +11,7 @@ interface WheelPreviewModalProps {
   open: boolean;
   onClose: () => void;
   wheel: Wheel | null;
+  zClassName?: string;
 }
 const getImageUrl = (path: string) => {
   if (!path) return null;
@@ -20,7 +21,12 @@ const getImageUrl = (path: string) => {
   return `${baseUrl}/uploads/${cleanPath}`;
 };
 
-export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreviewModalProps) {
+export default function WheelPreviewModal({
+  open,
+  onClose,
+  wheel,
+  zClassName = 'z-[100]',
+}: WheelPreviewModalProps) {
   const pricing = useMemo(() => {
     if (!wheel) return null;
     return calculateTireNetCostPricing(
@@ -45,7 +51,7 @@ export default function WheelPreviewModal({ open, onClose, wheel }: WheelPreview
   );
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]">
+    <div className={`fixed inset-0 ${zClassName} flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]`}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-[#1e2a4a]/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 

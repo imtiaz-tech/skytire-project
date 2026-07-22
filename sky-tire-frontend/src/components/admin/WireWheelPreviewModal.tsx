@@ -11,6 +11,7 @@ interface WireWheelPreviewModalProps {
   open: boolean;
   onClose: () => void;
   wireWheel: WireWheel | null;
+  zClassName?: string;
 }
 
 const getImageUrl = (path: string) => {
@@ -21,7 +22,12 @@ const getImageUrl = (path: string) => {
   return `${baseUrl}/uploads/${cleanPath}`;
 };
 
-export default function WireWheelPreviewModal({ open, onClose, wireWheel }: WireWheelPreviewModalProps) {
+export default function WireWheelPreviewModal({
+  open,
+  onClose,
+  wireWheel,
+  zClassName = 'z-[100]',
+}: WireWheelPreviewModalProps) {
   const pricing = useMemo(() => {
     if (!wireWheel) return null;
     return calculateTireNetCostPricing(
@@ -46,7 +52,7 @@ export default function WireWheelPreviewModal({ open, onClose, wireWheel }: Wire
   );
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]">
+    <div className={`fixed inset-0 ${zClassName} flex items-center justify-center p-4 sm:p-6 lg:pl-[280px]`}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-[#1e2a4a]/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 

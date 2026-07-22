@@ -108,7 +108,13 @@ export function ResultsSearchBar({
   );
 }
 
-export function UpdatedProductsTable({ products }: { products: UpdatedProduct[] }) {
+export function UpdatedProductsTable({
+  products,
+  onRowClick,
+}: {
+  products: UpdatedProduct[];
+  onRowClick?: (product: UpdatedProduct) => void;
+}) {
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
       <div className="overflow-auto max-h-[520px]">
@@ -145,8 +151,14 @@ export function UpdatedProductsTable({ products }: { products: UpdatedProduct[] 
               products.map((p, idx) => (
                 <tr
                   key={`${p.id}-${idx}`}
+                  onClick={() => onRowClick?.(p)}
+                  title={onRowClick ? 'Click to preview product' : undefined}
                   className={`border-b border-gray-100 ${
                     idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'
+                  } ${
+                    onRowClick
+                      ? 'cursor-pointer hover:bg-blue-50/70 transition-colors'
+                      : ''
                   }`}
                 >
                   <td className="px-3 py-2.5 font-medium text-gray-900 whitespace-nowrap">
