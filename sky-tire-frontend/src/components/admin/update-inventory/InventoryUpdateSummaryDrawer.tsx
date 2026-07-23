@@ -37,6 +37,8 @@ interface Props {
   liveUpdated?: UpdatedProduct[];
   liveNotFound?: NotFoundProduct[];
   liveInventoryType?: string;
+  liveSourceName?: string | null;
+  liveUploadColumns?: string[] | null;
 }
 
 export default function InventoryUpdateSummaryDrawer({
@@ -47,6 +49,8 @@ export default function InventoryUpdateSummaryDrawer({
   liveUpdated,
   liveNotFound,
   liveInventoryType,
+  liveSourceName,
+  liveUploadColumns,
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<TabKey>('updated');
@@ -57,6 +61,8 @@ export default function InventoryUpdateSummaryDrawer({
   const updated = liveUpdated ?? summary?.updatedProducts ?? [];
   const notFound = liveNotFound ?? summary?.notFoundProducts ?? [];
   const inventoryType = liveInventoryType ?? summary?.inventoryType ?? null;
+  const sourceName = liveSourceName ?? summary?.sourceName ?? null;
+  const uploadColumns = liveUploadColumns ?? summary?.uploadColumns ?? null;
   const timestamp = summary?.timestamp;
   const { openPreview, previewModals } = useInventoryProductPreview(inventoryType);
 
@@ -222,7 +228,12 @@ export default function InventoryUpdateSummaryDrawer({
                       onRowClick={(p) => openPreview(p.id)}
                     />
                   ) : (
-                    <SkippedProductsTable products={visibleSkipped} />
+                    <SkippedProductsTable
+                      products={visibleSkipped}
+                      inventoryType={inventoryType}
+                      sourceName={sourceName}
+                      uploadColumns={uploadColumns}
+                    />
                   )}
                 </>
               )}

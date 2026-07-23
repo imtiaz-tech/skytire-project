@@ -825,6 +825,8 @@ model InventoryUpdateSummary {
   updatedProducts  Json     @default("[]")
   notFoundProducts Json     @default("[]")
   inventoryType    String?
+  sourceName       String?
+  uploadColumns    Json     @default("[]")
   timestamp        DateTime @default(now())
   createdById      Int?
   createdBy        User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)

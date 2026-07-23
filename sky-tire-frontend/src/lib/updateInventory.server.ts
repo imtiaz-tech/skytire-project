@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
+import { getSkippedDescription } from '@/lib/updateInventory';
 
 export type InventoryType =
   | 'tire'
@@ -41,7 +42,11 @@ export type UpdatedProductRow = {
 
 export type NotFoundProductRow = {
   sku: string;
+  brand: string | null;
   reason: string;
+  description: string;
+  /** Exact row from the uploaded file (original column names/values) */
+  originalRow?: Record<string, unknown> | null;
 };
 
 type ProductSnap = {
@@ -212,15 +217,42 @@ function applyStockFromCsv(stockFromCSV: number | null): number | null {
   return stockFromCSV > STOCK_THRESHOLD ? stockFromCSV : 0;
 }
 
-export function parseWorkbookRows(buffer: Buffer): Record<string, unknown>[] {
+export function parseWorkbookRows(buffer: Buffer): {
+  rows: Record<string, unknown>[];
+  columns: string[];
+} {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
-  if (!sheetName) return [];
+  if (!sheetName) return { rows: [], columns: [] };
   const sheet = workbook.Sheets[sheetName];
-  return XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+  const headerRow = XLSX.utils.sheet_to_json<string[]>(sheet, {
+    header: 1,
+    defval: '',
+  })[0] as string[] | undefined;
+  const columns = (headerRow || [])
+    .map((h) => String(h ?? '').trim())
+    .filter(Boolean);
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
     defval: '',
     raw: false,
   });
+  const resolvedColumns =
+    columns.length > 0
+      ? columns
+      : Object.keys(rows[0] || {});
+  return { rows, columns: resolvedColumns };
+}
+
+function pickOriginalRow(
+  row: Record<string, unknown>,
+  columns: string[]
+): Record<string, unknown> {
+  if (columns.length === 0) return { ...row };
+  const out: Record<string, unknown> = {};
+  for (const col of columns) {
+    out[col] = row[col] ?? '';
+  }
+  return out;
 }
 
 async function resolveInventorySource(sourceName: string) {
@@ -814,7 +846,8 @@ async function zeroSourceInventoryStock(
 
 export async function processInventoryRows(
   rows: Record<string, unknown>[],
-  selectedFields: SelectedFields
+  selectedFields: SelectedFields,
+  uploadColumns: string[] = []
 ): Promise<{ updatedProducts: UpdatedProductRow[]; notFoundProducts: NotFoundProductRow[] }> {
   const updatedProducts: UpdatedProductRow[] = [];
   const notFoundProducts: NotFoundProductRow[] = [];
@@ -832,6 +865,26 @@ export async function processInventoryRows(
     DecreaseCost,
     source: sourceField,
   } = selectedFields;
+
+  const columns =
+    uploadColumns.length > 0
+      ? uploadColumns
+      : Object.keys(rows[0] || {});
+
+  const pushSkipped = (
+    sku: string,
+    reason: string,
+    brand: string | null | undefined,
+    row: Record<string, unknown>
+  ) => {
+    notFoundProducts.push({
+      sku,
+      brand: brand?.trim() ? brand.trim() : null,
+      reason,
+      description: getSkippedDescription(reason, inventoryType),
+      originalRow: pickOriginalRow(row, columns),
+    });
+  };
 
   if (!skuField || !inventoryType || !sourceField) {
     throw new Error('SKU, inventory type, and source are required');
@@ -901,11 +954,6 @@ export async function processInventoryRows(
       row['\uFEFFsku']?.toString().trim() ||
       '';
 
-    if (!sku) {
-      notFoundProducts.push({ sku: sku || 'N/A', reason: 'Missing SKU' });
-      continue;
-    }
-
     const brandFromCSV = brandField
       ? row[brandField]?.toString().trim() || null
       : null;
@@ -914,19 +962,26 @@ export async function processInventoryRows(
         ? normalizeBrandName(brandFromCSV)
         : null;
 
+    if (!sku) {
+      pushSkipped(sku || 'N/A', 'Missing SKU', brandFromCSV, row);
+      continue;
+    }
+
     const product = productMap.get(sku);
     if (!product) {
-      notFoundProducts.push({ sku, reason: 'Product not found' });
+      pushSkipped(sku, 'Product not found', brandFromCSV, row);
       continue;
     }
 
     if (normalizedBrandFromCSV) {
       if (product.brandName) {
         if (normalizeBrandName(product.brandName) !== normalizedBrandFromCSV) {
-          notFoundProducts.push({
+          pushSkipped(
             sku,
-            reason: `Brand mismatch: expected '${brandFromCSV}', found '${product.brandName}'`,
-          });
+            `Brand mismatch: expected '${brandFromCSV}', found '${product.brandName}'`,
+            product.brandName || brandFromCSV,
+            row
+          );
           continue;
         }
       }
@@ -964,7 +1019,12 @@ export async function processInventoryRows(
       ? parseStock(row[stockField])
       : null;
     if (stockField && (stockFromCSV === null || Number.isNaN(stockFromCSV as number))) {
-      notFoundProducts.push({ sku, reason: 'Invalid stock value' });
+      pushSkipped(
+        sku,
+        'Invalid stock value',
+        product.brandName || brandFromCSV,
+        row
+      );
       continue;
     }
 
@@ -1012,10 +1072,12 @@ export async function processInventoryRows(
 
         if (salePriceField && salePriceFromCSV !== null) {
           if (salePriceFromCSV < nextCost) {
-            notFoundProducts.push({
+            pushSkipped(
               sku,
-              reason: `Sale price ($${salePriceFromCSV.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
-            });
+              `Sale price ($${salePriceFromCSV.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
+              product.brandName || brandFromCSV,
+              row
+            );
             skipped = true;
           } else {
             let sale = salePriceFromCSV;
@@ -1052,10 +1114,12 @@ export async function processInventoryRows(
       } else {
         if (salePriceField && salePriceFromCSV !== null) {
           if (salePriceFromCSV < nextCost) {
-            notFoundProducts.push({
+            pushSkipped(
               sku,
-              reason: `Sale price ($${salePriceFromCSV.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
-            });
+              `Sale price ($${salePriceFromCSV.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
+              product.brandName || brandFromCSV,
+              row
+            );
             skipped = true;
           } else {
             let sale = salePriceFromCSV;
@@ -1082,10 +1146,12 @@ export async function processInventoryRows(
 
     // Enforce sale >= cost and sale >= map
     if (nextSale < nextCost) {
-      notFoundProducts.push({
+      pushSkipped(
         sku,
-        reason: `Sale price ($${nextSale.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
-      });
+        `Sale price ($${nextSale.toFixed(2)}) is below cost ($${nextCost.toFixed(2)})`,
+        product.brandName || brandFromCSV,
+        row
+      );
       continue;
     }
     if (nextMap > 0 && nextSale < nextMap) {
@@ -1334,6 +1400,8 @@ export async function saveInventorySummary(
   updatedProducts: UpdatedProductRow[],
   notFoundProducts: NotFoundProductRow[],
   inventoryType: string,
+  sourceName?: string | null,
+  uploadColumns: string[] = [],
   userId?: number | null
 ) {
   const existing = await prisma.inventoryUpdateSummary.findFirst({
@@ -1344,6 +1412,8 @@ export async function saveInventorySummary(
     updatedProducts,
     notFoundProducts,
     inventoryType,
+    sourceName: sourceName || null,
+    uploadColumns,
     timestamp: new Date(),
     createdById: userId ?? null,
   };

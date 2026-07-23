@@ -72,6 +72,8 @@ export default function UpdateInventoryPage() {
   const [updatedProducts, setUpdatedProducts] = useState<UpdatedProduct[]>([]);
   const [notFoundProducts, setNotFoundProducts] = useState<NotFoundProduct[]>([]);
   const [lastInventoryType, setLastInventoryType] = useState<string>('');
+  const [lastSourceName, setLastSourceName] = useState<string>('');
+  const [lastUploadColumns, setLastUploadColumns] = useState<string[]>([]);
   const [hasResult, setHasResult] = useState(false);
 
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -185,6 +187,9 @@ export default function UpdateInventoryPage() {
           notFoundProducts: Array.isArray(summary.notFoundProducts)
             ? summary.notFoundProducts
             : [],
+          uploadColumns: Array.isArray(summary.uploadColumns)
+            ? summary.uploadColumns
+            : [],
         });
       } else {
         setSavedSummary(null);
@@ -239,6 +244,10 @@ export default function UpdateInventoryPage() {
       setUpdatedProducts(updated);
       setNotFoundProducts(notFound);
       setLastInventoryType(selectedFields.inventoryType);
+      setLastSourceName(selectedFields.source || '');
+      setLastUploadColumns(
+        Array.isArray(res.data?.uploadColumns) ? res.data.uploadColumns : columnNames
+      );
       setHasResult(true);
       toast.success(
         `Inventory updated: ${updated.length} updated, ${notFound.length} skipped`
@@ -570,6 +579,8 @@ export default function UpdateInventoryPage() {
           updatedProducts={updatedProducts}
           notFoundProducts={notFoundProducts}
           inventoryType={lastInventoryType}
+          sourceName={lastSourceName}
+          uploadColumns={lastUploadColumns}
         />
       )}
 
@@ -597,6 +608,20 @@ export default function UpdateInventoryPage() {
             ? undefined
             : hasResult
               ? lastInventoryType
+              : undefined
+        }
+        liveSourceName={
+          savedSummary
+            ? undefined
+            : hasResult
+              ? lastSourceName
+              : undefined
+        }
+        liveUploadColumns={
+          savedSummary
+            ? undefined
+            : hasResult
+              ? lastUploadColumns
               : undefined
         }
       />

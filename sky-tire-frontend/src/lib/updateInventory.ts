@@ -59,7 +59,11 @@ export type UpdatedProduct = {
 
 export type NotFoundProduct = {
   sku: string;
+  brand?: string | null;
   reason: string;
+  description?: string;
+  /** Exact row from the uploaded file (original column names/values) */
+  originalRow?: Record<string, unknown> | null;
 };
 
 export type InventorySummary = {
@@ -67,6 +71,8 @@ export type InventorySummary = {
   updatedProducts: UpdatedProduct[];
   notFoundProducts: NotFoundProduct[];
   inventoryType: string | null;
+  sourceName?: string | null;
+  uploadColumns?: string[] | null;
   timestamp: string;
   createdBy?: { id: number; name: string; email: string } | null;
 };
@@ -298,8 +304,34 @@ export function searchNotFoundProducts(
   return products.filter(
     (p) =>
       p.sku?.toLowerCase().includes(q) ||
-      p.reason?.toLowerCase().includes(q)
+      p.brand?.toLowerCase().includes(q) ||
+      p.reason?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q)
   );
+}
+
+export function getSkippedDescription(
+  reason: string,
+  inventoryType?: string | null
+): string {
+  const label = inventoryTypeSingular(inventoryType);
+  const r = (reason || '').toLowerCase();
+  if (r.includes('product not found')) {
+    return `${label} was not found in inventory. Create the product or verify the SKU.`;
+  }
+  if (r.includes('missing sku')) {
+    return `${label} row was skipped because the SKU is missing.`;
+  }
+  if (r.includes('brand mismatch')) {
+    return `${label} brand does not match the brand mapped from the file.`;
+  }
+  if (r.includes('invalid stock')) {
+    return `${label} stock value is invalid and could not be applied.`;
+  }
+  if (r.includes('sale price') && r.includes('below cost')) {
+    return `${label} sale price is below cost and was skipped.`;
+  }
+  return reason || `${label} was skipped during inventory update.`;
 }
 
 export function getSkippedMeta(reason: string): {
@@ -329,6 +361,66 @@ export function getSkippedMeta(reason: string): {
     };
   }
   return { category: 'Other', suggestion: 'Review the row and try again' };
+}
+
+export function downloadSkippedProductsFile(
+  products: NotFoundProduct[],
+  options: {
+    sourceName?: string | null;
+    uploadColumns?: string[] | null;
+    format: 'csv' | 'xlsx';
+  }
+) {
+  const sourceLabel = (options.sourceName || 'Inventory').trim() || 'Inventory';
+
+  const columnsFromOptions = Array.isArray(options.uploadColumns)
+    ? options.uploadColumns.filter(Boolean)
+    : [];
+
+  const columnsFromRows = (() => {
+    const firstWithRow = products.find(
+      (p) => p.originalRow && typeof p.originalRow === 'object'
+    );
+    return firstWithRow?.originalRow ? Object.keys(firstWithRow.originalRow) : [];
+  })();
+
+  const columns =
+    columnsFromOptions.length > 0 ? columnsFromOptions : columnsFromRows;
+
+  const hasOriginalRows = products.some(
+    (p) => p.originalRow && typeof p.originalRow === 'object'
+  );
+
+  let rows: Record<string, unknown>[];
+
+  if (hasOriginalRows && columns.length > 0) {
+    rows = products.map((p) => {
+      const out: Record<string, unknown> = {};
+      for (const col of columns) {
+        out[col] = p.originalRow?.[col] ?? '';
+      }
+      return out;
+    });
+  } else {
+    // Fallback for older summaries that don't include original upload rows
+    rows = products.map((p) => ({
+      SKU: p.sku || 'N/A',
+      Brand: p.brand || '-',
+      Reason: p.reason,
+      Description: p.description || '',
+    }));
+  }
+
+  const sheet = XLSX.utils.json_to_sheet(rows, {
+    header: hasOriginalRows && columns.length > 0 ? columns : undefined,
+  });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, 'Skipped Products');
+  const safeName = sourceLabel.replace(/[\\/:*?"<>|]+/g, '-').trim();
+  const filename = `${safeName} - Skipped Products.${options.format}`;
+  XLSX.writeFile(workbook, filename, {
+    bookType: options.format === 'csv' ? 'csv' : 'xlsx',
+  });
 }
 
 export function computeSummaryStats(

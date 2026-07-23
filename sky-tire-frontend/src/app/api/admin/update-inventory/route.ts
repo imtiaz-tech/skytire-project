@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const rows = parseWorkbookRows(buffer);
+    const { rows, columns } = parseWorkbookRows(buffer);
 
     if (rows.length === 0) {
       return NextResponse.json({ error: 'File has no data rows' }, { status: 400 });
@@ -57,13 +57,16 @@ export async function POST(request: NextRequest) {
 
     const { updatedProducts, notFoundProducts } = await processInventoryRows(
       rows,
-      selectedFields
+      selectedFields,
+      columns
     );
 
     await saveInventorySummary(
       updatedProducts,
       notFoundProducts,
       selectedFields.inventoryType,
+      selectedFields.source,
+      columns,
       null
     );
 
@@ -78,6 +81,8 @@ export async function POST(request: NextRequest) {
       notFoundCount: notFoundProducts.length,
       updatedProducts,
       notFoundProducts,
+      sourceName: selectedFields.source,
+      uploadColumns: columns,
     });
   } catch (error: unknown) {
     const durationMs = Date.now() - startTime;

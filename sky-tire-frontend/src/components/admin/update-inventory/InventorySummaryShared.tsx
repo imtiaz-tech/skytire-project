@@ -5,7 +5,9 @@ import type { NotFoundProduct, UpdatedProduct, UpdateFilterType } from '@/lib/up
 import {
   UPDATE_FILTER_OPTIONS,
   formatMoney,
+  getSkippedDescription,
   getSkippedMeta,
+  downloadSkippedProductsFile,
 } from '@/lib/updateInventory';
 
 export function Pill({
@@ -207,56 +209,125 @@ export function UpdatedProductsTable({
   );
 }
 
-export function SkippedProductsTable({ products }: { products: NotFoundProduct[] }) {
+export function SkippedProductsTable({
+  products,
+  inventoryType,
+  sourceName,
+  uploadColumns,
+}: {
+  products: NotFoundProduct[];
+  inventoryType?: string | null;
+  sourceName?: string | null;
+  uploadColumns?: string[] | null;
+}) {
+  const [showDownloadMenu, setShowDownloadMenu] = React.useState(false);
+
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    setShowDownloadMenu(false);
+    downloadSkippedProductsFile(products, {
+      sourceName,
+      uploadColumns,
+      format,
+    });
+  };
+
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <div className="overflow-auto max-h-[420px]">
-        <table className="w-full text-sm min-w-[720px]">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr className="text-left text-gray-700 border-b border-gray-200">
-              <th className="px-3 py-2.5 font-semibold">SKU</th>
-              <th className="px-3 py-2.5 font-semibold">Reason</th>
-              <th className="px-3 py-2.5 font-semibold">Category</th>
-              <th className="px-3 py-2.5 font-semibold">Suggestion</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-3 py-10 text-center text-gray-500">
-                  No skipped products
-                </td>
+    <div className="space-y-3">
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-auto max-h-[420px]">
+          <table className="w-full text-sm min-w-[900px]">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr className="text-left text-gray-700 border-b border-gray-200">
+                <th className="px-3 py-2.5 font-semibold">SKU</th>
+                <th className="px-3 py-2.5 font-semibold">Brand</th>
+                <th className="px-3 py-2.5 font-semibold">Description</th>
+                <th className="px-3 py-2.5 font-semibold">Reason</th>
+                <th className="px-3 py-2.5 font-semibold">Category</th>
+                <th className="px-3 py-2.5 font-semibold">Suggestion</th>
               </tr>
-            ) : (
-              products.map((p, idx) => {
-                const meta = getSkippedMeta(p.reason);
-                return (
-                  <tr
-                    key={`${p.sku}-${idx}`}
-                    className={`border-b border-gray-100 ${
-                      idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'
-                    }`}
-                  >
-                    <td className="px-3 py-2.5 font-medium text-gray-900 whitespace-nowrap">
-                      {p.sku || 'N/A'}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span className="inline-flex px-2.5 py-1 rounded-full border border-red-300 text-red-600 text-[12px] font-semibold bg-white">
-                        {p.reason}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span className="inline-flex px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-[12px] font-semibold">
-                        {meta.category}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-gray-700">{meta.suggestion}</td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-10 text-center text-gray-500">
+                    No skipped products
+                  </td>
+                </tr>
+              ) : (
+                products.map((p, idx) => {
+                  const meta = getSkippedMeta(p.reason);
+                  const description =
+                    p.description ||
+                    getSkippedDescription(p.reason, inventoryType);
+                  return (
+                    <tr
+                      key={`${p.sku}-${idx}`}
+                      className={`border-b border-gray-100 ${
+                        idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'
+                      }`}
+                    >
+                      <td className="px-3 py-2.5 font-medium text-gray-900 whitespace-nowrap">
+                        {p.sku || 'N/A'}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">
+                        {p.brand || '-'}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-700 min-w-[220px]">
+                        {description}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className="inline-flex px-2.5 py-1 rounded-full border border-red-300 text-red-600 text-[12px] font-semibold bg-white">
+                          {p.reason}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className="inline-flex px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-[12px] font-semibold">
+                          {meta.category}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-700">{meta.suggestion}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="flex justify-end relative">
+        <button
+          type="button"
+          disabled={products.length === 0}
+          onClick={() => setShowDownloadMenu((v) => !v)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1e2a4a] text-white text-sm font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Download
+        </button>
+        {showDownloadMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowDownloadMenu(false)}
+            />
+            <div className="absolute bottom-full right-0 mb-2 z-20 w-44 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => handleDownload('xlsx')}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50"
+              >
+                Excel (.xlsx)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDownload('csv')}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 border-t border-gray-100"
+              >
+                CSV (.csv)
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

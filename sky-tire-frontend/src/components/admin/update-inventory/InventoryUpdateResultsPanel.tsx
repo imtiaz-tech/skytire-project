@@ -21,12 +21,16 @@ interface Props {
   updatedProducts: UpdatedProduct[];
   notFoundProducts: NotFoundProduct[];
   inventoryType: string;
+  sourceName?: string | null;
+  uploadColumns?: string[] | null;
 }
 
 export default function InventoryUpdateResultsPanel({
   updatedProducts,
   notFoundProducts,
   inventoryType,
+  sourceName,
+  uploadColumns,
 }: Props) {
   const [updatedQuery, setUpdatedQuery] = useState('');
   const [updatedSearch, setUpdatedSearch] = useState('');
@@ -83,7 +87,12 @@ export default function InventoryUpdateResultsPanel({
           onSearch={() => setSkippedSearch(skippedQuery)}
           total={filteredSkipped.length}
         />
-        <SkippedProductsTable products={filteredSkipped} />
+        <SkippedProductsTable
+          products={filteredSkipped}
+          inventoryType={inventoryType}
+          sourceName={sourceName}
+          uploadColumns={uploadColumns}
+        />
       </div>
 
       <InventoryChangeFilterModal
