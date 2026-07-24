@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
-import { getSkippedDescription } from '@/lib/updateInventory';
+import {
+  extractSizeFromUploadRow,
+  extractStockFromUploadRow,
+  getSkippedDescription,
+  inventoryTypeLabel,
+} from '@/lib/updateInventory';
 
 export type InventoryType =
   | 'tire'
@@ -43,8 +48,14 @@ export type UpdatedProductRow = {
 export type NotFoundProductRow = {
   sku: string;
   brand: string | null;
+  /** Full skip message for the Reason column */
   reason: string;
+  /** Size from uploaded file */
   description: string;
+  /** Stock from uploaded file */
+  stock: number | string | null;
+  /** Inventory type category label */
+  category: string;
   /** Exact row from the uploaded file (original column names/values) */
   originalRow?: Record<string, unknown> | null;
 };
@@ -873,16 +884,25 @@ export async function processInventoryRows(
 
   const pushSkipped = (
     sku: string,
-    reason: string,
+    reasonCode: string,
     brand: string | null | undefined,
     row: Record<string, unknown>
   ) => {
+    const originalRow = pickOriginalRow(row, columns);
+    const r = reasonCode.toLowerCase();
+    const keepDetailedReason =
+      r.includes('brand mismatch') ||
+      (r.includes('sale price') && r.includes('below'));
     notFoundProducts.push({
       sku,
       brand: brand?.trim() ? brand.trim() : null,
-      reason,
-      description: getSkippedDescription(reason, inventoryType),
-      originalRow: pickOriginalRow(row, columns),
+      reason: keepDetailedReason
+        ? reasonCode
+        : getSkippedDescription(reasonCode, inventoryType),
+      description: extractSizeFromUploadRow(originalRow, columns) || '-',
+      stock: extractStockFromUploadRow(originalRow, stockField, columns),
+      category: inventoryTypeLabel(inventoryType),
+      originalRow,
     });
   };
 

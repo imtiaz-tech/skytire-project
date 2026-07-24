@@ -4,9 +4,12 @@ import React from 'react';
 import type { NotFoundProduct, UpdatedProduct, UpdateFilterType } from '@/lib/updateInventory';
 import {
   UPDATE_FILTER_OPTIONS,
+  extractSizeFromUploadRow,
+  extractStockFromUploadRow,
   formatMoney,
   getSkippedDescription,
   getSkippedMeta,
+  inventoryTypeLabel,
   downloadSkippedProductsFile,
 } from '@/lib/updateInventory';
 
@@ -235,12 +238,13 @@ export function SkippedProductsTable({
     <div className="space-y-3">
       <div className="border border-gray-200 rounded-xl overflow-hidden">
         <div className="overflow-auto max-h-[420px]">
-          <table className="w-full text-sm min-w-[900px]">
+          <table className="w-full text-sm min-w-[980px]">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="text-left text-gray-700 border-b border-gray-200">
                 <th className="px-3 py-2.5 font-semibold">SKU</th>
                 <th className="px-3 py-2.5 font-semibold">Brand</th>
                 <th className="px-3 py-2.5 font-semibold">Description</th>
+                <th className="px-3 py-2.5 font-semibold">Stock</th>
                 <th className="px-3 py-2.5 font-semibold">Reason</th>
                 <th className="px-3 py-2.5 font-semibold">Category</th>
                 <th className="px-3 py-2.5 font-semibold">Suggestion</th>
@@ -249,16 +253,34 @@ export function SkippedProductsTable({
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-10 text-center text-gray-500">
+                  <td colSpan={7} className="px-3 py-10 text-center text-gray-500">
                     No skipped products
                   </td>
                 </tr>
               ) : (
                 products.map((p, idx) => {
-                  const meta = getSkippedMeta(p.reason);
-                  const description =
-                    p.description ||
-                    getSkippedDescription(p.reason, inventoryType);
+                  const meta = getSkippedMeta(p.reason, inventoryType);
+                  const category =
+                    p.category || meta.category || inventoryTypeLabel(inventoryType);
+                  const looksLikeLegacyReason =
+                    typeof p.description === 'string' &&
+                    (p.description.toLowerCase().includes('was not found') ||
+                      p.description.toLowerCase().includes('was skipped') ||
+                      p.description.toLowerCase().includes('below cost') ||
+                      p.description.toLowerCase().includes('missing sku'));
+                  const descriptionDisplay = looksLikeLegacyReason
+                    ? extractSizeFromUploadRow(p.originalRow, uploadColumns) || '-'
+                    : (p.description && p.description !== '-'
+                        ? p.description
+                        : extractSizeFromUploadRow(p.originalRow, uploadColumns) || '-');
+                  const stockDisplay =
+                    p.stock ??
+                    extractStockFromUploadRow(p.originalRow, null, uploadColumns) ??
+                    '-';
+                  const reasonDisplay = looksLikeShortReasonCode(p.reason)
+                    ? getSkippedDescription(p.reason, inventoryType)
+                    : p.reason || getSkippedDescription('other', inventoryType);
+
                   return (
                     <tr
                       key={`${p.sku}-${idx}`}
@@ -272,17 +294,22 @@ export function SkippedProductsTable({
                       <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">
                         {p.brand || '-'}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-700 min-w-[220px]">
-                        {description}
+                      <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">
+                        {descriptionDisplay}
                       </td>
-                      <td className="px-3 py-2.5">
-                        <span className="inline-flex px-2.5 py-1 rounded-full border border-red-300 text-red-600 text-[12px] font-semibold bg-white">
-                          {p.reason}
+                      <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">
+                        {stockDisplay === null || stockDisplay === ''
+                          ? '-'
+                          : String(stockDisplay)}
+                      </td>
+                      <td className="px-3 py-2.5 min-w-[240px]">
+                        <span className="inline-flex px-2.5 py-1 rounded-full border border-red-300 text-red-600 text-[12px] font-semibold bg-white text-left leading-snug">
+                          {reasonDisplay}
                         </span>
                       </td>
                       <td className="px-3 py-2.5">
                         <span className="inline-flex px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-[12px] font-semibold">
-                          {meta.category}
+                          {category}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-gray-700">{meta.suggestion}</td>
@@ -330,5 +357,16 @@ export function SkippedProductsTable({
         )}
       </div>
     </div>
+  );
+}
+
+function looksLikeShortReasonCode(reason: string): boolean {
+  const r = reason.trim().toLowerCase();
+  return (
+    r === 'product not found' ||
+    r === 'missing sku' ||
+    r === 'invalid stock value' ||
+    r.startsWith('brand mismatch') ||
+    r.startsWith('sale price')
   );
 }

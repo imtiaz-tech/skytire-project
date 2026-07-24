@@ -60,8 +60,14 @@ export type UpdatedProduct = {
 export type NotFoundProduct = {
   sku: string;
   brand?: string | null;
+  /** Full skip message shown in the Reason column */
   reason: string;
+  /** Product size from the uploaded file */
   description?: string;
+  /** Stock value from the uploaded file */
+  stock?: number | string | null;
+  /** Inventory type label (Tire, Wheels, etc.) */
+  category?: string | null;
   /** Exact row from the uploaded file (original column names/values) */
   originalRow?: Record<string, unknown> | null;
 };
@@ -306,7 +312,11 @@ export function searchNotFoundProducts(
       p.sku?.toLowerCase().includes(q) ||
       p.brand?.toLowerCase().includes(q) ||
       p.reason?.toLowerCase().includes(q) ||
-      p.description?.toLowerCase().includes(q)
+      p.description?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q) ||
+      String(p.stock ?? '')
+        .toLowerCase()
+        .includes(q)
   );
 }
 
@@ -316,7 +326,7 @@ export function getSkippedDescription(
 ): string {
   const label = inventoryTypeSingular(inventoryType);
   const r = (reason || '').toLowerCase();
-  if (r.includes('product not found')) {
+  if (r.includes('product not found') || r.includes('was not found in inventory')) {
     return `${label} was not found in inventory. Create the product or verify the SKU.`;
   }
   if (r.includes('missing sku')) {
@@ -334,33 +344,107 @@ export function getSkippedDescription(
   return reason || `${label} was skipped during inventory update.`;
 }
 
-export function getSkippedMeta(reason: string): {
+export function getSkippedMeta(
+  reason: string,
+  inventoryType?: string | null
+): {
   category: string;
   suggestion: string;
 } {
+  const typeCategory = inventoryTypeLabel(inventoryType);
   const r = (reason || '').toLowerCase();
-  if (r.includes('product not found')) {
-    return { category: 'Missing', suggestion: 'Product may need to be created' };
+  if (r.includes('product not found') || r.includes('was not found in inventory')) {
+    return {
+      category: typeCategory,
+      suggestion: 'Product may need to be created',
+    };
   }
   if (r.includes('missing sku')) {
-    return { category: 'Data', suggestion: 'Ensure SKU column is mapped' };
+    return {
+      category: typeCategory,
+      suggestion: 'Ensure SKU column is mapped',
+    };
   }
   if (r.includes('brand mismatch')) {
     return {
-      category: 'Brand',
+      category: typeCategory,
       suggestion: 'Verify brand column matches the product brand',
     };
   }
   if (r.includes('invalid stock')) {
-    return { category: 'Data', suggestion: 'Provide a valid numeric stock value' };
+    return {
+      category: typeCategory,
+      suggestion: 'Provide a valid numeric stock value',
+    };
   }
   if (r.includes('sale price') && r.includes('below cost')) {
     return {
-      category: 'Pricing',
+      category: typeCategory,
       suggestion: 'Raise sale price so it is not below cost',
     };
   }
-  return { category: 'Other', suggestion: 'Review the row and try again' };
+  return {
+    category: typeCategory,
+    suggestion: 'Review the row and try again',
+  };
+}
+
+/** Read size from an uploaded inventory row (common column names). */
+export function extractSizeFromUploadRow(
+  row: Record<string, unknown> | null | undefined,
+  columns?: string[] | null
+): string {
+  if (!row) return '';
+  const cols = (columns && columns.length > 0 ? columns : Object.keys(row)).map(
+    (c) => String(c)
+  );
+  const preferred = [
+    'size',
+    'tire size',
+    'tire_size',
+    'tiresize',
+    'wheel size',
+    'wheel_size',
+    'wheelsize',
+    'product size',
+    'product_size',
+  ];
+  for (const col of cols) {
+    if (preferred.includes(col.trim().toLowerCase())) {
+      const v = row[col]?.toString().trim();
+      if (v) return v;
+    }
+  }
+  for (const col of cols) {
+    if (/size/i.test(col) && !/resize|ssize/i.test(col)) {
+      const v = row[col]?.toString().trim();
+      if (v) return v;
+    }
+  }
+  return '';
+}
+
+/** Read stock from an uploaded inventory row. */
+export function extractStockFromUploadRow(
+  row: Record<string, unknown> | null | undefined,
+  stockColumn?: string | null,
+  columns?: string[] | null
+): string | number | null {
+  if (!row) return null;
+  if (stockColumn && row[stockColumn] !== undefined && row[stockColumn] !== null) {
+    const v = row[stockColumn]?.toString().trim();
+    if (v !== '') return v;
+  }
+  const cols = (columns && columns.length > 0 ? columns : Object.keys(row)).map(
+    (c) => String(c)
+  );
+  for (const col of cols) {
+    if (/^stock$/i.test(col.trim()) || /^qty$/i.test(col.trim()) || /^quantity$/i.test(col.trim())) {
+      const v = row[col]?.toString().trim();
+      if (v !== '') return v;
+    }
+  }
+  return null;
 }
 
 export function downloadSkippedProductsFile(
