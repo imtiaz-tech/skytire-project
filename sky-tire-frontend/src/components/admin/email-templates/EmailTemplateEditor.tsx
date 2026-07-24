@@ -90,6 +90,49 @@ const EmailTemplateEditor = forwardRef<EmailTemplateEditorHandle, EmailTemplateE
       const editor = editorRef.current?.editor;
       if (!editor) return;
 
+      // Route Unlayer's "Upload Image" through our own API — without this,
+      // Unlayer shows "Offline mode is enabled..." because it has no storage.
+      const editorWithCallbacks = editor as unknown as {
+        registerCallback: (
+          name: string,
+          cb: (
+            file: { attachments: File[] },
+            done: (result: { progress: number; url?: string }) => void
+          ) => void
+        ) => void;
+      };
+      editorWithCallbacks.registerCallback('image', async (file, done) => {
+        try {
+          const attachment = file.attachments?.[0];
+          if (!attachment) {
+            throw new Error('No image selected');
+          }
+          done({ progress: 10 });
+
+          const formData = new FormData();
+          formData.append('files', attachment, attachment.name);
+          const res = await fetch('/api/admin/email-templates/import-assets', {
+            method: 'POST',
+            body: formData,
+          });
+          if (!res.ok) {
+            const body = (await res.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(body?.error || 'Failed to upload image');
+          }
+          const data = (await res.json()) as { uploaded?: { url: string }[] };
+          const url = data.uploaded?.[0]?.url;
+          if (!url) {
+            throw new Error('Upload did not return a URL');
+          }
+          // Unlayer runs in a cross-origin iframe — the URL must be absolute.
+          const absoluteUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url;
+          done({ progress: 100, url: absoluteUrl });
+        } catch (err) {
+          console.error('Unlayer image upload failed:', err);
+          done({ progress: 100 });
+        }
+      });
+
       if (importedDesignRef.current) {
         editor.loadDesign(importedDesignRef.current);
         return;

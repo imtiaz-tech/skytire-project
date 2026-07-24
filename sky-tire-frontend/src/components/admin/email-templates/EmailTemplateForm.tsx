@@ -73,39 +73,62 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
     }
   };
 
-  const handleImportHtml = (html: string) => {
+  const handleImportHtml = (html: string, meta?: { message?: string }) => {
     setImporting(true);
     try {
-      const result = editorRef.current?.importHtml(html);
+      if (!editorRef.current) {
+        throw new Error('Email editor is not ready yet. Please wait a moment and try again.');
+      }
+      const result = editorRef.current.importHtml(html);
       setImportOpen(false);
-      if (result && result.htmlFallbacks > 0) {
+      if (meta?.message) {
+        if (
+          /relative image/i.test(meta.message) ||
+          /could not map/i.test(meta.message) ||
+          /could not be uploaded/i.test(meta.message)
+        ) {
+          toast.error(meta.message);
+        } else {
+          toast.success(meta.message);
+        }
+      } else if (result && result.htmlFallbacks > 0) {
         toast.success(
           `Email converted into ${result.blocks} editable blocks (${result.htmlFallbacks} complex section(s) kept as HTML).`
         );
       } else {
         toast.success(
-          `Email converted into ${result?.blocks ?? 0} drag-and-drop blocks. You can edit and save.`
+          `Email converted into ${result.blocks} drag-and-drop blocks. You can edit and save.`
         );
       }
     } catch (error: unknown) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to import HTML into the editor'
       );
+      throw error instanceof Error ? error : new Error('Failed to import HTML into the editor');
     } finally {
       setImporting(false);
     }
   };
 
-  const handleImportDesign = (design: Record<string, unknown>) => {
+  const handleImportDesign = (
+    design: Record<string, unknown>,
+    meta?: { message?: string }
+  ) => {
     setImporting(true);
     try {
-      editorRef.current?.importDesign(design);
+      if (!editorRef.current) {
+        throw new Error('Email editor is not ready yet. Please wait a moment and try again.');
+      }
+      editorRef.current.importDesign(design);
       setImportOpen(false);
-      toast.success('Unlayer design imported. You can edit it with drag-and-drop.');
+      toast.success(meta?.message || 'Unlayer design imported. You can edit it with drag-and-drop.');
     } catch (error: unknown) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to import design into the editor'
       );
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to import design into the editor');
     } finally {
       setImporting(false);
     }
@@ -195,6 +218,8 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
         onClose={() => setImportOpen(false)}
         onImportHtml={handleImportHtml}
         onImportDesign={handleImportDesign}
+        onImportStart={() => setImporting(true)}
+        onImportEnd={() => setImporting(false)}
       />
     </div>
   );

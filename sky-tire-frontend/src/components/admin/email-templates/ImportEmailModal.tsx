@@ -3,19 +3,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Mail, Upload, X } from 'lucide-react';
-import {
-  parseUnlayerDesignJson,
-  readFileAsText,
-} from '@/lib/emailTemplateImport';
+import { resolveEmailImportFiles } from '@/lib/resolveEmailImportPackage';
 
-type ImportTab = 'gmail' | 'html-file' | 'json-file';
+type ImportTab = 'gmail' | 'html-file' | 'unlayer-export';
 
 interface ImportEmailModalProps {
   open: boolean;
   importing: boolean;
   onClose: () => void;
-  onImportHtml: (html: string) => void;
-  onImportDesign: (design: Record<string, unknown>) => void;
+  onImportHtml: (html: string, meta?: { message?: string }) => void;
+  onImportDesign: (design: Record<string, unknown>, meta?: { message?: string }) => void;
+  onImportStart?: () => void;
+  onImportEnd?: () => void;
 }
 
 export default function ImportEmailModal({
@@ -24,13 +23,16 @@ export default function ImportEmailModal({
   onClose,
   onImportHtml,
   onImportDesign,
+  onImportStart,
+  onImportEnd,
 }: ImportEmailModalProps) {
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<ImportTab>('gmail');
   const [pastedHtml, setPastedHtml] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const htmlFileRef = useRef<HTMLInputElement>(null);
-  const jsonFileRef = useRef<HTMLInputElement>(null);
+  const unlayerFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -38,9 +40,9 @@ export default function ImportEmailModal({
 
   useEffect(() => {
     if (!open) return;
-    setTab('gmail');
     setPastedHtml('');
     setError(null);
+    setBusy(false);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -49,6 +51,8 @@ export default function ImportEmailModal({
   }, [open]);
 
   if (!open || !mounted) return null;
+
+  const isBusy = importing || busy;
 
   const handlePasteImport = () => {
     setError(null);
@@ -59,37 +63,50 @@ export default function ImportEmailModal({
     }
   };
 
-  const handleHtmlFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  const handlePackageFiles = async (files: File[]) => {
+    if (files.length === 0) {
+      setError('No file selected. Please choose a ZIP, HTML, or JSON file.');
+      return;
+    }
     setError(null);
+    setBusy(true);
+    onImportStart?.();
     try {
-      const text = await readFileAsText(file);
-      onImportHtml(text);
+      const resolved = await resolveEmailImportFiles(files);
+      if (resolved.kind === 'design') {
+        onImportDesign(resolved.design, { message: resolved.message });
+      } else {
+        onImportHtml(resolved.html, { message: resolved.message });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to read HTML file');
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? // axios-style
+            ((err as { response?: { data?: { error?: string } }; message?: string })
+              .response?.data?.error ||
+              (err as { message?: string }).message ||
+              'Failed to import file')
+          : err instanceof Error
+            ? err.message
+            : 'Failed to import file';
+      setError(message);
+    } finally {
+      setBusy(false);
+      onImportEnd?.();
     }
   };
 
-  const handleJsonFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setError(null);
-    try {
-      const text = await readFileAsText(file);
-      const design = parseUnlayerDesignJson(text);
-      onImportDesign(design);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to read JSON file');
-    }
+  /** Snapshot FileList before clearing the input — FileList is live and becomes empty after reset. */
+  const onFileInputChange = (input: HTMLInputElement) => {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    void handlePackageFiles(files);
   };
 
   const tabs: { key: ImportTab; label: string }[] = [
     { key: 'gmail', label: 'From Gmail / others' },
-    { key: 'html-file', label: 'Upload HTML' },
-    { key: 'json-file', label: 'Unlayer JSON' },
+    { key: 'html-file', label: 'Upload HTML / ZIP' },
+    { key: 'unlayer-export', label: 'Unlayer export' },
   ];
 
   return createPortal(
@@ -144,18 +161,17 @@ export default function ImportEmailModal({
                     <li>Open the email in Gmail / Yahoo / Outlook.</li>
                     <li>
                       Click ⋮ (More) → <strong>Show original</strong> → select all → Copy
-                      (we extract the HTML body and strip headers like Delivered-To / DKIM).
+                      (we extract the HTML body and strip headers).
                     </li>
-                    <li>Or: right‑click the email body → Inspect → copy the message HTML from the iframe.</li>
                     <li>
-                      Paste below and click <strong>Import &amp; convert</strong> — images,
-                      headings, text, buttons, columns, and dividers become Unlayer blocks.
+                      Paste below and click <strong>Import &amp; convert</strong>.
                     </li>
                   </ol>
                   <p className="text-xs text-blue-700 pt-1">
-                    Complex sections that cannot be mapped safely are kept as HTML blocks
-                    so nothing is lost. Existing Unlayer design JSON imports still load as
-                    fully editable designs.
+                    Gmail images usually use absolute URLs and display correctly. For Unlayer
+                    downloads with an <strong>images</strong> folder, use the{' '}
+                    <strong>Upload HTML / ZIP</strong> or <strong>Unlayer export</strong> tab
+                    and upload the ZIP so images are included.
                   </p>
                 </div>
 
@@ -182,11 +198,11 @@ export default function ImportEmailModal({
                   </button>
                   <button
                     type="button"
-                    disabled={importing || !pastedHtml.trim()}
+                    disabled={isBusy || !pastedHtml.trim()}
                     onClick={handlePasteImport}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1e2a4a] text-white text-sm font-bold hover:bg-opacity-90 disabled:opacity-60"
                   >
-                    {importing ? (
+                    {isBusy ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Importing…
@@ -201,58 +217,94 @@ export default function ImportEmailModal({
 
             {tab === 'html-file' && (
               <>
-                <p className="text-sm text-gray-600">
-                  Upload an <strong>.html</strong> or <strong>.htm</strong> file exported
-                  from an email client or another builder.
-                </p>
+                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-900 space-y-2">
+                  <p className="font-semibold">HTML file or ZIP package</p>
+                  <p>
+                    If you downloaded a template from Unlayer / Gmail as a folder with{' '}
+                    <code className="text-xs bg-white/70 px-1 rounded">index.html</code> +{' '}
+                    <code className="text-xs bg-white/70 px-1 rounded">images/</code>, zip that
+                    folder and upload the <strong>.zip</strong> here so images display.
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Uploading only <code className="text-xs">index.html</code> without images
+                    causes broken image icons (relative paths like{' '}
+                    <code className="text-xs">images/image-1.png</code>).
+                  </p>
+                </div>
                 <input
                   ref={htmlFileRef}
                   type="file"
-                  accept=".html,.htm,text/html"
+                  multiple
+                  accept=".html,.htm,.zip,.png,.jpg,.jpeg,.gif,.webp,text/html,application/zip,image/*"
                   className="hidden"
-                  onChange={handleHtmlFile}
+                  onChange={(e) => onFileInputChange(e.target)}
                 />
                 <button
                   type="button"
-                  disabled={importing}
+                  disabled={isBusy}
                   onClick={() => htmlFileRef.current?.click()}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-dashed border-gray-300 text-[#1e2a4a] text-sm font-bold hover:bg-gray-50 disabled:opacity-60 w-full justify-center"
                 >
-                  {importing ? (
+                  {isBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Upload className="h-4 w-4" />
                   )}
-                  Choose HTML file
+                  Choose HTML, images, or ZIP
                 </button>
               </>
             )}
 
-            {tab === 'json-file' && (
+            {tab === 'unlayer-export' && (
               <>
-                <p className="text-sm text-gray-600">
-                  Upload an Unlayer <strong>design JSON</strong> export. This loads as a
-                  fully drag-and-drop editable design.
-                </p>
+                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-900 space-y-2">
+                  <p className="font-semibold">Unlayer studio export</p>
+                  <ol className="list-decimal list-inside space-y-1 text-blue-800">
+                    <li>
+                      From{' '}
+                      <a
+                        href="https://studio.unlayer.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline font-semibold"
+                      >
+                        studio.unlayer.com
+                      </a>
+                      , export <strong>HTML</strong> (ZIP with images) or{' '}
+                      <strong>JSON</strong> design.
+                    </li>
+                    <li>
+                      If Gmail gives you a folder with{' '}
+                      <code className="text-xs bg-white/70 px-1 rounded">index.html</code> and{' '}
+                      <code className="text-xs bg-white/70 px-1 rounded">images</code>, compress
+                      that folder to a <strong>.zip</strong> and upload it here.
+                    </li>
+                    <li>
+                      Pure <strong>.json</strong> design exports are also accepted (fully
+                      drag-and-drop editable).
+                    </li>
+                  </ol>
+                </div>
                 <input
-                  ref={jsonFileRef}
+                  ref={unlayerFileRef}
                   type="file"
-                  accept=".json,application/json"
+                  multiple
+                  accept=".json,.zip,.html,.htm,.png,.jpg,.jpeg,.gif,.webp,application/json,application/zip,text/html,image/*"
                   className="hidden"
-                  onChange={handleJsonFile}
+                  onChange={(e) => onFileInputChange(e.target)}
                 />
                 <button
                   type="button"
-                  disabled={importing}
-                  onClick={() => jsonFileRef.current?.click()}
+                  disabled={isBusy}
+                  onClick={() => unlayerFileRef.current?.click()}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-dashed border-gray-300 text-[#1e2a4a] text-sm font-bold hover:bg-gray-50 disabled:opacity-60 w-full justify-center"
                 >
-                  {importing ? (
+                  {isBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Upload className="h-4 w-4" />
                   )}
-                  Choose Unlayer JSON file
+                  Choose Unlayer ZIP / JSON / HTML (+ images)
                 </button>
               </>
             )}

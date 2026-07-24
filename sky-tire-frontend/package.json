@@ -18,6 +18,7 @@
     "axios": "^1.8.1",
     "dotenv": "^17.4.2",
     "jodit-react": "^5.3.21",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.477.0",
     "next": "16.2.3",
     "nodemailer": "^9.0.3",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^20.19.39",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
