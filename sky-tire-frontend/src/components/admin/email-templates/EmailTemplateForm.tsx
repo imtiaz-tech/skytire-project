@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Mail, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppDispatch } from '@/redux/hooks';
 import {
@@ -13,6 +13,7 @@ import { EmailTemplate } from '@/redux/types/emailTemplateTypes';
 import EmailTemplateEditor, {
   EmailTemplateEditorHandle,
 } from '@/components/admin/email-templates/EmailTemplateEditor';
+import ImportEmailModal from '@/components/admin/email-templates/ImportEmailModal';
 
 interface EmailTemplateFormProps {
   mode: 'create' | 'edit';
@@ -27,6 +28,8 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
   const [name, setName] = useState(template?.name ?? '');
   const [subject, setSubject] = useState(template?.subject ?? '');
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -70,13 +73,60 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
     }
   };
 
+  const handleImportHtml = (html: string) => {
+    setImporting(true);
+    try {
+      const result = editorRef.current?.importHtml(html);
+      setImportOpen(false);
+      if (result && result.htmlFallbacks > 0) {
+        toast.success(
+          `Email converted into ${result.blocks} editable blocks (${result.htmlFallbacks} complex section(s) kept as HTML).`
+        );
+      } else {
+        toast.success(
+          `Email converted into ${result?.blocks ?? 0} drag-and-drop blocks. You can edit and save.`
+        );
+      }
+    } catch (error: unknown) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to import HTML into the editor'
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleImportDesign = (design: Record<string, unknown>) => {
+    setImporting(true);
+    try {
+      editorRef.current?.importDesign(design);
+      setImportOpen(false);
+      toast.success('Unlayer design imported. You can edit it with drag-and-drop.');
+    } catch (error: unknown) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to import design into the editor'
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between mt-15">
+      <div className="flex items-center justify-between mt-15 gap-4 flex-wrap">
         <h1 className="text-2xl font-bold text-[#1e2a4a]">
           {mode === 'create' ? 'Create New Template' : 'Edit Template'}
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            disabled={saving || importing}
+            className="inline-flex items-center gap-2 px-5 py-3 border border-blue-500 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all disabled:opacity-60"
+          >
+            <Mail className="h-4 w-4" />
+            Import from Gmail or other places
+          </button>
           <button
             type="button"
             onClick={() => router.push('/admin/email-templates')}
@@ -87,7 +137,7 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || importing}
             className="inline-flex items-center gap-2 bg-[#1e2a4a] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-opacity-90 transition-all disabled:opacity-60"
           >
             {saving ? (
@@ -137,6 +187,14 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
         ref={editorRef}
         designJson={template?.designJson}
         minHeight="650px"
+      />
+
+      <ImportEmailModal
+        open={importOpen}
+        importing={importing}
+        onClose={() => setImportOpen(false)}
+        onImportHtml={handleImportHtml}
+        onImportDesign={handleImportDesign}
       />
     </div>
   );
