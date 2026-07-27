@@ -281,7 +281,7 @@ export default function WheelsPage() {
                   onClick={() => handleSort('productName')}
                 >
                   <div className="flex items-center gap-2">
-                    Model
+                   Name
                     <SortIcon col="productName" />
                   </div>
                 </th>

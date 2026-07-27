@@ -218,7 +218,7 @@ export default function AccessoriesPage() {
                 )}
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('productName')}>
-                  <div className="flex items-center gap-2">Model <SortIcon col="productName" /></div>
+                  <div className="flex items-center gap-2">Name <SortIcon col="productName" /></div>
                 </th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('category')}>
                   <div className="flex items-center gap-2">Tire Size <SortIcon col="category" /></div>

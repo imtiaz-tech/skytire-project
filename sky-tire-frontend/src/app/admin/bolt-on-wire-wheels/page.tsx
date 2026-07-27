@@ -283,7 +283,7 @@ export default function BoltOnWireWheelsPage() {
                   onClick={() => handleSort('name')}
                 >
                   <div className="flex items-center gap-2">
-                    Model
+                    Name
                     <SortIcon col="name" />
                   </div>
                 </th>
