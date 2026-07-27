@@ -409,6 +409,8 @@ export default function BoltOnWireWheelPreviewModal({
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="SKU" value={<span className="font-bold">{boltOnWireWheel.sku}</span>} />
+                <InfoRow label="Alternate Part #" value={boltOnWireWheel.alternatePartNumber} />
+                <InfoRow label="UPC No" value={boltOnWireWheel.upcNo} />
                 <InfoRow label="Package Include" value={boltOnWireWheel.packageInclude} />
                 <InfoRow label="KnockOff Option" value={boltOnWireWheel.knockOffOption} />
                 <InfoRow label="Stock Level" value={<span className="font-bold">{boltOnWireWheel.stock} units</span>} />

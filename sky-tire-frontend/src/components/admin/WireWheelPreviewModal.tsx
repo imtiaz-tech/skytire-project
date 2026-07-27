@@ -409,6 +409,8 @@ export default function WireWheelPreviewModal({
               </div>
               <div className="px-8 py-2">
                 <InfoRow label="SKU" value={<span className="font-bold">{wireWheel.sku}</span>} />
+                <InfoRow label="Alternate Part #" value={wireWheel.alternatePartNumber} />
+                <InfoRow label="UPC No" value={wireWheel.upcNo} />
                 <InfoRow label="Package Include" value={wireWheel.packageInclude} />
                 <InfoRow label="KnockOff Option" value={wireWheel.knockOffOption} />
                 <InfoRow label="Stock Level" value={<span className="font-bold">{wireWheel.stock} units</span>} />

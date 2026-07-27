@@ -216,28 +216,29 @@ export default function AccessoriesPage() {
                     <input type="checkbox" checked={allChecked} ref={(el) => { if (el) el.indeterminate = someChecked; }} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a] cursor-pointer accent-[#1e2a4a]" />
                   </th>
                 )}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('productName')}>
-                  <div className="flex items-center gap-2">Name <SortIcon col="productName" /></div>
+                  <div className="flex items-center gap-2">Model <SortIcon col="productName" /></div>
+                </th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('category')}>
+                  <div className="flex items-center gap-2">Tire Size <SortIcon col="category" /></div>
                 </th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('sku')}>
                   <div className="flex items-center gap-2">SKU <SortIcon col="sku" /></div>
                 </th>
-                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('category')}>
-                  <div className="flex items-center gap-2">Category <SortIcon col="category" /></div>
-                </th>
-                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
-                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Source</th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Alt Part #</th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">UPC No</th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('cost')}>
                   <div className="flex items-center gap-2">Cost <SortIcon col="cost" /></div>
-                </th>
-                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('mapPrice')}>
-                  <div className="flex items-center gap-2">MAP Price <SortIcon col="mapPrice" /></div>
                 </th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('salePrice')}>
                   <div className="flex items-center gap-2">Sale <SortIcon col="salePrice" /></div>
                 </th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('regularPrice')}>
                   <div className="flex items-center gap-2">Regular <SortIcon col="regularPrice" /></div>
+                </th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('mapPrice')}>
+                  <div className="flex items-center gap-2">MAP <SortIcon col="mapPrice" /></div>
                 </th>
                 <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a]" onClick={() => handleSort('stock')}>
                   <div className="flex items-center gap-2">Stock <SortIcon col="stock" /></div>
@@ -267,18 +268,6 @@ export default function AccessoriesPage() {
                           <input type="checkbox" checked={isChecked} onChange={() => toggleSelectOne(item.id)} className="w-4 h-4 rounded border-gray-300 text-[#1e2a4a] cursor-pointer accent-[#1e2a4a]" />
                         </td>
                       )}
-                      <td className="px-6 py-4">
-                        <button onClick={() => openPreview(item)} className="flex items-center gap-3 text-left hover:opacity-80">
-                          <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shrink-0 flex items-center justify-center">
-                            {firstImage ? <img src={firstImage} alt="" className="w-full h-full object-cover" /> : <Wrench className="h-5 w-5 text-gray-200" />}
-                          </div>
-                          <span className="text-[14px] font-bold text-[#1e2a4a] max-w-[300px] truncate">{item.productName}</span>
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button onClick={() => openPreview(item)} className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600">{item.sku}</button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">{item.category}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => openPreview(item)}
@@ -287,14 +276,35 @@ export default function AccessoriesPage() {
                           {item.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-500">{item.source?.source || '—'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-[#1e2a4a]">${item.cost.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">
-                        {item.mapPrice > 0 ? `$${item.mapPrice.toFixed(2)}` : <span className="text-gray-300 italic font-normal">—</span>}
+                      <td className="px-6 py-4">
+                        <button onClick={() => openPreview(item)} className="flex items-center gap-3 text-left hover:opacity-80">
+                          <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shrink-0 flex items-center justify-center">
+                            {firstImage ? <img src={firstImage} alt="" className="w-full h-full object-cover" /> : <Wrench className="h-5 w-5 text-gray-200" />}
+                          </div>
+                          <span className="text-[14px] font-bold text-[#1e2a4a] max-w-[300px] truncate">{item.productName}</span>
+                        </button>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">{item.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button onClick={() => openPreview(item)} className="text-[14px] font-bold text-[#1e2a4a] hover:text-blue-600">{item.sku}</button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-[14px] font-bold text-gray-600">
+                          {item.alternatePartNumber || <span className="text-gray-300 italic font-normal">—</span>}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-[14px] font-bold text-gray-600">
+                          {item.upcNo || <span className="text-gray-300 italic font-normal">—</span>}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-[#1e2a4a]">${item.cost.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-green-600">${item.salePrice.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-[#1e2a4a]">
                         {item.regularPrice != null && item.regularPrice > 0 ? `$${item.regularPrice.toFixed(2)}` : <span className="text-gray-300 italic font-normal">—</span>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[14px] font-bold text-gray-600">
+                        {item.mapPrice > 0 ? `$${item.mapPrice.toFixed(2)}` : <span className="text-gray-300 italic font-normal">—</span>}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`text-[14px] font-bold ${item.stock <= 0 ? 'text-red-500' : 'text-[#1e2a4a]'}`}>{item.stock}</span>

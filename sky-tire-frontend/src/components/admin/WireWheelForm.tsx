@@ -237,6 +237,8 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
   const [formData, setFormData] = useState({
     sku: '',
+    alternatePartNumber: '',
+    upcNo: '',
     name: '',
     description: '',
     size: '',
@@ -341,6 +343,8 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
 
         setFormData({
           sku: activeDuplicateId ? '' : (wheel.sku || ''),
+          alternatePartNumber: wheel.alternatePartNumber || '',
+          upcNo: wheel.upcNo || '',
           name: wheel.name || '',
           description: wheel.description || '',
           size: wheel.size || '',
@@ -1173,6 +1177,14 @@ export default function WireWheelForm({ editWireWheelId, duplicateId }: WireWhee
             <div className="relative w-full">
               {formData.sku && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>}
               <input type="text" placeholder="SKU" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} required />
+            </div>
+            <div className="relative w-full">
+              {formData.alternatePartNumber && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Alternate Part Number</label>}
+              <input type="text" placeholder="Alternate Part Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.alternatePartNumber} onChange={(e) => setFormData({ ...formData, alternatePartNumber: e.target.value })} />
+            </div>
+            <div className="relative w-full">
+              {formData.upcNo && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">UPC Number</label>}
+              <input type="text" placeholder="UPC Number" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.upcNo} onChange={(e) => setFormData({ ...formData, upcNo: e.target.value })} />
             </div>
             <div className="relative w-full" ref={brandDropdownRef}>
               <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Brand</label>

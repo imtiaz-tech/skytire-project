@@ -25,6 +25,8 @@ export interface AccessorySpecifications {
 export interface Accessory {
   id: string;
   sku: string;
+  alternatePartNumber?: string | null;
+  upcNo?: string | null;
   category: string;
   productName: string;
   status: string;

@@ -396,6 +396,8 @@ model WireWheel {
   name                  String
   description           String?
   sku                   String            @unique
+  alternatePartNumber   String?
+  upcNo                 String?
   size                  String
   finish                String?
   countryOfOrigin       String?
@@ -464,6 +466,8 @@ model BoltOnWireWheel {
   name                  String
   description           String?
   sku                   String            @unique
+  alternatePartNumber   String?
+  upcNo                 String?
   size                  String
   finish                String?
   countryOfOrigin       String?
@@ -525,6 +529,8 @@ model BoltOnWireWheel {
 model Accessory {
   id                    String            @id @default(cuid())
   sku                   String            @unique
+  alternatePartNumber   String?
+  upcNo                 String?
   brandId               String?
   category              String
   productName           String

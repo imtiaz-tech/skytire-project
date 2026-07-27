@@ -29,6 +29,8 @@ export interface WireWheel {
   name: string;
   description: string | null;
   sku: string;
+  alternatePartNumber?: string | null;
+  upcNo?: string | null;
   size: string;
   finish: string | null;
   countryOfOrigin: string | null;

@@ -67,6 +67,8 @@ export async function PUT(
 
     const productName = formData.get('productName') as string;
     const sku = formData.get('sku') as string;
+    const alternatePartNumber = formData.get('alternatePartNumber') as string;
+    const upcNo = formData.get('upcNo') as string;
     const category = formData.get('category') as string;
     const brandId = formData.get('brandId') as string;
     const description = formData.get('description') as string;
@@ -230,6 +232,8 @@ export async function PUT(
       where: { id },
       data: {
         sku: sku || current.sku,
+        alternatePartNumber: alternatePartNumber || null,
+        upcNo: upcNo || null,
         category: category || current.category,
         productName: productName || current.productName,
         brandId: brandId || null,

@@ -102,6 +102,8 @@ export async function PUT(
 
     const name = formData.get('name') as string;
     const sku = formData.get('sku') as string;
+    const alternatePartNumber = formData.get('alternatePartNumber') as string;
+    const upcNo = formData.get('upcNo') as string;
     const description = formData.get('description') as string;
     const size = formData.get('size') as string;
     const finish = formData.get('finish') as string;
@@ -390,6 +392,8 @@ export async function PUT(
       where: { id },
       data: {
         sku: sku || null,
+        alternatePartNumber: alternatePartNumber || null,
+        upcNo: upcNo || null,
         name: name || 'Draft Wire Wheel',
         description: description || null,
         images: allImages,

@@ -54,6 +54,8 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { sku: { contains: search, mode: 'insensitive' as const } },
+        { alternatePartNumber: { contains: search, mode: 'insensitive' as const } },
+        { upcNo: { contains: search, mode: 'insensitive' as const } },
         { productName: { contains: search, mode: 'insensitive' as const } },
         { category: { contains: search, mode: 'insensitive' as const } },
         { brand: { brandName: { contains: search, mode: 'insensitive' as const } } },
@@ -90,6 +92,8 @@ export async function POST(request: NextRequest) {
 
     const productName = formData.get('productName') as string;
     const sku = formData.get('sku') as string;
+    const alternatePartNumber = formData.get('alternatePartNumber') as string;
+    const upcNo = formData.get('upcNo') as string;
     const category = formData.get('category') as string;
     const brandId = formData.get('brandId') as string;
     const description = formData.get('description') as string;
@@ -235,6 +239,8 @@ export async function POST(request: NextRequest) {
     const accessory = await prisma.accessory.create({
       data: {
         sku: sku || `DRAFT-${Date.now()}`,
+        alternatePartNumber: alternatePartNumber || null,
+        upcNo: upcNo || null,
         category: category || 'Lowrider Adapters',
         productName: productName || 'Draft Accessory',
         brandId: brandId || null,

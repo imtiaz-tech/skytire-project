@@ -275,17 +275,25 @@ export default function WheelsPage() {
                     />
                   </th>
                 )}
-                {/* Name + Image */}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('productName')}
                 >
                   <div className="flex items-center gap-2">
-                    Name
+                    Model
                     <SortIcon col="productName" />
                   </div>
                 </th>
-                {/* SKU */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('wheelSize')}
+                >
+                  <div className="flex items-center gap-2">
+                    Tire Size
+                    <SortIcon col="wheelSize" />
+                  </div>
+                </th>
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('sku')}
@@ -295,19 +303,8 @@ export default function WheelsPage() {
                     <SortIcon col="sku" />
                   </div>
                 </th>
-                {/* Size */}
-                <th
-                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
-                  onClick={() => handleSort('wheelSize')}
-                >
-                  <div className="flex items-center gap-2 ">
-                    Size
-                    <SortIcon col="wheelSize" />
-                  </div>
-                </th>
-                {/* Brand */}
-                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Brand</th>
-                {/* Cost */}
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">Alt Part #</th>
+                <th className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em]">UPC No</th>
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('cost')}
@@ -317,7 +314,6 @@ export default function WheelsPage() {
                     <SortIcon col="cost" />
                   </div>
                 </th>
-                {/* Sale Price */}
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('salePrice')}
@@ -327,27 +323,24 @@ export default function WheelsPage() {
                     <SortIcon col="salePrice" />
                   </div>
                 </th>
-                {/* Map Price */}
-                <th
-                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
-                  onClick={() => handleSort('mapPrice')}
-                >
-                  <div className="flex items-center gap-2">
-                    Map Price
-                    <SortIcon col="mapPrice" />
-                  </div>
-                </th>
-                {/* Regular Price */}
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('regularPrice')}
                 >
                   <div className="flex items-center gap-2">
-                    Regular Price
+                    Regular
                     <SortIcon col="regularPrice" />
                   </div>
                 </th>
-                {/* Stock */}
+                <th
+                  className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
+                  onClick={() => handleSort('mapPrice')}
+                >
+                  <div className="flex items-center gap-2">
+                    MAP
+                    <SortIcon col="mapPrice" />
+                  </div>
+                </th>
                 <th
                   className="px-6 py-5 text-[14px] font-bold text-gray-400 uppercase tracking-[0.1em] cursor-pointer hover:text-[#1e2a4a] transition-colors"
                   onClick={() => handleSort('stock')}
@@ -402,7 +395,17 @@ export default function WheelsPage() {
                         </td>
                       )}
 
-                      {/* Name + Image */}
+                      {/* Brand */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
+                        >
+                          {wheel.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
+                      {/* Model (name + image) */}
                       <td className="px-6 py-4">
                         <button
                           onClick={() => openPreview(wheel)}
@@ -421,6 +424,16 @@ export default function WheelsPage() {
                         </button>
                       </td>
 
+                      {/* Tire Size */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => openPreview(wheel)}
+                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
+                        >
+                          {wheel.wheelSize || <span className="text-gray-300 italic font-normal">—</span>}
+                        </button>
+                      </td>
+
                       {/* SKU */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
@@ -431,23 +444,18 @@ export default function WheelsPage() {
                         </button>
                       </td>
 
-                      {/* Size */}
+                      {/* Alt Part # */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
-                        >
-                          {wheel.wheelSize || <span className="text-gray-300 italic font-normal">—</span>}
-                        </button>
+                        <div className="text-[14px] font-bold text-gray-600">
+                          {wheel.alternatePartNumber || <span className="text-gray-300 italic font-normal">—</span>}
+                        </div>
                       </td>
-                      {/* Brand */}
+
+                      {/* UPC No */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => openPreview(wheel)}
-                          className="text-[14px] font-bold text-gray-600 hover:text-blue-600 transition-colors underline-offset-2"
-                        >
-                          {wheel.brand?.brandName || <span className="text-gray-300 italic font-normal">—</span>}
-                        </button>
+                        <div className="text-[14px] font-bold text-gray-600">
+                          {wheel.upcNo || <span className="text-gray-300 italic font-normal">—</span>}
+                        </div>
                       </td>
 
                       {/* Cost */}
@@ -457,24 +465,24 @@ export default function WheelsPage() {
                         </div>
                       </td>
 
-                      {/* Sale Price */}
+                      {/* Sale */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-[14px] font-bold text-green-600">
                           ${wheel.salePrice.toFixed(2)}
                         </div>
                       </td>
 
-                      {/* Map Price */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-[14px] font-bold text-[#1e2a4a]">
-                          ${wheel.mapPrice.toFixed(2)}
-                        </div>
-                      </td>
-
-                      {/* Regular Price */}
+                      {/* Regular */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-[14px] font-bold text-[#1e2a4a]">
                           ${wheel.regularPrice.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* MAP */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-[14px] font-bold text-[#1e2a4a]">
+                          ${wheel.mapPrice.toFixed(2)}
                         </div>
                       </td>
 

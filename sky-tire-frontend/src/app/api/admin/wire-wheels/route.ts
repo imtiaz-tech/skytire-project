@@ -81,6 +81,8 @@ export async function GET(request: NextRequest) {
   try {
     let searchConditions: any[] = [
       { sku: { contains: search, mode: 'insensitive' as const } },
+      { alternatePartNumber: { contains: search, mode: 'insensitive' as const } },
+      { upcNo: { contains: search, mode: 'insensitive' as const } },
       { name: { contains: search, mode: 'insensitive' as const } },
       { size: { contains: search, mode: 'insensitive' as const } },
       { finish: { contains: search, mode: 'insensitive' as const } },
@@ -133,6 +135,8 @@ export async function POST(request: NextRequest) {
 
     const name = formData.get('name') as string;
     const sku = formData.get('sku') as string;
+    const alternatePartNumber = formData.get('alternatePartNumber') as string;
+    const upcNo = formData.get('upcNo') as string;
     const description = formData.get('description') as string;
     const size = formData.get('size') as string;
     const finish = formData.get('finish') as string;
@@ -398,6 +402,8 @@ export async function POST(request: NextRequest) {
     const newWireWheel = await prisma.wireWheel.create({
       data: {
         sku: sku || `DRAFT-${Date.now()}`,
+        alternatePartNumber: alternatePartNumber || null,
+        upcNo: upcNo || null,
         name: name || 'Draft Wire Wheel',
         description: description || null,
         images: allImages,
