@@ -16,4 +16,7 @@ export const configValidationSchema = Joi.object({
 
   // Frontend
   FRONTEND_URL: Joi.string().default('http://localhost:3000'),
+  /** Public origin for email <img src> (no /api). Required for Gmail to load images. */
+  EMAIL_IMAGE_BASE_URL: Joi.string().optional().allow(''),
+  API_PUBLIC_URL: Joi.string().optional().allow(''),
 });

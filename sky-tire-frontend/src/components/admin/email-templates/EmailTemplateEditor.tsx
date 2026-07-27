@@ -107,8 +107,9 @@ const EmailTemplateEditor = forwardRef<EmailTemplateEditorHandle, EmailTemplateE
           if (!attachment) {
             throw new Error('No image selected');
           }
-          done({ progress: 10 });
+          done({ progress: 20 });
 
+          // Upload to sky-tire-api/uploads — same as tires / wheels / brands
           const formData = new FormData();
           formData.append('files', attachment, attachment.name);
           const res = await fetch('/api/admin/email-templates/import-assets', {
@@ -117,16 +118,19 @@ const EmailTemplateEditor = forwardRef<EmailTemplateEditorHandle, EmailTemplateE
           });
           if (!res.ok) {
             const body = (await res.json().catch(() => null)) as { error?: string } | null;
-            throw new Error(body?.error || 'Failed to upload image');
+            throw new Error(body?.error || 'Failed to upload image to server');
           }
-          const data = (await res.json()) as { uploaded?: { url: string }[] };
-          const url = data.uploaded?.[0]?.url;
-          if (!url) {
+          const data = (await res.json()) as {
+            uploaded?: { url: string; filename: string }[];
+          };
+          const hostedUrl = data.uploaded?.[0]?.url;
+          if (!hostedUrl) {
             throw new Error('Upload did not return a URL');
           }
-          // Unlayer runs in a cross-origin iframe — the URL must be absolute.
-          const absoluteUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url;
-          done({ progress: 100, url: absoluteUrl });
+
+          // Return product-style URL so Unlayer "Image URL" is e.g.
+          // http://localhost:5001/uploads/1785…-7.jpg (not assets.unlayer.com)
+          done({ progress: 100, url: hostedUrl });
         } catch (err) {
           console.error('Unlayer image upload failed:', err);
           done({ progress: 100 });

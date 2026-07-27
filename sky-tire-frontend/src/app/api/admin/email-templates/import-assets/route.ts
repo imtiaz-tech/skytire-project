@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
+import { getUploadImageUrl } from '@/lib/uploadImageUrl';
 
-/** Store under the Next app so we can serve assets same-origin (Unlayer iframe). */
-const UPLOAD_DIR = join(process.cwd(), 'uploads', 'email-imports');
+/**
+ * Same disk location as tires / wheels / wire wheels / brands:
+ *   sky-tire-api/uploads/{timestamp}-{filename}
+ * Public URL (served by Nest @fastify/static):
+ *   {API_HOST}/uploads/{filename}
+ */
+const UPLOAD_DIR = join(process.cwd(), '../sky-tire-api/uploads');
 
 const MIME: Record<string, string> = {
   '.png': 'image/png',
@@ -22,19 +28,18 @@ function guessMime(filename: string): string {
   return MIME[ext] || 'application/octet-stream';
 }
 
-function publicUploadUrl(filename: string): string {
-  // Same-origin URL — works in the Unlayer editor without the Nest API running.
-  return `/api/admin/email-templates/import-assets?file=${encodeURIComponent(filename)}`;
-}
-
 /**
- * Upload one or more email-import image assets and return public URLs.
- * POST multipart/form-data with fields named "files" (multiple allowed).
+ * Upload email images the same way product images are saved.
+ * POST multipart/form-data field "files" (multiple allowed).
+ * Also accepts "images" for consistency with wheels/tires forms.
  */
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('files').filter((f): f is File => f instanceof File);
+    const files = [
+      ...formData.getAll('files'),
+      ...formData.getAll('images'),
+    ].filter((f): f is File => f instanceof File && f.size > 0);
 
     if (files.length === 0) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
@@ -47,27 +52,30 @@ export async function POST(request: NextRequest) {
     const uploaded: { originalName: string; filename: string; url: string }[] = [];
 
     for (const file of files) {
-      const safeBase = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}`;
+      // Match wheels/tires naming: {timestamp}-{sanitized-original-name}
+      const safeName = file.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9._-]/g, '-');
+      const filename = `${Date.now()}-${safeName}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(join(UPLOAD_DIR, filename), buffer);
+
       uploaded.push({
         originalName: file.name,
         filename,
-        url: publicUploadUrl(filename),
+        // Same public URL helper used across admin (tires, wheels, brands, …)
+        url: getUploadImageUrl(filename),
       });
     }
 
     return NextResponse.json({ uploaded });
   } catch (error) {
-    console.error('Email import asset upload failed:', error);
-    return NextResponse.json({ error: 'Failed to upload assets' }, { status: 500 });
+    console.error('Email image upload failed:', error);
+    return NextResponse.json({ error: 'Failed to upload images' }, { status: 500 });
   }
 }
 
 /**
- * Serve a previously uploaded import asset (same-origin for Unlayer).
- * GET /api/admin/email-templates/import-assets?file=...
+ * Optional GET for local preview / debugging:
+ * GET /api/admin/email-templates/import-assets?file={filename}
  */
 export async function GET(request: NextRequest) {
   try {
@@ -76,7 +84,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing file' }, { status: 400 });
     }
 
-    // Prevent path traversal
     const filename = basename(fileParam);
     if (!filename || filename !== fileParam.replace(/^.*[/\\]/, '')) {
       return NextResponse.json({ error: 'Invalid file' }, { status: 400 });
@@ -96,7 +103,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Email import asset serve failed:', error);
-    return NextResponse.json({ error: 'Failed to serve asset' }, { status: 500 });
+    console.error('Email image serve failed:', error);
+    return NextResponse.json({ error: 'Failed to serve image' }, { status: 500 });
   }
 }

@@ -14,6 +14,10 @@ import EmailTemplateEditor, {
   EmailTemplateEditorHandle,
 } from '@/components/admin/email-templates/EmailTemplateEditor';
 import ImportEmailModal from '@/components/admin/email-templates/ImportEmailModal';
+import {
+  hostDataImagesInDesign,
+  hostDataImagesInHtml,
+} from '@/lib/hostEmailDataImages';
 
 interface EmailTemplateFormProps {
   mode: 'create' | 'edit';
@@ -50,19 +54,31 @@ export default function EmailTemplateForm({ mode, template }: EmailTemplateFormP
         return;
       }
 
+      // Convert any data:image embeds to hosted URLs before save — Gmail clips/hides base64 bodies.
+      const hostedHtml = await hostDataImagesInHtml(exported.html);
+      const hostedDesign = await hostDataImagesInDesign(exported.design);
+
       const payload = {
         name: name.trim(),
         subject: subject.trim(),
-        html: exported.html,
-        designJson: exported.design,
+        html: hostedHtml.html,
+        designJson: hostedDesign.design,
       };
 
       if (mode === 'create') {
         await dispatch(createEmailTemplate(payload)).unwrap();
-        toast.success('Email template created successfully');
+        toast.success(
+          hostedHtml.converted > 0
+            ? `Email template created (${hostedHtml.converted} image(s) saved to server)`
+            : 'Email template created successfully'
+        );
       } else if (template) {
         await dispatch(updateEmailTemplate({ id: template.id, data: payload })).unwrap();
-        toast.success('Email template updated successfully');
+        toast.success(
+          hostedHtml.converted > 0
+            ? `Email template updated (${hostedHtml.converted} image(s) saved to server)`
+            : 'Email template updated successfully'
+        );
       }
 
       router.push('/admin/email-templates');

@@ -6,6 +6,7 @@
 import JSZip from 'jszip';
 import axios from 'axios';
 import { isValidUnlayerDesign, parseUnlayerDesignJson } from '@/lib/emailTemplateImport';
+import { getUploadImageUrl } from '@/lib/uploadImageUrl';
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i;
 
@@ -110,6 +111,7 @@ async function uploadImageBlobs(
 
   const uploaded = (res.data?.uploaded || []) as {
     originalName: string;
+    filename?: string;
     url: string;
   }[];
 
@@ -117,12 +119,12 @@ async function uploadImageBlobs(
     throw new Error('No files provided');
   }
 
-  // Unlayer editor runs in a cross-origin iframe — relative /api URLs would resolve
-  // against unlayer.com. Always use absolute same-origin URLs (or data: fallback).
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  // Product-style public URLs: {API}/uploads/{filename}
   const absolute = uploaded.map((u) => ({
     ...u,
-    url: u.url.startsWith('/') ? `${origin}${u.url}` : u.url,
+    url: u.filename ? getUploadImageUrl(u.filename) : u.url.startsWith('/')
+      ? `${typeof window !== 'undefined' ? window.location.origin : ''}${u.url}`
+      : u.url,
   }));
 
   return mapImageUrls(
@@ -200,8 +202,10 @@ async function resolveImageUrlMap(
 ): Promise<{ urlMap: Map<string, string>; mode: 'upload' | 'data-url' | 'none' }> {
   if (images.length === 0) return { urlMap: new Map(), mode: 'none' };
 
-  // Prefer embedded data URLs so images always render inside Unlayer's cross-origin iframe.
-  // Fall back to uploaded absolute URLs only if data-URL encoding fails.
+  // Unlayer's editor iframe is HTTPS (cdn/editor.unlayer.com). http://localhost
+  // upload URLs are blocked as mixed content → broken images in the canvas.
+  // Use data: URLs so the editor always shows images; save/send convert them
+  // to hosted files + CID attachments for Gmail.
   try {
     const urlMap = await imagesToDataUrlMap(images, htmlDir);
     if (urlMap.size > 0) return { urlMap, mode: 'data-url' };
