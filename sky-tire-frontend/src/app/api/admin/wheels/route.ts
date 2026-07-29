@@ -215,8 +215,29 @@ export async function POST(request: NextRequest) {
       await writeFile(path, buffer);
       savedImageNames.push(filename);
     }
-    
-    const allImages = [...existingImages, ...savedImageNames];
+
+    let imageOrder: string[] = [];
+    try {
+      imageOrder = JSON.parse((formData.get('imageOrder') as string) || '[]');
+      if (!Array.isArray(imageOrder)) imageOrder = [];
+    } catch {
+      imageOrder = [];
+    }
+
+    let allImages: string[];
+    if (imageOrder.length > 0) {
+      let newIdx = 0;
+      allImages = imageOrder
+        .map((token) => {
+          if (typeof token === 'string' && token.startsWith('__new__:')) {
+            return savedImageNames[newIdx++] || null;
+          }
+          return typeof token === 'string' ? token : null;
+        })
+        .filter((name): name is string => Boolean(name));
+    } else {
+      allImages = [...existingImages, ...savedImageNames];
+    }
 
     // Optional product video (max 1) + optional YouTube URL
     const existingVideo = ((formData.get('existingVideo') as string) || '').trim() || null;

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createWheel, updateWheel } from '@/redux/slices/wheelsSlice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
-import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, X, Settings2, Check, ChevronDown, Calculator, Plus, GripVertical } from 'lucide-react';
 import { calculateTireNetCostPricing, calculateSaleMarkupPercentage, isSalePriceBelowRecommended } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -26,6 +26,10 @@ interface WheelFormProps {
   editWheelId?: string;
   duplicateId?: string;
 }
+
+type ProductImageItem =
+  | { id: string; kind: 'existing'; path: string }
+  | { id: string; kind: 'new'; file: File; previewUrl: string };
 
 export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) {
   const router = useRouter();
@@ -85,8 +89,9 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     }
   }, [duplicateId]);
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [productImages, setProductImages] = useState<ProductImageItem[]>([]);
+  const dragImageIndexRef = useRef<number | null>(null);
+  const [dragOverImageIndex, setDragOverImageIndex] = useState<number | null>(null);
 
   // Product video (max 1) + optional YouTube URL
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -236,7 +241,15 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
         }
 
         if (wheel.images && Array.isArray(wheel.images)) {
-          setExistingImages(wheel.images);
+          setProductImages(
+            wheel.images.map((path: string, index: number) => ({
+              id: `existing-${index}-${path}`,
+              kind: 'existing' as const,
+              path,
+            }))
+          );
+        } else {
+          setProductImages([]);
         }
 
         setExistingVideo(wheel.video || null);
@@ -296,8 +309,15 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
-      setImageFiles(prev => [...prev, ...newFiles]);
+      const items: ProductImageItem[] = newFiles.map((file, index) => ({
+        id: `new-${Date.now()}-${index}-${file.name}`,
+        kind: 'new',
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setProductImages((prev) => [...prev, ...items]);
     }
+    e.target.value = '';
   };
 
   const handleBoltPatternInchesChange = (val: string) => {
@@ -326,13 +346,65 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     setFormData({ ...formData, loadRatingKg: val, loadRatingLbs: lbsVal });
   };
 
-  const removeNewImage = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  const removeProductImage = (id: string) => {
+    setProductImages((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target?.kind === 'new') {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
   };
 
-  const removeExistingImage = (img: string) => {
-    setExistingImages(prev => prev.filter(i => i !== img));
+  const reorderProductImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    setProductImages((prev) => {
+      if (fromIndex >= prev.length || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
   };
+
+  const handleImageDragStart = (index: number) => (e: React.DragEvent) => {
+    dragImageIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleImageDragOver = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverImageIndex !== index) {
+      setDragOverImageIndex(index);
+    }
+  };
+
+  const handleImageDrop = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndex = dragImageIndexRef.current;
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
+    if (fromIndex == null) return;
+    reorderProductImages(fromIndex, index);
+  };
+
+  const handleImageDragEnd = () => {
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
+  };
+
+  const productImagesRef = useRef(productImages);
+  productImagesRef.current = productImages;
+
+  useEffect(() => {
+    return () => {
+      productImagesRef.current.forEach((item) => {
+        if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
+      });
+    };
+  }, []);
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -456,13 +528,24 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
       submitData.set('minimumSalePrice', String(tirePricing.minimumSalePrice));
       submitData.set('status', finalStatus);
 
-      imageFiles.forEach(file => {
-        submitData.append('images', file);
+      // Main product images (order preserved via imageOrder)
+      const existingPaths: string[] = [];
+      const imageOrder: string[] = [];
+      let newImageIndex = 0;
+      productImages.forEach((item) => {
+        if (item.kind === 'existing') {
+          existingPaths.push(item.path);
+          imageOrder.push(item.path);
+        } else {
+          submitData.append('images', item.file);
+          imageOrder.push(`__new__:${newImageIndex}`);
+          newImageIndex += 1;
+        }
       });
-
-      if (existingImages.length > 0) {
-        submitData.append('existingImages', JSON.stringify(existingImages));
+      if (existingPaths.length > 0) {
+        submitData.append('existingImages', JSON.stringify(existingPaths));
       }
+      submitData.append('imageOrder', JSON.stringify(imageOrder));
 
       if (videoFile) {
         submitData.append('video', videoFile);
@@ -515,6 +598,7 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
         {/* Section 1: Media Upload */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
           <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">Images</h3>
+          <p className="text-sm text-gray-500 -mt-2">Drag images to reorder. The first image is used as the primary photo.</p>
           
           <div className="flex flex-wrap gap-4">
             {/* Add Images Box */}
@@ -526,25 +610,40 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               </div>
             </div>
 
-            {/* Existing Images */}
-            {existingImages.map((img, idx) => (
-              <div key={`existing-${idx}`} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group flex-shrink-0">
-                <img src={getImageUrl(img)} alt="Preview" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => removeExistingImage(img)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            
-            {/* New Images */}
-            {imageFiles.map((file, idx) => (
-              <div key={`new-${idx}`} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group flex-shrink-0">
-                <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+            {productImages.map((item, idx) => {
+              const src = item.kind === 'existing' ? getImageUrl(item.path) : item.previewUrl;
+              const isDragOver = dragOverImageIndex === idx;
+              return (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={handleImageDragStart(idx)}
+                  onDragOver={handleImageDragOver(idx)}
+                  onDrop={handleImageDrop(idx)}
+                  onDragEnd={handleImageDragEnd}
+                  className={`w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border group flex-shrink-0 bg-white flex items-center justify-center cursor-grab active:cursor-grabbing transition-all ${
+                    isDragOver ? 'border-blue-500 ring-2 ring-blue-200 scale-[1.02]' : 'border-gray-100'
+                  }`}
+                  title="Drag to reorder"
+                >
+                  <img src={src} alt={`Product ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
+                  <div className="absolute top-2 left-2 p-1 bg-black/45 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md bg-black/50 text-white text-[11px] font-semibold">
+                    {idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => removeProductImage(item.id)}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 
