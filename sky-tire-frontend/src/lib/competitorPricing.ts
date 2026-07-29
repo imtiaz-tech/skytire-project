@@ -353,6 +353,7 @@ export function productMatchesSearch(
     product.sku?.toLowerCase().includes(q) ||
     product.brand?.toLowerCase().includes(q) ||
     product.model?.toLowerCase().includes(q) ||
+    product.productName?.toLowerCase().includes(q) ||
     product.tireSize?.toLowerCase().includes(q) ||
     product.id?.toLowerCase().includes(q)
   );

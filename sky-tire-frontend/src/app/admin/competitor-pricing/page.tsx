@@ -20,6 +20,7 @@ import {
   bulkUpdateRegularPrices,
   bulkUpdateSalePrices,
   clearSkippedProducts,
+  clearScrapedData,
   fetchCompetitorProducts,
   fetchPriceUpdateHistory,
   selectAllMinPrices,
@@ -56,6 +57,11 @@ import {
   productMatchesSearch,
   toNumber,
 } from '@/lib/competitorPricing';
+import {
+  COMPETITOR_PRODUCT_TYPE_OPTIONS,
+  competitorSizeColumnLabel,
+  type CompetitorProductType,
+} from '@/redux/types/competitorPricingTypes';
 import Pagination from '@/components/ui/Pagination';
 import SkippedProductsModal from '@/components/admin/competitor-pricing/SkippedProductsModal';
 import PriceHistoryModal from '@/components/admin/competitor-pricing/PriceHistoryModal';
@@ -117,13 +123,32 @@ export default function CompetitorPricingPage() {
   const [showSkippedModal, setShowSkippedModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [reduceModal, setReduceModal] = useState<null | 'sale' | 'regular'>(null);
+  const [productType, setProductType] = useState<CompetitorProductType>('TIRE');
 
   const hasScrapedData = sheetNames.length > 0;
   const datesReady = Boolean(startDate && endDate);
+  const sizeColumnLabel = competitorSizeColumnLabel(productType);
 
   useEffect(() => {
-    dispatch(fetchCompetitorProducts());
-  }, [dispatch]);
+    dispatch(fetchCompetitorProducts({ productType }));
+  }, [dispatch, productType]);
+
+  const handleProductTypeChange = (nextType: CompetitorProductType) => {
+    if (nextType === productType) return;
+    dispatch(clearScrapedData());
+    dispatch(clearPriceHistory());
+    setCheckMode(null);
+    setStartDate('');
+    setEndDate('');
+    setDateFilterActive(false);
+    setShowHistoryModal(false);
+    setSaleCompetitorSelect('');
+    setRegularCompetitorSelect('');
+    setSearch('');
+    setSearchInput('');
+    setPage(1);
+    setProductType(nextType);
+  };
 
   useEffect(() => {
     if (skippedProducts.length > 0) {
@@ -254,6 +279,7 @@ export default function CompetitorPricingPage() {
           startDate,
           endDate,
           type: checkMode === 'regular' ? 'regular' : 'sale',
+          productType,
         })
       ).unwrap();
     } catch (err: unknown) {
@@ -302,7 +328,9 @@ export default function CompetitorPricingPage() {
       return;
     }
     try {
-      const result = await dispatch(bulkUpdateSalePrices(updates)).unwrap();
+      const result = await dispatch(
+        bulkUpdateSalePrices({ updates, productType })
+      ).unwrap();
       toast.success(result.message || `Updated ${result.updated} products`);
       if ((result.skipped || []).length > 0) {
         setShowSkippedModal(true);
@@ -321,7 +349,9 @@ export default function CompetitorPricingPage() {
       return;
     }
     try {
-      const result = await dispatch(bulkUpdateRegularPrices(updates)).unwrap();
+      const result = await dispatch(
+        bulkUpdateRegularPrices({ updates, productType })
+      ).unwrap();
       toast.success(result.message || `Updated ${result.updated} products`);
       if ((result.skipped || []).length > 0) {
         setShowSkippedModal(true);
@@ -423,7 +453,7 @@ export default function CompetitorPricingPage() {
 
       {/* Controls card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <button
             onClick={() => setCheckMode(checkMode === 'sale' ? null : 'sale')}
             className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${
@@ -444,6 +474,22 @@ export default function CompetitorPricingPage() {
           >
             Check Regular Price Updates
           </button>
+          <div className="flex flex-wrap gap-2">
+            {COMPETITOR_PRODUCT_TYPE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleProductTypeChange(option.value)}
+                className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                  productType === option.value
+                    ? 'bg-[#1e2a4a] border-[#1e2a4a] text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Date range panel */}
@@ -721,7 +767,7 @@ export default function CompetitorPricingPage() {
                       className="px-3 py-3 font-semibold whitespace-nowrap cursor-pointer"
                       onClick={() => handleSort('tireSize')}
                     >
-                      Tire Size <SortIcon column="tireSize" />
+                      {sizeColumnLabel} <SortIcon column="tireSize" />
                     </th>
                     <th className="px-3 py-3 font-semibold whitespace-nowrap">Cost</th>
                     <th className="px-3 py-3 font-semibold whitespace-nowrap">Shipping</th>

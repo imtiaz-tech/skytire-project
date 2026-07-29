@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  findCompetitorCatalogByIds,
+  parseCompetitorProductType,
+  updateCompetitorSalePrice,
+  type CompetitorCatalogType,
+} from '@/lib/competitorPricingProduct.server';
 
 interface SaleUpdateItem {
   productId: string;
@@ -16,72 +22,56 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const updates = (body?.updates || []) as SaleUpdateItem[];
+    const productType: CompetitorCatalogType = parseCompetitorProductType(
+      body?.productType
+    );
 
     if (!Array.isArray(updates) || updates.length === 0) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
 
     const ids = updates.map((u) => String(u.productId).trim()).filter(Boolean);
-    const tires = await prisma.tire.findMany({
-      where: { id: { in: ids } },
-      select: {
-        id: true,
-        sku: true,
-        tireSize: true,
-        cost: true,
-        salePrice: true,
-        regularPrice: true,
-        mapPrice: true,
-        stock: true,
-        model: {
-          select: {
-            modelName: true,
-            brand: { select: { brandName: true } },
-          },
-        },
-      },
-    });
-
-    const tireMap = new Map(tires.map((t) => [t.id, t]));
+    const products = await findCompetitorCatalogByIds(productType, ids);
+    const productMap = new Map(products.map((p) => [p.id, p]));
     const skipped: Array<Record<string, unknown>> = [];
     const valid: SaleUpdateItem[] = [];
 
     for (const item of updates) {
       const productId = String(item.productId || '').trim();
       const salePrice = Number(item.salePrice);
-      const tire = tireMap.get(productId);
+      const product = productMap.get(productId);
 
-      if (!tire || !Number.isFinite(salePrice)) {
-        const brand = tire?.model?.brand?.brandName || '';
-        const model = tire?.model?.modelName || '';
-        const size = tire?.tireSize || '';
+      if (!product || !Number.isFinite(salePrice)) {
+        const brand = product?.brand || '';
+        const model = product?.model || '';
+        const size = product?.tireSize || '';
         skipped.push({
           productId,
-          sku: tire?.sku || productId,
+          sku: product?.sku || productId,
           brand,
           model,
           productName: `${brand} ${model}${size ? ` ${size}` : ''}`.trim(),
-          currentSalePrice: tire?.salePrice ?? 0,
+          currentSalePrice: product?.salePrice ?? 0,
           attemptedSalePrice: salePrice,
-          mapPrice: tire?.mapPrice ?? 0,
+          mapPrice: product?.mapPrice ?? 0,
           competitor: (item.competitor || '').toLowerCase(),
           reason: 'Product not found or invalid sale price',
         });
         continue;
       }
 
-      const mapPrice = tire.mapPrice ?? 0;
+      const mapPrice = product.mapPrice ?? 0;
       if (mapPrice > 0 && salePrice < mapPrice) {
-        const brand = tire.model?.brand?.brandName || '';
-        const model = tire.model?.modelName || '';
-        const size = tire.tireSize || '';
+        const brand = product.brand || '';
+        const model = product.model || '';
+        const size = product.tireSize || '';
         skipped.push({
           productId,
-          sku: tire.sku || '',
+          sku: product.sku || '',
           brand,
           model,
           productName: `${brand} ${model}${size ? ` ${size}` : ''}`.trim(),
-          currentSalePrice: tire.salePrice,
+          currentSalePrice: product.salePrice,
           attemptedSalePrice: salePrice,
           mapPrice,
           competitor: (item.competitor || '').toLowerCase(),
@@ -100,6 +90,7 @@ export async function PATCH(request: NextRequest) {
     let updated = 0;
     const historyRows: Array<{
       productId: string;
+      productType: string;
       sku: string | null;
       brand: string;
       model: string;
@@ -116,34 +107,31 @@ export async function PATCH(request: NextRequest) {
     }> = [];
 
     for (const item of valid) {
-      const tire = tireMap.get(item.productId)!;
-      const brand = tire.model?.brand?.brandName || '';
-      const model = tire.model?.modelName || '';
-      const size = tire.tireSize || '';
+      const product = productMap.get(item.productId)!;
+      const brand = product.brand || '';
+      const model = product.model || '';
+      const size = product.tireSize || '';
       const productName = `${brand} ${model}${size ? ` ${size}` : ''}`.trim();
-      const previousPrice = tire.salePrice ?? 0;
+      const previousPrice = product.salePrice ?? 0;
 
-      // Skip no-op updates (same price) — do not clutter history
       if (Number(previousPrice) === Number(item.salePrice)) {
         continue;
       }
 
-      await prisma.tire.update({
-        where: { id: item.productId },
-        data: { salePrice: item.salePrice },
-      });
+      await updateCompetitorSalePrice(productType, item.productId, item.salePrice);
 
       historyRows.push({
         productId: item.productId,
-        sku: tire.sku,
+        productType,
+        sku: product.sku,
         brand,
         model,
         productName,
-        cost: tire.cost ?? 0,
+        cost: product.cost ?? 0,
         salePrice: item.salePrice,
-        mapPrice: tire.mapPrice ?? 0,
-        regularPrice: tire.regularPrice ?? 0,
-        stock: tire.stock ?? 0,
+        mapPrice: product.mapPrice ?? 0,
+        regularPrice: product.regularPrice ?? 0,
+        stock: product.stock ?? 0,
         previousPrice,
         updatedPrice: item.salePrice,
         competitor: (item.competitor || '').toLowerCase(),

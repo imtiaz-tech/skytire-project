@@ -806,6 +806,7 @@ enum CompetitorPriceUpdateType {
 model CompetitorPriceUpdate {
   id            String                     @id @default(cuid())
   productId     String
+  productType   String                     @default("TIRE") // TIRE | WHEEL | WIRE_WHEEL | BOLT_ON_WIRE_WHEEL | ACCESSORY
   sku           String?
   brand         String?
   model         String?
@@ -822,6 +823,7 @@ model CompetitorPriceUpdate {
   createdAt     DateTime                   @default(now())
 
   @@index([priceType, createdAt])
+  @@index([productType, priceType, createdAt])
   @@index([productId])
   @@index([createdAt])
 }

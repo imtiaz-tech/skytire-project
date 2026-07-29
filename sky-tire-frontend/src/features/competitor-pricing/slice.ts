@@ -5,6 +5,7 @@ import {
   BulkSaleUpdateItem,
   CompetitorPricingState,
   CompetitorProduct,
+  CompetitorProductType,
   ProductWithPriceHistory,
   ScrapedData,
   SkippedProduct,
@@ -42,10 +43,17 @@ const initialState: CompetitorPricingState = {
 
 export const fetchCompetitorProducts = createAsyncThunk(
   'competitorPricing/fetchProducts',
-  async (params: { search?: string } | undefined, { rejectWithValue }) => {
+  async (
+    params: { search?: string; productType?: CompetitorProductType } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
       const response = await axios.get('/api/admin/competitor-pricing', {
-        params: { search: params?.search || '', limit: 50000 },
+        params: {
+          search: params?.search || '',
+          limit: 50000,
+          productType: params?.productType || 'TIRE',
+        },
       });
       return response.data as { products: CompetitorProduct[]; total: number };
     } catch (err: unknown) {
@@ -59,10 +67,14 @@ export const fetchCompetitorProducts = createAsyncThunk(
 
 export const bulkUpdateSalePrices = createAsyncThunk(
   'competitorPricing/bulkUpdateSale',
-  async (updates: BulkSaleUpdateItem[], { rejectWithValue }) => {
+  async (
+    payload: { updates: BulkSaleUpdateItem[]; productType: CompetitorProductType },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await axios.patch('/api/admin/competitor-pricing/bulk-sale', {
-        updates,
+        updates: payload.updates,
+        productType: payload.productType,
       });
       return response.data as {
         updated: number;
@@ -80,10 +92,14 @@ export const bulkUpdateSalePrices = createAsyncThunk(
 
 export const bulkUpdateRegularPrices = createAsyncThunk(
   'competitorPricing/bulkUpdateRegular',
-  async (updates: BulkRegularUpdateItem[], { rejectWithValue }) => {
+  async (
+    payload: { updates: BulkRegularUpdateItem[]; productType: CompetitorProductType },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await axios.patch('/api/admin/competitor-pricing/bulk-regular', {
-        updates,
+        updates: payload.updates,
+        productType: payload.productType,
       });
       return response.data as {
         updated: number;
@@ -102,7 +118,12 @@ export const bulkUpdateRegularPrices = createAsyncThunk(
 export const fetchPriceUpdateHistory = createAsyncThunk(
   'competitorPricing/fetchPriceUpdateHistory',
   async (
-    params: { startDate: string; endDate: string; type: 'sale' | 'regular' },
+    params: {
+      startDate: string;
+      endDate: string;
+      type: 'sale' | 'regular';
+      productType: CompetitorProductType;
+    },
     { rejectWithValue }
   ) => {
     try {

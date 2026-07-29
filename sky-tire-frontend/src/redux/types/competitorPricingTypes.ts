@@ -10,6 +10,30 @@ export interface CompetitorRow {
 /** sheetName -> productId(normalized) -> row */
 export type ScrapedData = Record<string, Record<string, CompetitorRow>>;
 
+export type CompetitorProductType =
+  | 'TIRE'
+  | 'WHEEL'
+  | 'WIRE_WHEEL'
+  | 'BOLT_ON_WIRE_WHEEL'
+  | 'ACCESSORY';
+
+export const COMPETITOR_PRODUCT_TYPE_OPTIONS: {
+  value: CompetitorProductType;
+  label: string;
+}[] = [
+  { value: 'TIRE', label: 'Tires' },
+  { value: 'WHEEL', label: 'Wheels' },
+  { value: 'WIRE_WHEEL', label: 'Wire Wheels' },
+  { value: 'BOLT_ON_WIRE_WHEEL', label: 'Bolt-On Wire Wheels' },
+  { value: 'ACCESSORY', label: 'Accessories' },
+];
+
+export function competitorSizeColumnLabel(productType: CompetitorProductType): string {
+  if (productType === 'TIRE') return 'Tire Size';
+  if (productType === 'ACCESSORY') return 'Category';
+  return 'Size';
+}
+
 export interface CompetitorMatch {
   name: string;
   title: string;
@@ -26,6 +50,7 @@ export interface CompetitorProduct {
   brand: string;
   model: string;
   productName: string;
+  /** Size / category display field (tireSize, wheelSize, size, or category) */
   tireSize: string;
   cost: number;
   shipping: number;
