@@ -316,7 +316,7 @@ export async function PUT(
       }
     }
 
-    // Save product images
+    // Save product images (preserve drag-and-drop order via imageOrder when provided)
     const newSavedImageNames: string[] = [];
     for (const file of newImageFiles) {
       if (file.size === 0) continue;
@@ -327,7 +327,29 @@ export async function PUT(
       await writeFile(path, buffer);
       newSavedImageNames.push(filename);
     }
-    const allImages = [...existingImages, ...newSavedImageNames];
+
+    let imageOrder: string[] = [];
+    try {
+      imageOrder = JSON.parse((formData.get('imageOrder') as string) || '[]');
+      if (!Array.isArray(imageOrder)) imageOrder = [];
+    } catch {
+      imageOrder = [];
+    }
+
+    let allImages: string[];
+    if (imageOrder.length > 0) {
+      let newIdx = 0;
+      allImages = imageOrder
+        .map((token) => {
+          if (typeof token === 'string' && token.startsWith('__new__:')) {
+            return newSavedImageNames[newIdx++] || null;
+          }
+          return typeof token === 'string' ? token : null;
+        })
+        .filter((name): name is string => Boolean(name));
+    } else {
+      allImages = [...existingImages, ...newSavedImageNames];
+    }
 
     // Optional product video (max 1) + optional YouTube URL
     const existingVideo = ((formData.get('existingVideo') as string) || '').trim() || null;
