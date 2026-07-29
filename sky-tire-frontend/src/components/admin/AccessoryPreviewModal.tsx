@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Accessory } from '@/redux/types/accessoryTypes';
 import { SPECIFICATION_FIELDS } from '@/constants/accessoryCategories';
 import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
+import PreviewImageGallery from '@/components/admin/PreviewImageGallery';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface AccessoryPreviewModalProps {
@@ -46,10 +47,13 @@ export default function AccessoryPreviewModal({
   const heroImages = (() => {
     const imgs: string[] = [];
     if (accessory.images?.length) {
-      imgs.push(...accessory.images.slice(0, 2));
-    } else {
-      if (accessory.leftImage) imgs.push(accessory.leftImage);
-      if (accessory.rightImage) imgs.push(accessory.rightImage);
+      imgs.push(...accessory.images);
+    }
+    if (accessory.leftImage && !imgs.includes(accessory.leftImage)) {
+      imgs.push(accessory.leftImage);
+    }
+    if (accessory.rightImage && !imgs.includes(accessory.rightImage)) {
+      imgs.push(accessory.rightImage);
     }
     return imgs;
   })();
@@ -138,24 +142,11 @@ export default function AccessoryPreviewModal({
             {/* Main Info with Images */}
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="w-full lg:w-[45%]">
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center gap-4 h-full min-h-[250px] shadow-sm">
-                  {heroImages.length > 0 ? (
-                    heroImages.map((img, idx) => {
-                      const imageUrl = getImageUrl(img);
-                      return (
-                        <div key={idx} className="flex-1 rounded-xl overflow-hidden flex items-center justify-center h-[200px]">
-                          <img
-                            src={imageUrl || ''}
-                            alt={`${accessory.productName} ${idx}`}
-                            className="w-full h-full object-contain mix-blend-multiply"
-                          />
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-gray-400 font-medium text-sm">No images available</div>
-                  )}
-                </div>
+                <PreviewImageGallery
+                  images={heroImages}
+                  alt={accessory.productName}
+                  getImageUrl={getImageUrl}
+                />
               </div>
 
               <div className="w-full lg:w-[55%] flex flex-col justify-center space-y-6">

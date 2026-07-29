@@ -5,6 +5,7 @@ import { X, Pencil, Package, DollarSign, Calculator, ExternalLink } from 'lucide
 import Link from 'next/link';
 import { Wheel } from '@/redux/types/wheelTypes';
 import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
+import PreviewImageGallery from '@/components/admin/PreviewImageGallery';
 import { calculateTireNetCostPricing } from '@/utils/pricing';
 
 interface WheelPreviewModalProps {
@@ -133,20 +134,11 @@ export default function WheelPreviewModal({
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Images Left Side */}
               <div className="w-full lg:w-[45%]">
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center gap-4 h-full min-h-[250px] shadow-sm">
-                  {wheel.images && wheel.images.length > 0 ? (
-                    wheel.images.slice(0, 2).map((img, idx) => {
-                      const imageUrl = getImageUrl(img);
-                      return (
-                        <div key={idx} className="flex-1 rounded-xl overflow-hidden flex items-center justify-center h-[200px]">
-                          <img src={imageUrl || ''} alt={`${wheel.productName} ${idx}`} className="w-full h-full object-contain mix-blend-multiply" />
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-gray-400 font-medium text-sm">No images available</div>
-                  )}
-                </div>
+                <PreviewImageGallery
+                  images={wheel.images || []}
+                  alt={wheel.productName}
+                  getImageUrl={getImageUrl}
+                />
               </div>
 
               {/* Product Info Right Side */}

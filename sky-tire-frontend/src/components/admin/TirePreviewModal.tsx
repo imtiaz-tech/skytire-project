@@ -5,6 +5,7 @@ import { X, Pencil, Package, DollarSign, Calculator, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Tire } from '@/redux/types/tireTypes';
 import PreviewSourceInventoryBlock from '@/components/admin/PreviewSourceInventoryBlock';
+import PreviewImageGallery from '@/components/admin/PreviewImageGallery';
 import {
   calculateTireNetCostPricing,
   calculateSaleMarkupPercentage,
@@ -103,33 +104,43 @@ export default function TirePreviewModal({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           <div className="max-w-4xl mx-auto space-y-10">
-            
-            {/* Header Info */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    {tire.model?.brand?.brandName || 'Unknown Brand'}
-                  </span>
-                  <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    {tire.model?.modelName || 'Unknown Model'}
-                  </span>
-                  <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[13px] font-bold uppercase tracking-wider rounded-lg">
-                    SKU: {tire.sku}
-                  </span>
-                </div>
-                <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
-                  {tire.tireSize || 'Tire Size'}
-                </h1>
+
+            {/* Main Info with Images */}
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="w-full lg:w-[45%]">
+                <PreviewImageGallery
+                  images={tire.model?.images || []}
+                  alt={tire.tireSize || 'Tire'}
+                  getImageUrl={getUploadUrl}
+                />
               </div>
-              <div className="bg-green-50 px-8 py-6 rounded-[32px] border border-green-100 text-center min-w-[200px]">
-                <div className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Sale Price</div>
-                <div className="text-4xl font-black text-green-700">${tire.salePrice.toFixed(2)}</div>
-                {pricing?.saleMarkupPercentage && (
-                  <div className={`mt-1 text-xs font-bold ${parseFloat(pricing.saleMarkupPercentage) < 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                    Markup: {pricing.saleMarkupPercentage}%
+
+              <div className="w-full lg:w-[55%] flex flex-col justify-center space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      {tire.model?.brand?.brandName || 'Unknown Brand'}
+                    </span>
+                    <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      {tire.model?.modelName || 'Unknown Model'}
+                    </span>
+                    <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[13px] font-bold uppercase tracking-wider rounded-lg">
+                      SKU: {tire.sku}
+                    </span>
                   </div>
-                )}
+                  <h1 className="text-[36px] sm:text-[42px] font-black text-[#1e2a4a] leading-tight tracking-tight">
+                    {tire.tireSize || 'Tire Size'}
+                  </h1>
+                </div>
+                <div className="bg-green-50 px-8 py-6 rounded-[32px] border border-green-100 text-center min-w-[200px] self-start">
+                  <div className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Sale Price</div>
+                  <div className="text-4xl font-black text-green-700">${tire.salePrice.toFixed(2)}</div>
+                  {pricing?.saleMarkupPercentage && (
+                    <div className={`mt-1 text-xs font-bold ${parseFloat(pricing.saleMarkupPercentage) < 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                      Markup: {pricing.saleMarkupPercentage}%
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
