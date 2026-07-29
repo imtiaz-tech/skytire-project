@@ -83,8 +83,28 @@ export async function PUT(
       newSavedImageNames.push(filename);
     }
 
-    // Combine existing and new image names
-    const allImages = [...existingImages, ...newSavedImageNames];
+    let imageOrder: string[] = [];
+    try {
+      imageOrder = JSON.parse((formData.get('imageOrder') as string) || '[]');
+      if (!Array.isArray(imageOrder)) imageOrder = [];
+    } catch {
+      imageOrder = [];
+    }
+
+    let allImages: string[];
+    if (imageOrder.length > 0) {
+      let newIdx = 0;
+      allImages = imageOrder
+        .map((token) => {
+          if (typeof token === 'string' && token.startsWith('__new__:')) {
+            return newSavedImageNames[newIdx++] || null;
+          }
+          return typeof token === 'string' ? token : null;
+        })
+        .filter((name): name is string => Boolean(name));
+    } else {
+      allImages = [...existingImages, ...newSavedImageNames];
+    }
 
     const updatedModel = await prisma.tireModel.update({
       where: { id },

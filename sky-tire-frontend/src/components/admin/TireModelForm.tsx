@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/redux/hooks';
 import { createTireModel, updateTireModel } from '@/redux/slices/tireModelsSlice';
 import { TireModel } from '@/redux/types/tireModelTypes';
-import { ArrowLeft, Upload, X, Loader2, Plus, Image as ImageIcon, ChevronDown, Check } from 'lucide-react';
+import { ArrowLeft, Upload, X, Loader2, Plus, Image as ImageIcon, ChevronDown, Check, GripVertical } from 'lucide-react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 import ManageBrandsModal from './ManageBrandsModal';
@@ -15,6 +15,10 @@ const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
 interface TireModelFormProps {
   editModel?: TireModel;
 }
+
+type ProductImageItem =
+  | { id: string; kind: 'existing'; path: string }
+  | { id: string; kind: 'new'; file: File; previewUrl: string };
 
 const seasons = ['Summer', 'Winter', 'All Season', 'All Weather'];
 const performances = [
@@ -43,9 +47,9 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
   const [isManageBrandsOpen, setIsManageBrandsOpen] = useState(false);
 
   // Images State
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [productImages, setProductImages] = useState<ProductImageItem[]>([]);
+  const dragImageIndexRef = useRef<number | null>(null);
+  const [dragOverImageIndex, setDragOverImageIndex] = useState<number | null>(null);
 
 
   const [formData, setFormData] = useState({
@@ -124,36 +128,89 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
         warranty: editModel.warranty || '',
         treadLife: editModel.treadLife || '',
       });
-      setExistingImages(editModel.images || []);
+      setProductImages(
+        (editModel.images || []).map((path: string, index: number) => ({
+          id: `existing-${index}-${path}`,
+          kind: 'existing' as const,
+          path,
+        }))
+      );
     }
   }, [editModel]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      const newPreviews = files.map(file => URL.createObjectURL(file));
-      setSelectedFiles(prev => [...prev, ...files]);
-      setPreviews(prev => [...prev, ...newPreviews]);
+      const items: ProductImageItem[] = files.map((file, index) => ({
+        id: `new-${Date.now()}-${index}-${file.name}`,
+        kind: 'new',
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setProductImages((prev) => [...prev, ...items]);
+    }
+    e.target.value = '';
+  };
+
+  const removeProductImage = (id: string) => {
+    setProductImages((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target?.kind === 'new') {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
+  const reorderProductImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    setProductImages((prev) => {
+      if (fromIndex >= prev.length || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const handleImageDragStart = (index: number) => (e: React.DragEvent) => {
+    dragImageIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleImageDragOver = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverImageIndex !== index) {
+      setDragOverImageIndex(index);
     }
   };
 
-  const removeNewImage = (index: number) => {
-    const newFiles = [...selectedFiles];
-    const newPreviews = [...previews];
-    URL.revokeObjectURL(newPreviews[index]);
-    newFiles.splice(index, 1);
-    newPreviews.splice(index, 1);
-    setSelectedFiles(newFiles);
-    setPreviews(newPreviews);
+  const handleImageDrop = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndex = dragImageIndexRef.current;
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
+    if (fromIndex == null) return;
+    reorderProductImages(fromIndex, index);
   };
 
-  const removeExistingImage = (index: number) => {
-    const newExisting = [...existingImages];
-    newExisting.splice(index, 1);
-    setExistingImages(newExisting);
+  const handleImageDragEnd = () => {
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
   };
 
+  const productImagesRef = useRef(productImages);
+  productImagesRef.current = productImages;
 
+  useEffect(() => {
+    return () => {
+      productImagesRef.current.forEach((item) => {
+        if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
+      });
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,11 +227,22 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
     data.append('threePMS', String(formData.threePMS));
     data.append('warranty', formData.warranty);
     data.append('treadLife', formData.treadLife);
-    
-    data.append('existingImages', JSON.stringify(existingImages));
-    selectedFiles.forEach((file) => {
-      data.append('images', file);
+
+    const existingPaths: string[] = [];
+    const imageOrder: string[] = [];
+    let newImageIndex = 0;
+    productImages.forEach((item) => {
+      if (item.kind === 'existing') {
+        existingPaths.push(item.path);
+        imageOrder.push(item.path);
+      } else {
+        data.append('images', item.file);
+        imageOrder.push(`__new__:${newImageIndex}`);
+        newImageIndex += 1;
+      }
     });
+    data.append('existingImages', JSON.stringify(existingPaths));
+    data.append('imageOrder', JSON.stringify(imageOrder));
 
     try {
       if (editModel) {
@@ -216,37 +284,55 @@ export default function TireModelForm({ editModel }: TireModelFormProps) {
         {/* Multi-Image Upload Area */}
         <div className="flex flex-col items-center justify-center space-y-6">
           <label className="text-[13px] font-bold text-gray-400 uppercase tracking-wider">Model Images</label>
+          <p className="text-sm text-gray-500 -mt-2">Drag images to reorder. The first image is used as the primary photo.</p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full max-w-5xl">
-            {existingImages.map((img, index) => (
-              <div key={`existing-${index}`} className="relative group aspect-square">
-                <div className="w-full h-full border border-gray-100 rounded-2xl overflow-hidden bg-gray-50 shadow-sm">
-                  <img src={getImageUrl(img)} alt="Model" className="w-full h-full object-cover" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeExistingImage(index)}
-                  className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg border-2 border-white opacity-0 group-hover:opacity-100"
+            {productImages.map((item, index) => {
+              const src = item.kind === 'existing' ? getImageUrl(item.path) : item.previewUrl;
+              const isDragOver = dragOverImageIndex === index;
+              return (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={handleImageDragStart(index)}
+                  onDragOver={handleImageDragOver(index)}
+                  onDrop={handleImageDrop(index)}
+                  onDragEnd={handleImageDragEnd}
+                  className={`relative group aspect-square cursor-grab active:cursor-grabbing transition-all ${
+                    isDragOver ? 'scale-[1.02]' : ''
+                  }`}
+                  title="Drag to reorder"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-
-            {previews.map((url, index) => (
-              <div key={`new-${index}`} className="relative group aspect-square animate-in zoom-in-95 duration-200">
-                <div className="w-full h-full border-2 border-blue-100 rounded-2xl overflow-hidden bg-blue-50/30">
-                  <img src={url} alt="New Preview" className="w-full h-full object-cover" />
+                  <div
+                    className={`w-full h-full rounded-2xl overflow-hidden bg-gray-50 shadow-sm border ${
+                      isDragOver
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : item.kind === 'new'
+                          ? 'border-2 border-blue-100 bg-blue-50/30'
+                          : 'border border-gray-100'
+                    }`}
+                  >
+                    <img src={src} alt={`Model ${index + 1}`} className="w-full h-full object-cover pointer-events-none" />
+                  </div>
+                  <div className="absolute top-2 left-2 p-1 bg-black/45 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md bg-black/50 text-white text-[11px] font-semibold">
+                    {index + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => removeProductImage(item.id)}
+                    className={`absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg border-2 border-white ${
+                      item.kind === 'new' ? '' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeNewImage(index)}
-                  className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg border-2 border-white"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
 
             <button
               type="button"

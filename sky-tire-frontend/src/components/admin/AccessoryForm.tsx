@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createAccessory, updateAccessory } from '@/features/accessories/slice';
 import { fetchAllInventorySources } from '@/redux/slices/inventorySourcesSlice';
 import {
-  ArrowLeft, Loader2, UploadCloud, X, Calculator, ChevronDown, Check, Settings2, Plus,
+  ArrowLeft, Loader2, UploadCloud, X, Calculator, ChevronDown, Check, Settings2, Plus, GripVertical,
 } from 'lucide-react';
 import { calculateTireNetCostPricing, calculateSaleMarkupPercentage, isSalePriceBelowRecommended } from '@/utils/pricing';
 import axios from 'axios';
@@ -32,6 +32,10 @@ interface AccessoryFormProps {
   editAccessoryId?: string;
   duplicateId?: string;
 }
+
+type ProductImageItem =
+  | { id: string; kind: 'existing'; path: string }
+  | { id: string; kind: 'new'; file: File; previewUrl: string };
 
 const emptySpecs = (): AccessorySpecifications =>
   Object.fromEntries(SPECIFICATION_FIELDS.map((f) => [f.key, '']));
@@ -86,8 +90,9 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
 
   const { categories: accessoryCategories } = useAppSelector((state) => state.accessoryCategories);
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [productImages, setProductImages] = useState<ProductImageItem[]>([]);
+  const dragImageIndexRef = useRef<number | null>(null);
+  const [dragOverImageIndex, setDragOverImageIndex] = useState<number | null>(null);
   const [leftImageFile, setLeftImageFile] = useState<File | null>(null);
   const [rightImageFile, setRightImageFile] = useState<File | null>(null);
   const [existingLeftImage, setExistingLeftImage] = useState<string | null>(null);
@@ -229,7 +234,13 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
           youtubeUrl: item.youtubeUrl || '',
         });
 
-        setExistingImages(item.images || []);
+        setProductImages(
+          (item.images || []).map((path: string, index: number) => ({
+            id: `existing-${index}-${path}`,
+            kind: 'existing' as const,
+            path,
+          }))
+        );
         setExistingLeftImage(item.leftImage || null);
         setExistingRightImage(item.rightImage || null);
         setExistingVideo(item.video || null);
@@ -268,6 +279,80 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
 
   const processingChargesLabel = formData.processingCharges || '0';
   const marginLabel = formData.margin || '0';
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const items: ProductImageItem[] = newFiles.map((file, index) => ({
+        id: `new-${Date.now()}-${index}-${file.name}`,
+        kind: 'new',
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setProductImages((prev) => [...prev, ...items]);
+    }
+    e.target.value = '';
+  };
+
+  const removeProductImage = (id: string) => {
+    setProductImages((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target?.kind === 'new') {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
+  const reorderProductImages = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    setProductImages((prev) => {
+      if (fromIndex >= prev.length || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const handleImageDragStart = (index: number) => (e: React.DragEvent) => {
+    dragImageIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleImageDragOver = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverImageIndex !== index) {
+      setDragOverImageIndex(index);
+    }
+  };
+
+  const handleImageDrop = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndex = dragImageIndexRef.current;
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
+    if (fromIndex == null) return;
+    reorderProductImages(fromIndex, index);
+  };
+
+  const handleImageDragEnd = () => {
+    dragImageIndexRef.current = null;
+    setDragOverImageIndex(null);
+  };
+
+  const productImagesRef = useRef(productImages);
+  productImagesRef.current = productImages;
+
+  useEffect(() => {
+    return () => {
+      productImagesRef.current.forEach((item) => {
+        if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl);
+      });
+    };
+  }, []);
 
   const getImageUrl = (path: string) => {
     if (path.startsWith('http') || path.startsWith('blob:')) return path;
@@ -357,7 +442,7 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
     }
     if (mapNum > 0 && saleNum < mapNum) return toast.error('Sale price must be greater than or equal to MAP price');
 
-    const totalImages = existingImages.length + imageFiles.length;
+    const totalImages = productImages.length;
     if (totalImages === 0) return toast.error('At least one image is required to publish');
 
     const scores = [
@@ -416,10 +501,24 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
       submitData.append('keywords', keywordArray.join(';'));
       submitData.append('specifications', JSON.stringify(specifications));
 
-      imageFiles.forEach((file) => submitData.append('images', file));
-      if (existingImages.length > 0) {
-        submitData.append('existingImages', JSON.stringify(existingImages));
+      // Main product images (order preserved via imageOrder)
+      const existingPaths: string[] = [];
+      const imageOrder: string[] = [];
+      let newImageIndex = 0;
+      productImages.forEach((item) => {
+        if (item.kind === 'existing') {
+          existingPaths.push(item.path);
+          imageOrder.push(item.path);
+        } else {
+          submitData.append('images', item.file);
+          imageOrder.push(`__new__:${newImageIndex}`);
+          newImageIndex += 1;
+        }
+      });
+      if (existingPaths.length > 0) {
+        submitData.append('existingImages', JSON.stringify(existingPaths));
       }
+      submitData.append('imageOrder', JSON.stringify(imageOrder));
 
       if (videoFile) {
         submitData.append('video', videoFile);
@@ -582,38 +681,56 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
           <div className="space-y-3">
             <h3 className="text-[18px] font-bold text-[#1e2a4a]">Additional Images</h3>
-            {(existingImages.length > 0 || imageFiles.length > 0) && (
-              <div className="flex flex-wrap gap-4">
-                {existingImages.map((img) => (
-                  <div key={img} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group shrink-0 bg-white">
-                    <img src={getImageUrl(img)} alt="" className="w-full h-full object-contain" />
-                    <button type="button" onClick={() => setExistingImages((prev) => prev.filter((i) => i !== img))} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+            <p className="text-sm text-gray-500">Drag images to reorder. The first image is used as the primary photo.</p>
+            <div className="flex flex-wrap gap-4">
+              <div className="w-[140px] h-[140px] border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative shrink-0">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleImageChange}
+                />
+                <div className="flex items-center gap-1.5 pointer-events-none">
+                  <UploadCloud className="h-[22px] w-[22px] text-[#8c9bb1]" />
+                  <span className="text-[#8c9bb1] font-medium text-[15px]">Add Images</span>
+                </div>
+              </div>
+
+              {productImages.map((item, idx) => {
+                const src = item.kind === 'existing' ? getImageUrl(item.path) : item.previewUrl;
+                const isDragOver = dragOverImageIndex === idx;
+                return (
+                  <div
+                    key={item.id}
+                    draggable
+                    onDragStart={handleImageDragStart(idx)}
+                    onDragOver={handleImageDragOver(idx)}
+                    onDrop={handleImageDrop(idx)}
+                    onDragEnd={handleImageDragEnd}
+                    className={`w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border group shrink-0 bg-white flex items-center justify-center cursor-grab active:cursor-grabbing transition-all ${
+                      isDragOver ? 'border-blue-500 ring-2 ring-blue-200 scale-[1.02]' : 'border-gray-100'
+                    }`}
+                    title="Drag to reorder"
+                  >
+                    <img src={src} alt={`Product ${idx + 1}`} className="w-full h-full object-contain pointer-events-none" />
+                    <div className="absolute top-2 left-2 p-1 bg-black/45 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                      <GripVertical className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md bg-black/50 text-white text-[11px] font-semibold">
+                      {idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => removeProductImage(item.id)}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                ))}
-                {imageFiles.map((file, idx) => (
-                  <div key={idx} className="w-[140px] h-[140px] relative rounded-[24px] overflow-hidden border border-gray-100 group shrink-0 bg-white">
-                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-contain" />
-                    <button type="button" onClick={() => setImageFiles((prev) => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="w-[140px] h-[140px] border-2 border-dashed border-[#d1d5db] rounded-[24px] flex items-center justify-center bg-[#f8fafc] hover:bg-gray-100 transition-colors cursor-pointer relative shrink-0">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={(e) => { if (e.target.files) setImageFiles((prev) => [...prev, ...Array.from(e.target.files!)]); }}
-              />
-              <div className="flex items-center gap-1.5 pointer-events-none">
-                <UploadCloud className="h-[22px] w-[22px] text-[#8c9bb1]" />
-                <span className="text-[#8c9bb1] font-medium text-[15px]">Add Images</span>
-              </div>
+                );
+              })}
             </div>
           </div>
 
