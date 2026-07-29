@@ -62,6 +62,14 @@ function mapPricingFields(row: {
   };
 }
 
+/** Draft products are never priced against competitors */
+function notDraftFilter(productType: CompetitorCatalogType): Record<string, unknown> {
+  if (productType === 'TIRE') {
+    return { publishStatus: { not: 'DRAFT' } };
+  }
+  return { status: { not: 'draft' } };
+}
+
 const pricingSelect = {
   id: true,
   sku: true,
@@ -85,7 +93,7 @@ export async function listCompetitorCatalogProducts(
   const take = opts.take ?? 50000;
 
   if (productType === 'TIRE') {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { ...notDraftFilter(productType) };
     if (search) {
       where.OR = [
         { sku: { contains: search, mode: 'insensitive' } },
@@ -132,7 +140,7 @@ export async function listCompetitorCatalogProducts(
   }
 
   if (productType === 'WHEEL') {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { ...notDraftFilter(productType) };
     if (search) {
       where.OR = [
         { sku: { contains: search, mode: 'insensitive' } },
@@ -175,7 +183,7 @@ export async function listCompetitorCatalogProducts(
   }
 
   if (productType === 'WIRE_WHEEL' || productType === 'BOLT_ON_WIRE_WHEEL') {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { ...notDraftFilter(productType) };
     if (search) {
       where.OR = [
         { sku: { contains: search, mode: 'insensitive' } },
@@ -184,23 +192,28 @@ export async function listCompetitorCatalogProducts(
         { brand: { brandName: { contains: search, mode: 'insensitive' } } },
       ];
     }
-    const client =
-      productType === 'WIRE_WHEEL' ? prisma.wireWheel : prisma.boltOnWireWheel;
-    const [rows, total] = await Promise.all([
-      client.findMany({
-        where,
-        skip,
-        take,
-        select: {
-          ...pricingSelect,
-          name: true,
-          size: true,
-          brand: { select: { brandName: true } },
-        },
-        orderBy: { sku: 'asc' },
-      }),
-      client.count({ where }),
-    ]);
+    const findArgs = {
+      where,
+      skip,
+      take,
+      select: {
+        ...pricingSelect,
+        name: true,
+        size: true,
+        brand: { select: { brandName: true } },
+      },
+      orderBy: { sku: 'asc' as const },
+    };
+    const [rows, total] =
+      productType === 'WIRE_WHEEL'
+        ? await Promise.all([
+            prisma.wireWheel.findMany(findArgs),
+            prisma.wireWheel.count({ where }),
+          ])
+        : await Promise.all([
+            prisma.boltOnWireWheel.findMany(findArgs),
+            prisma.boltOnWireWheel.count({ where }),
+          ]);
     return {
       total,
       products: rows.map((w) => {
@@ -220,7 +233,7 @@ export async function listCompetitorCatalogProducts(
   }
 
   // ACCESSORY
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { ...notDraftFilter(productType) };
   if (search) {
     where.OR = [
       { sku: { contains: search, mode: 'insensitive' } },
@@ -269,7 +282,7 @@ export async function findCompetitorCatalogByIds(
   if (ids.length === 0) return [];
   if (productType === 'TIRE') {
     const rows = await prisma.tire.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, ...notDraftFilter(productType) },
       select: {
         ...pricingSelect,
         tireSize: true,
@@ -297,7 +310,7 @@ export async function findCompetitorCatalogByIds(
   }
   if (productType === 'WHEEL') {
     const rows = await prisma.wheel.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, ...notDraftFilter(productType) },
       select: {
         ...pricingSelect,
         productName: true,
@@ -320,17 +333,19 @@ export async function findCompetitorCatalogByIds(
     });
   }
   if (productType === 'WIRE_WHEEL' || productType === 'BOLT_ON_WIRE_WHEEL') {
-    const client =
-      productType === 'WIRE_WHEEL' ? prisma.wireWheel : prisma.boltOnWireWheel;
-    const rows = await client.findMany({
-      where: { id: { in: ids } },
+    const findArgs = {
+      where: { id: { in: ids }, ...notDraftFilter(productType) },
       select: {
         ...pricingSelect,
         name: true,
         size: true,
         brand: { select: { brandName: true } },
       },
-    });
+    };
+    const rows =
+      productType === 'WIRE_WHEEL'
+        ? await prisma.wireWheel.findMany(findArgs)
+        : await prisma.boltOnWireWheel.findMany(findArgs);
     return rows.map((w) => {
       const brand = w.brand?.brandName || '';
       const model = w.name || '';
@@ -346,7 +361,7 @@ export async function findCompetitorCatalogByIds(
     });
   }
   const rows = await prisma.accessory.findMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, ...notDraftFilter(productType) },
     select: {
       ...pricingSelect,
       productName: true,
