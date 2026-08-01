@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchUnreadPriceMatchCount } from '@/features/price-match-queries/slice';
+import { fetchUnreadChatCount } from '@/features/chats/slice';
 import {
   LayoutDashboard,
   Users,
@@ -28,6 +29,7 @@ import {
   Mail,
   ChartColumn,
   RefreshCw,
+  MessageSquare,
 } from 'lucide-react';
 
 const navItems = [
@@ -46,6 +48,7 @@ const navItems = [
   { label: 'Update Inventory', href: '/admin/update-inventory', icon: RefreshCw },
   { label: 'Orders', href: '/admin/orders', icon: Package },
   { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { label: 'Chats', href: '/admin/chats', icon: MessageSquare, badge: 'chats' as const },
   { label: 'Price Match Queries', href: '/admin/price-match-queries', icon: Scale, badge: 'priceMatch' as const },
   { label: 'Competitor Pricing', href: '/admin/competitor-pricing', icon: ChartColumn },
   { label: 'Email Templates', href: '/admin/email-templates', icon: Mail },
@@ -61,13 +64,16 @@ export default function AdminSidebar() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const unreadPriceMatchCount = useAppSelector((state) => state.priceMatchQueries.unreadCount);
+  const unreadChatCount = useAppSelector((state) => state.chats.unreadCount);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   useEffect(() => {
     dispatch(fetchUnreadPriceMatchCount());
+    dispatch(fetchUnreadChatCount());
 
     const interval = setInterval(() => {
       dispatch(fetchUnreadPriceMatchCount());
+      dispatch(fetchUnreadChatCount());
     }, 30000);
 
     return () => clearInterval(interval);
@@ -76,6 +82,9 @@ export default function AdminSidebar() {
   useEffect(() => {
     if (pathname.startsWith('/admin/price-match-queries')) {
       dispatch(fetchUnreadPriceMatchCount());
+    }
+    if (pathname.startsWith('/admin/chats')) {
+      dispatch(fetchUnreadChatCount());
     }
   }, [dispatch, pathname]);
 
@@ -147,7 +156,9 @@ export default function AdminSidebar() {
           const badgeCount =
             item.badge === 'priceMatch' && unreadPriceMatchCount > 0
               ? unreadPriceMatchCount
-              : 0;
+              : item.badge === 'chats' && unreadChatCount > 0
+                ? unreadChatCount
+                : 0;
 
           return (
             <Link

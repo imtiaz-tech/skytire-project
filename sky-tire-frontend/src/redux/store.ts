@@ -22,6 +22,7 @@ import bannerReducer from '../features/banner/slice';
 import priceMatchQueriesReducer from '../features/price-match-queries/slice';
 import emailTemplatesReducer from '../features/email-templates/slice';
 import competitorPricingReducer from '../features/competitor-pricing/slice';
+import chatsReducer from '../features/chats/slice';
 
 
 export const store = configureStore({
@@ -49,6 +50,7 @@ export const store = configureStore({
     priceMatchQueries: priceMatchQueriesReducer,
     emailTemplates: emailTemplatesReducer,
     competitorPricing: competitorPricingReducer,
+    chats: chatsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
