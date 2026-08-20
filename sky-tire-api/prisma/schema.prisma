@@ -436,6 +436,9 @@ model WireWheel {
   keywords              String?
   seoTitle              String?
   metaDescription       String?
+  faqs                  String?           // Rich HTML FAQ content (Jodit)
+  tags                  String[]          @default([])
+  alsoFoundIn           String[]          @default([])
   
   // Wire Wheel Scores (0-10)
   platingDepthScore     Int?              @default(0)
@@ -506,6 +509,9 @@ model BoltOnWireWheel {
   keywords              String?
   seoTitle              String?
   metaDescription       String?
+  faqs                  String?           // Rich HTML FAQ content (Jodit)
+  tags                  String[]          @default([])
+  alsoFoundIn           String[]          @default([])
   
   // Wire Wheel Scores (0-10)
   platingDepthScore     Int?              @default(0)

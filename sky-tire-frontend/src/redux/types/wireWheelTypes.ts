@@ -65,6 +65,10 @@ export interface WireWheel {
   keywords: string | null;
   seoTitle: string | null;
   metaDescription: string | null;
+  /** Rich HTML FAQ content from the admin Jodit editor. */
+  faqs?: string | null;
+  tags?: string[];
+  alsoFoundIn?: string[];
   
   platingDepthScore: number;
   sealingIntegrityScore: number;

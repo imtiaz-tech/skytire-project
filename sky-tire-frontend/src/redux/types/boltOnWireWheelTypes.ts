@@ -62,6 +62,10 @@ export interface BoltOnWireWheel {
   keywords: string | null;
   seoTitle: string | null;
   metaDescription: string | null;
+  /** Rich HTML FAQ content from the admin Jodit editor. */
+  faqs?: string | null;
+  tags?: string[];
+  alsoFoundIn?: string[];
   staggeredFitment?: boolean;
   wireWheelWeight?: string | null;
   shippingDimensions?: string | null;
