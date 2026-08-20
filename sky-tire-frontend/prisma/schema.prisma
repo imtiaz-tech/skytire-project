@@ -127,6 +127,9 @@ model Tire {
   vehicleType         VehicleType?
   keywords            String?
   features            String[]
+  faqs                String?          // Rich HTML FAQ content (Jodit)
+  tags                String[]         @default([])
+  alsoFoundIn         String[]         @default([])
   sidewallCategory    SidewallCategory?
   sidewallDetail      String?
   publishStatus       PublishStatus @default(PUBLISHED)

@@ -55,6 +55,10 @@ export interface Tire {
   vehicleType?: 'PASSENGER' | 'LIGHT_TRUCK' | 'SUV' | 'TRUCK' | 'COMMERCIAL' | 'PERFORMANCE' | 'OFF_ROAD';
   keywords?: string;
   features?: string[];
+  /** Rich HTML FAQ content from the admin Jodit editor. */
+  faqs?: string | null;
+  tags?: string[];
+  alsoFoundIn?: string[];
   sidewallCategory?: 'BLACK_WALL' | 'WHITE_WALL';
   sidewallDetail?: string;
   publishStatus?: 'PUBLISHED' | 'DRAFT';
