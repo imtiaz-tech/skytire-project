@@ -264,27 +264,6 @@ export default function TireFieldsSection({
         </div>
       </div>
 
-      <div className="space-y-4 pt-4 border-t border-gray-50">
-        <h3 className="text-[16px] font-bold text-[#1e2a4a]">Sky Score (0-10)</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="relative w-full">
-            {formData.mileageScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Mileage Score</label>}
-            <input type="number" placeholder="Mileage Score" className="w-full px-4 py-4 bg-[#f8f9fa] border border-gray-100 rounded-xl text-[#1e2a4a] text-[15px] outline-none focus:bg-white transition-all" value={formData.mileageScore} onChange={(e) => setFormData((prev: any) => ({ ...prev, mileageScore: e.target.value }))} onWheel={(e) => e.currentTarget.blur()} />
-          </div>
-          <div className="relative w-full">
-            {formData.stabilityScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Stability Score</label>}
-            <input type="number" placeholder="Stability Score" className="w-full px-4 py-4 bg-[#f8f9fa] border border-gray-100 rounded-xl text-[#1e2a4a] text-[15px] outline-none focus:bg-white transition-all" value={formData.stabilityScore} onChange={(e) => setFormData((prev: any) => ({ ...prev, stabilityScore: e.target.value }))} onWheel={(e) => e.currentTarget.blur()} />
-          </div>
-          <div className="relative w-full">
-            {formData.tractionScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Traction Score</label>}
-            <input type="number" placeholder="Traction Score" className="w-full px-4 py-4 bg-[#f8f9fa] border border-gray-100 rounded-xl text-[#1e2a4a] text-[15px] outline-none focus:bg-white transition-all" value={formData.tractionScore} onChange={(e) => setFormData((prev: any) => ({ ...prev, tractionScore: e.target.value }))} onWheel={(e) => e.currentTarget.blur()} />
-          </div>
-          <div className="relative w-full">
-            {formData.feedbackScore && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Feedback</label>}
-            <input type="number" placeholder="Feedback" className="w-full px-4 py-4 bg-[#f8f9fa] border border-gray-100 rounded-xl text-[#1e2a4a] text-[15px] outline-none focus:bg-white transition-all" value={formData.feedbackScore} onChange={(e) => setFormData((prev: any) => ({ ...prev, feedbackScore: e.target.value }))} onWheel={(e) => e.currentTarget.blur()} />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

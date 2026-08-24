@@ -9,7 +9,6 @@ import { ArrowLeft, Loader2, UploadCloud, X, Plus, Trash2, Calculator, ChevronDo
 import { calculateTireNetCostPricing, calculateSaleMarkupPercentage, isSalePriceBelowRecommended } from '@/utils/pricing';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import dynamic from 'next/dynamic';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import StockCostDetailsTable from './StockCostDetailsTable';
 import type { SourceInventoryRow } from '@/lib/sourceInventory';
@@ -19,8 +18,7 @@ import {
   isAllowedWireWheelVideoFile,
   isValidYouTubeUrl,
 } from '@/lib/youtube';
-
-const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
+import ProductCommonFields from './ProductCommonFields';
 
 interface BoltOnWireWheelFormProps {
   editBoltOnWireWheelId?: string;
@@ -60,31 +58,6 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const editorConfig = useMemo(() => ({
-    readonly: false,
-    placeholder: editBoltOnWireWheelId ? '' : 'Enter wire wheel description...',
-    showPlaceholder: !editBoltOnWireWheelId,
-    toolbarButtonSize: 'middle' as const,
-    buttons: [
-      'source', '|',
-      'bold', 'strikethrough', 'underline', 'italic', '|',
-      'ul', 'ol', '|',
-      'outdent', 'indent', '|',
-      'font', 'fontsize', 'brush', 'paragraph', '|',
-      'image', 'video', 'table', 'link', '|',
-      'align', 'undo', 'redo', '|',
-      'hr', 'eraser', 'copyformat', '|',
-      'symbol', 'fullsize', 'print', 'about'
-    ],
-    height: 400,
-    uploader: { insertImageAsBase64URI: true },
-    askBeforePasteHTML: false,
-    askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html',
-    width: '100%',
-    spellcheck: true,
-    language: 'en',
-  }), [editBoltOnWireWheelId]);
 
   const { sources } = useAppSelector((state) => state.inventorySources);
 
@@ -125,72 +98,11 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
   const [youtubeUrlError, setYoutubeUrlError] = useState('');
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // Keywords State
+  // Keywords / Tags / Also Found In / FAQs (UI handled by ProductCommonFields)
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
-  const [keywordInput, setKeywordInput] = useState('');
-
-  // Tags / Also Found In / FAQs
   const [tagArray, setTagArray] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [alsoFoundInArray, setAlsoFoundInArray] = useState<string[]>([]);
-  const [alsoFoundInInput, setAlsoFoundInInput] = useState('');
   const [faqs, setFaqs] = useState('');
-
-  const faqEditorConfig = useMemo(
-    () => ({
-      readonly: false,
-      placeholder:
-        'Use bold text or a heading for each question (default 20px Inter), then write the answer below it (default 18px Inter).',
-      showPlaceholder: true,
-      toolbarButtonSize: 'middle' as const,
-      buttons: [
-        'source',
-        '|',
-        'bold',
-        'strikethrough',
-        'underline',
-        'italic',
-        '|',
-        'ul',
-        'ol',
-        '|',
-        'outdent',
-        'indent',
-        '|',
-        'font',
-        'fontsize',
-        'brush',
-        'paragraph',
-        '|',
-        'image',
-        'video',
-        'table',
-        'link',
-        '|',
-        'align',
-        'undo',
-        'redo',
-        '|',
-        'hr',
-        'eraser',
-        'copyformat',
-        '|',
-        'symbol',
-        'fullsize',
-        'print',
-        'about',
-      ],
-      height: 360,
-      uploader: { insertImageAsBase64URI: true },
-      askBeforePasteHTML: false,
-      askBeforePasteFromWord: false,
-      defaultActionOnPaste: 'insert_clear_html' as const,
-      width: '100%',
-      spellcheck: true,
-      language: 'en',
-    }),
-    []
-  );
 
   // Multi-option lists states
   const [floatingCapsList, setFloatingCapsList] = useState<FloatingCapOption[]>([]);
@@ -680,48 +592,6 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
   };
 
   // Keyword tag helpers
-  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      const val = keywordInput.trim().replace(/;$/, '');
-      if (val && !keywordArray.includes(val)) {
-        setKeywordArray([...keywordArray, val]);
-      }
-      setKeywordInput('');
-    }
-  };
-
-  const removeKeyword = (kw: string) => {
-    setKeywordArray(keywordArray.filter((k) => k !== kw));
-  };
-
-  const addChipValue = (
-    raw: string,
-    list: string[],
-    setList: React.Dispatch<React.SetStateAction<string[]>>,
-    setInput: React.Dispatch<React.SetStateAction<string>>
-  ) => {
-    const val = raw.trim().replace(/;$/, '');
-    if (val && !list.includes(val)) {
-      setList([...list, val]);
-    }
-    setInput('');
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      addChipValue(tagInput, tagArray, setTagArray, setTagInput);
-    }
-  };
-
-  const handleAlsoFoundInKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      addChipValue(alsoFoundInInput, alsoFoundInArray, setAlsoFoundInArray, setAlsoFoundInInput);
-    }
-  };
-
 
   const handleSubmit = async (e: React.FormEvent, statusOverride?: 'published' | 'draft') => {
     e.preventDefault();
@@ -1355,16 +1225,12 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
             <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
 
-          <div className="space-y-4">
-            <label className="text-[14px] font-bold text-[#1e2a4a]">Description</label>
-            <div className="border border-gray-200 rounded-xl overflow-hidden">
-              <JoditEditor
-                value={formData.description}
-                config={editorConfig}
-                onBlur={(newContent) => setFormData({ ...formData, description: newContent })}
-              />
-            </div>
-          </div>
+          <ProductCommonFields
+            sections={['description']}
+            description={formData.description}
+            onDescriptionChange={(html) => setFormData({ ...formData, description: html })}
+            descriptionPlaceholder={editBoltOnWireWheelId ? '' : 'Enter bolt-on wire wheel description...'}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-50">
             <div className="relative w-full">
@@ -1778,155 +1644,35 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
           </div>
         </div>
 
-        {/* SEO Management */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">SEO & Search Optimization</h3>
-          
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <div className="relative w-full">
-                {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
-                <input
-                  type="text"
-                  placeholder="Press Enter or ; to add keywords"
-                  className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
-                  value={keywordInput}
-                  onChange={(e) => setKeywordInput(e.target.value)}
-                  onKeyDown={handleKeywordKeyDown}
-                />
-              </div>
-              {keywordArray.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {keywordArray.map(kw => (
-                    <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
-                      {kw} <X className="h-3 w-3 cursor-pointer hover:text-blue-800" onClick={() => removeKeyword(kw)} />
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative w-full">
-              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[12px] text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
-                SEO Title
-              </label>
-              <input
-                type="text"
-                placeholder="SEO Title"
-                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
-                value={formData.seoTitle}
-                onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-              />
-            </div>
-
-            <div className="relative w-full">
-              <label className="absolute -top-2 left-3 bg-white px-1.5 text-[12px]  text-gray-400 transition-colors peer-focus:text-blue-500 z-10">
-                Meta Description
-              </label>
-              <textarea
-                placeholder="Meta Description"
-                className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all min-h-[100px] resize-y"
-                value={formData.metaDescription}
-                onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* FAQs / Tags / Also Found In */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <div className="space-y-3">
-            <h3 className="text-[18px] font-bold text-[#1e2a4a]">FAQs</h3>
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
-              <JoditEditor value={faqs} config={faqEditorConfig} onBlur={(content) => setFaqs(content)} />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Tags</h3>
-            <input
-              type="text"
-              placeholder="Type tags and press Enter or semi-colon (;)"
-              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-            />
-            {tagArray.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tagArray.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
-                  >
-                    {tag}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setTagArray(tagArray.filter((t) => t !== tag))} />
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Also Found In</h3>
-            <input
-              type="text"
-              placeholder="Type categories and press Enter or semi-colon (;)"
-              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-              value={alsoFoundInInput}
-              onChange={(e) => setAlsoFoundInInput(e.target.value)}
-              onKeyDown={handleAlsoFoundInKeyDown}
-            />
-            {alsoFoundInArray.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {alsoFoundInArray.map((item) => (
-                  <span
-                    key={item}
-                    className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-emerald-100"
-                  >
-                    {item}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setAlsoFoundInArray(alsoFoundInArray.filter((t) => t !== item))}
-                    />
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Scoring */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
-          <h3 className="text-[18px] font-bold text-[#1e2a4a]">Sky Score (0-10)</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="relative w-full">
-              <input type="number" min="0" max="10" placeholder="Plating Depth Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.platingDepthScore} onChange={(e) => setFormData({ ...formData, platingDepthScore: e.target.value })} />
-              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.platingDepthScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
-                Plating Depth Score
-              </label>
-            </div>
-            <div className="relative w-full">
-              <input type="number" min="0" max="10" placeholder="Sealing Integrity Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.sealingIntegrityScore} onChange={(e) => setFormData({ ...formData, sealingIntegrityScore: e.target.value })} />
-              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.sealingIntegrityScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
-                Sealing Integrity Score
-              </label>
-            </div>
-            <div className="relative w-full">
-              <input type="number" min="0" max="10" placeholder="Spoke Tension Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.spokeTensionScore} onChange={(e) => setFormData({ ...formData, spokeTensionScore: e.target.value })} />
-              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.spokeTensionScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
-                Spoke Tension Score
-              </label>
-            </div>
-            <div className="relative w-full">
-              <input type="number" min="0" max="10" placeholder="Feedback Score" className="peer w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50 placeholder-transparent focus:placeholder-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={formData.feedbackScore} onChange={(e) => setFormData({ ...formData, feedbackScore: e.target.value })} />
-              <label className={`absolute left-3 px-1 font-medium pointer-events-none transition-all duration-200 z-10 ${formData.feedbackScore ? '-top-2.5 text-[12px] text-gray-400 bg-white' : 'top-3.5 text-[16px] text-gray-400 bg-transparent peer-focus:-top-2.5 peer-focus:text-[12px] peer-focus:bg-white'}`}>
-                Feedback Score
-              </label>
-            </div>
-          </div>
-        </div>
+        {/* SEO / FAQs / Tags / Also Found In / Sky Score */}
+        <ProductCommonFields
+          sections={['seo', 'faqs', 'scores']}
+          keywords={keywordArray}
+          onKeywordsChange={setKeywordArray}
+          seoTitle={formData.seoTitle}
+          onSeoTitleChange={(v) => setFormData({ ...formData, seoTitle: v })}
+          metaDescription={formData.metaDescription}
+          onMetaDescriptionChange={(v) => setFormData({ ...formData, metaDescription: v })}
+          faqs={faqs}
+          onFaqsChange={setFaqs}
+          tags={tagArray}
+          onTagsChange={setTagArray}
+          alsoFoundIn={alsoFoundInArray}
+          onAlsoFoundInChange={setAlsoFoundInArray}
+          scoreFields={[
+            { key: 'platingDepthScore', label: 'Plating Depth Score' },
+            { key: 'sealingIntegrityScore', label: 'Sealing Integrity Score' },
+            { key: 'spokeTensionScore', label: 'Spoke Tension Score' },
+            { key: 'feedbackScore', label: 'Feedback Score' }
+          ]}
+          scores={{
+            platingDepthScore: formData.platingDepthScore,
+            sealingIntegrityScore: formData.sealingIntegrityScore,
+            spokeTensionScore: formData.spokeTensionScore,
+            feedbackScore: formData.feedbackScore
+          }}
+          onScoreChange={(key, value) => setFormData({ ...formData, [key]: value })}
+        />
 
         {/* Submit Actions */}
         <div className="flex justify-end items-center gap-4 pt-8">

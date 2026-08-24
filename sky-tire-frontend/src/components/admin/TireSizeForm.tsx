@@ -9,7 +9,6 @@ import { Tire } from '@/redux/types/tireTypes';
 import { ArrowLeft, Loader2, X, Search, ChevronDown, Check, PlusCircle, UploadCloud } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import dynamic from 'next/dynamic';
 import TireFieldsSection from './TireFieldsSection';
 import ManageInventorySourcesModal from './ManageInventorySourcesModal';
 import type { SourceInventoryRow } from '@/lib/sourceInventory';
@@ -20,7 +19,7 @@ import {
   isValidYouTubeUrl,
 } from '@/lib/youtube';
 
-const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
+import ProductCommonFields from './ProductCommonFields';
 
 interface TireSizeFormProps {
   editTireId?: string;
@@ -64,79 +63,16 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Keywords State
+  // Keywords / Tags / Also Found In / FAQs (UI handled by ProductCommonFields)
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
-  const [keywordInput, setKeywordInput] = useState('');
+  const [tagArray, setTagArray] = useState<string[]>([]);
+  const [alsoFoundInArray, setAlsoFoundInArray] = useState<string[]>([]);
+  const [faqs, setFaqs] = useState('');
 
   // Features State
   const [featureArray, setFeatureArray] = useState<string[]>([]);
   const [featureInput, setFeatureInput] = useState('');
   const [isFeatureFocused, setIsFeatureFocused] = useState(false);
-
-  // Tags / Also Found In
-  const [tagArray, setTagArray] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [alsoFoundInArray, setAlsoFoundInArray] = useState<string[]>([]);
-  const [alsoFoundInInput, setAlsoFoundInInput] = useState('');
-
-  // FAQs (rich HTML)
-  const [faqs, setFaqs] = useState('');
-
-  const faqEditorConfig = useMemo(
-    () => ({
-      readonly: false,
-      placeholder:
-        'Use bold text or a heading for each question (default 20px Inter), then write the answer below it (default 18px Inter).',
-      showPlaceholder: true,
-      toolbarButtonSize: 'middle' as const,
-      buttons: [
-        'source',
-        '|',
-        'bold',
-        'strikethrough',
-        'underline',
-        'italic',
-        '|',
-        'ul',
-        'ol',
-        '|',
-        'outdent',
-        'indent',
-        '|',
-        'font',
-        'fontsize',
-        'brush',
-        'paragraph',
-        '|',
-        'image',
-        'video',
-        'table',
-        'link',
-        '|',
-        'align',
-        'undo',
-        'redo',
-        '|',
-        'hr',
-        'eraser',
-        'copyformat',
-        '|',
-        'symbol',
-        'fullsize',
-        'print',
-        'about',
-      ],
-      height: 360,
-      uploader: { insertImageAsBase64URI: true },
-      askBeforePasteHTML: false,
-      askBeforePasteFromWord: false,
-      defaultActionOnPaste: 'insert_clear_html' as const,
-      width: '100%',
-      spellcheck: true,
-      language: 'en',
-    }),
-    []
-  );
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingVideo, setExistingVideo] = useState<string | null>(null);
@@ -340,21 +276,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     setIsSourceDropdownOpen(false); // Optionally close dropdown for single-select UX
   };
 
-  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      const val = keywordInput.trim().replace(/;$/, '');
-      if (val && !keywordArray.includes(val)) {
-        setKeywordArray([...keywordArray, val]);
-      }
-      setKeywordInput('');
-    }
-  };
-
-  const removeKeyword = (kw: string) => {
-    setKeywordArray(keywordArray.filter((k) => k !== kw));
-  };
-
   const handleFeatureKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ':') {
       e.preventDefault();
@@ -370,33 +291,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
     setFeatureArray(featureArray.filter((f) => f !== feat));
   };
 
-  const addChipValue = (
-    raw: string,
-    list: string[],
-    setList: React.Dispatch<React.SetStateAction<string[]>>,
-    setInput: React.Dispatch<React.SetStateAction<string>>
-  ) => {
-    const val = raw.trim().replace(/;$/, '');
-    if (val && !list.includes(val)) {
-      setList([...list, val]);
-    }
-    setInput('');
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      addChipValue(tagInput, tagArray, setTagArray, setTagInput);
-    }
-  };
-
-  const handleAlsoFoundInKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ';') {
-      e.preventDefault();
-      addChipValue(alsoFoundInInput, alsoFoundInArray, setAlsoFoundInArray, setAlsoFoundInInput);
-    }
-  };
-  
   const addFeatureFromSuggestion = (feat: string) => {
     if (!featureArray.includes(feat)) {
       setFeatureArray([...featureArray, feat]);
@@ -747,20 +641,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
 
           <div className="space-y-4">
             <div className="relative w-full">
-              {keywordInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Keywords</label>}
-              <input type="text" placeholder="Press Enter or ; to add keywords" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} onKeyDown={handleKeywordKeyDown} />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {keywordArray.map(kw => (
-                <span key={kw} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
-                  {kw} <X className="h-3 w-3 cursor-pointer" onClick={() => removeKeyword(kw)} />
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="relative w-full">
               {featureInput && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Features</label>}
               <input 
                 type="text" 
@@ -798,79 +678,34 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             </div>
           </div>
 
-          <div className="relative w-full">
-            {formData.seoTitle && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SEO Title</label>}
-            <input type="text" placeholder="SEO Title" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none" value={formData.seoTitle} onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })} />
-          </div>
-
-          <div className="relative w-full">
-            {formData.metaDescription && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
-            <textarea placeholder="Meta Description" rows={3} className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none resize-none" value={formData.metaDescription} onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })} />
-          </div>
+          <ProductCommonFields
+            sections={['seo']}
+            wrapCards={false}
+            seoCardTitle=""
+            keywords={keywordArray}
+            onKeywordsChange={setKeywordArray}
+            seoTitle={formData.seoTitle}
+            onSeoTitleChange={(v) => setFormData({ ...formData, seoTitle: v })}
+            metaDescription={formData.metaDescription}
+            onMetaDescriptionChange={(v) => setFormData({ ...formData, metaDescription: v })}
+          />
         </div>
 
-        {/* FAQs / Tags / Also Found In */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
-          <div className="space-y-3">
-            <h3 className="text-[18px] font-bold text-[#1e2a4a]">FAQs</h3>
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
-              <JoditEditor value={faqs} config={faqEditorConfig} onBlur={(content) => setFaqs(content)} />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Tags</h3>
-            <input
-              type="text"
-              placeholder="Type tags and press Enter or semi-colon (;)"
-              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-            />
-            {tagArray.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tagArray.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
-                  >
-                    {tag}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setTagArray(tagArray.filter((t) => t !== tag))} />
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Also Found In</h3>
-            <input
-              type="text"
-              placeholder="Type categories and press Enter or semi-colon (;)"
-              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-              value={alsoFoundInInput}
-              onChange={(e) => setAlsoFoundInInput(e.target.value)}
-              onKeyDown={handleAlsoFoundInKeyDown}
-            />
-            {alsoFoundInArray.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {alsoFoundInArray.map((item) => (
-                  <span
-                    key={item}
-                    className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-emerald-100"
-                  >
-                    {item}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setAlsoFoundInArray(alsoFoundInArray.filter((t) => t !== item))}
-                    />
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <ProductCommonFields
+          sections={['faqs']}
+          keywords={keywordArray}
+          onKeywordsChange={setKeywordArray}
+          seoTitle={formData.seoTitle}
+          onSeoTitleChange={(v) => setFormData({ ...formData, seoTitle: v })}
+          metaDescription={formData.metaDescription}
+          onMetaDescriptionChange={(v) => setFormData({ ...formData, metaDescription: v })}
+          faqs={faqs}
+          onFaqsChange={setFaqs}
+          tags={tagArray}
+          onTagsChange={setTagArray}
+          alsoFoundIn={alsoFoundInArray}
+          onAlsoFoundInChange={setAlsoFoundInArray}
+        />
 
         {/* Product Videos */}
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-6">
@@ -978,6 +813,23 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             toggleSource={toggleSource}
             sourceInventories={sourceInventories}
             showStockCostDetails={Boolean(editTireId)}
+          />
+
+          <ProductCommonFields
+            sections={['scores']}
+            scoreFields={[
+              { key: 'mileageScore', label: 'Mileage Score' },
+              { key: 'stabilityScore', label: 'Stability Score' },
+              { key: 'tractionScore', label: 'Traction Score' },
+              { key: 'feedbackScore', label: 'Feedback Score' },
+            ]}
+            scores={{
+              mileageScore: formData.mileageScore,
+              stabilityScore: formData.stabilityScore,
+              tractionScore: formData.tractionScore,
+              feedbackScore: formData.feedbackScore,
+            }}
+            onScoreChange={(key, value) => setFormData({ ...formData, [key]: value })}
           />
         </div>
 
