@@ -98,6 +98,23 @@ export async function PUT(
     const keywords = formData.get('keywords') as string;
     const metaDescription = formData.get('metaDescription') as string;
     const seoTitle = formData.get('seoTitle') as string;
+    const faqs = formData.get('faqs') as string;
+    const tagsRaw = formData.get('tags') as string;
+    const alsoFoundInRaw = formData.get('alsoFoundIn') as string;
+    let tags: string[] = [];
+    let alsoFoundIn: string[] = [];
+    try {
+      tags = tagsRaw ? JSON.parse(tagsRaw) : [];
+      if (!Array.isArray(tags)) tags = [];
+    } catch {
+      tags = [];
+    }
+    try {
+      alsoFoundIn = alsoFoundInRaw ? JSON.parse(alsoFoundInRaw) : [];
+      if (!Array.isArray(alsoFoundIn)) alsoFoundIn = [];
+    } catch {
+      alsoFoundIn = [];
+    }
     const finishDurabilityScoreStr = formData.get('finishDurabilityScore') as string;
     const fitmentPrecisionScoreStr = formData.get('fitmentPrecisionScore') as string;
     const impactResistanceScoreStr = formData.get('impactResistanceScore') as string;
@@ -301,6 +318,9 @@ export async function PUT(
         keywords: keywords || null,
         metaDescription: metaDescription || null,
         seoTitle: seoTitle || null,
+        faqs: faqs || null,
+        tags,
+        alsoFoundIn,
         finishDurabilityScore: finishDurabilityScoreStr ? parseInt(finishDurabilityScoreStr) : 0,
         fitmentPrecisionScore: fitmentPrecisionScoreStr ? parseInt(fitmentPrecisionScoreStr) : 0,
         impactResistanceScore: impactResistanceScoreStr ? parseInt(impactResistanceScoreStr) : 0,

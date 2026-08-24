@@ -47,6 +47,9 @@ export interface Wheel {
   keywords: string | null;
   metaDescription: string | null;
   seoTitle: string | null;
+  faqs?: string | null;
+  tags?: string[];
+  alsoFoundIn?: string[];
   status: string;
   
   finishDurabilityScore?: number | null;

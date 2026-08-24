@@ -368,6 +368,9 @@ model Wheel {
   keywords             String?
   metaDescription      String?
   seoTitle             String?
+  faqs                 String?           // Rich HTML FAQ content (Jodit)
+  tags                 String[]          @default([])
+  alsoFoundIn          String[]          @default([])
   isVisible            Boolean           @default(true)
   category             String            @default("none")
   status               String            @default("draft") // draft or published

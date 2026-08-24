@@ -103,6 +103,69 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
   const [keywordArray, setKeywordArray] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
 
+  // Tags / Also Found In / FAQs
+  const [tagArray, setTagArray] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [alsoFoundInArray, setAlsoFoundInArray] = useState<string[]>([]);
+  const [alsoFoundInInput, setAlsoFoundInInput] = useState('');
+  const [faqs, setFaqs] = useState('');
+
+  const faqEditorConfig = useMemo(
+    () => ({
+      readonly: false,
+      placeholder:
+        'Use bold text or a heading for each question (default 20px Inter), then write the answer below it (default 18px Inter).',
+      showPlaceholder: true,
+      toolbarButtonSize: 'middle' as const,
+      buttons: [
+        'source',
+        '|',
+        'bold',
+        'strikethrough',
+        'underline',
+        'italic',
+        '|',
+        'ul',
+        'ol',
+        '|',
+        'outdent',
+        'indent',
+        '|',
+        'font',
+        'fontsize',
+        'brush',
+        'paragraph',
+        '|',
+        'image',
+        'video',
+        'table',
+        'link',
+        '|',
+        'align',
+        'undo',
+        'redo',
+        '|',
+        'hr',
+        'eraser',
+        'copyformat',
+        '|',
+        'symbol',
+        'fullsize',
+        'print',
+        'about',
+      ],
+      height: 360,
+      uploader: { insertImageAsBase64URI: true },
+      askBeforePasteHTML: false,
+      askBeforePasteFromWord: false,
+      defaultActionOnPaste: 'insert_clear_html' as const,
+      width: '100%',
+      spellcheck: true,
+      language: 'en',
+    }),
+    []
+  );
+
   const [formData, setFormData] = useState({
     sku: '',
     productName: '',
@@ -239,6 +302,10 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
         if (wheel.keywords) {
           setKeywordArray(wheel.keywords.split(';').filter(Boolean));
         }
+
+        setFaqs(wheel.faqs || '');
+        setTagArray(Array.isArray(wheel.tags) ? wheel.tags : []);
+        setAlsoFoundInArray(Array.isArray(wheel.alsoFoundIn) ? wheel.alsoFoundIn : []);
 
         if (wheel.images && Array.isArray(wheel.images)) {
           setProductImages(
@@ -456,6 +523,33 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
     setKeywordArray(keywordArray.filter((k) => k !== kw));
   };
 
+  const addChipValue = (
+    raw: string,
+    list: string[],
+    setList: React.Dispatch<React.SetStateAction<string[]>>,
+    setInput: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    const val = raw.trim().replace(/;$/, '');
+    if (val && !list.includes(val)) {
+      setList([...list, val]);
+    }
+    setInput('');
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ';') {
+      e.preventDefault();
+      addChipValue(tagInput, tagArray, setTagArray, setTagInput);
+    }
+  };
+
+  const handleAlsoFoundInKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ';') {
+      e.preventDefault();
+      addChipValue(alsoFoundInInput, alsoFoundInArray, setAlsoFoundInArray, setAlsoFoundInInput);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent, statusOverride?: 'published' | 'draft') => {
     e.preventDefault();
     const finalStatus = statusOverride || formData.status || 'published';
@@ -552,6 +646,9 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
       }
       submitData.append('existingVideo', existingVideo || '');
       submitData.set('youtubeUrl', trimmedYoutube);
+      submitData.set('faqs', faqs || '');
+      submitData.set('tags', JSON.stringify(tagArray));
+      submitData.set('alsoFoundIn', JSON.stringify(alsoFoundInArray));
 
       if (editWheelId) {
         await dispatch(updateWheel({ id: editWheelId, data: submitData })).unwrap();
@@ -1135,6 +1232,69 @@ export default function WheelForm({ editWheelId, duplicateId }: WheelFormProps) 
               {formData.metaDescription && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">Meta Description</label>}
               <textarea placeholder="Meta Description" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y" value={formData.metaDescription} onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })} />
             </div>
+          </div>
+        </div>
+
+        {/* FAQs / Tags / Also Found In */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8">
+          <div className="space-y-3">
+            <h3 className="text-[18px] font-bold text-[#1e2a4a]">FAQs</h3>
+            <div className="rounded-xl border border-gray-200 overflow-hidden">
+              <JoditEditor value={faqs} config={faqEditorConfig} onBlur={(content) => setFaqs(content)} />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Tags</h3>
+            <input
+              type="text"
+              placeholder="Type tags and press Enter or semi-colon (;)"
+              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+            />
+            {tagArray.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tagArray.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
+                  >
+                    {tag}
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => setTagArray(tagArray.filter((t) => t !== tag))} />
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-[16px] font-bold text-[#1e2a4a]">Also Found In</h3>
+            <input
+              type="text"
+              placeholder="Type categories and press Enter or semi-colon (;)"
+              className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
+              value={alsoFoundInInput}
+              onChange={(e) => setAlsoFoundInInput(e.target.value)}
+              onKeyDown={handleAlsoFoundInKeyDown}
+            />
+            {alsoFoundInArray.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {alsoFoundInArray.map((item) => (
+                  <span
+                    key={item}
+                    className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-emerald-100"
+                  >
+                    {item}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setAlsoFoundInArray(alsoFoundInArray.filter((t) => t !== item))}
+                    />
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
