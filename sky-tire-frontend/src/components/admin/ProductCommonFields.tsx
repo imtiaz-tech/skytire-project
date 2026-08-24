@@ -58,6 +58,88 @@ const DEFAULT_SECTIONS: ProductCommonSection[] = ['description', 'seo', 'faqs', 
 
 const cardClass = 'bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 space-y-8';
 
+const FAQ_QUESTION_STYLE =
+  'font-size: 20px; font-family: Inter, sans-serif; font-weight: 700;';
+const FAQ_ANSWER_STYLE =
+  'font-size: 18px; font-family: Inter, sans-serif; font-weight: 400;';
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Detect FAQ question lines (e.g. "1. What type of tires...?"). */
+function isFaqQuestionText(text: string): boolean {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (!t || !t.endsWith('?')) return false;
+  if (/^\d+[\.\)]\s+/.test(t)) return true;
+  // Short standalone question lines without a number
+  return t.length > 0 && t.length <= 220;
+}
+
+/**
+ * Preserve/restore FAQ formatting on paste:
+ * questions → bold 20px Inter, answers → 18px Inter.
+ */
+function formatFaqPasteHtml(html: string): string {
+  if (typeof document === 'undefined' || !html?.trim()) return html;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+
+  const applyBlockStyle = (el: HTMLElement) => {
+    const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!text) return;
+
+    if (isFaqQuestionText(text)) {
+      el.setAttribute('style', FAQ_QUESTION_STYLE);
+      const hasStrong = !!el.querySelector('strong, b');
+      if (!hasStrong) {
+        el.innerHTML = `<strong style="${FAQ_QUESTION_STYLE}">${el.innerHTML}</strong>`;
+      } else {
+        el.querySelectorAll('strong, b').forEach((node) => {
+          (node as HTMLElement).setAttribute('style', FAQ_QUESTION_STYLE);
+        });
+      }
+    } else {
+      el.setAttribute('style', FAQ_ANSWER_STYLE);
+    }
+  };
+
+  const blocks = Array.from(wrap.querySelectorAll('p, h1, h2, h3, h4, li')) as HTMLElement[];
+
+  if (blocks.length > 0) {
+    blocks.forEach(applyBlockStyle);
+    return wrap.innerHTML;
+  }
+
+  // Plain / br-separated paste: split into paragraphs first
+  const raw = (wrap.innerHTML || wrap.textContent || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?[^>]+>/g, '');
+  const lines = raw
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return html;
+
+  wrap.innerHTML = lines
+    .map((line) => {
+      const safe = escapeHtml(line);
+      if (isFaqQuestionText(line)) {
+        return `<p style="${FAQ_QUESTION_STYLE}"><strong style="${FAQ_QUESTION_STYLE}">${safe}</strong></p>`;
+      }
+      return `<p style="${FAQ_ANSWER_STYLE}">${safe}</p>`;
+    })
+    .join('');
+
+  return wrap.innerHTML;
+}
+
 function addChipValue(
   raw: string,
   list: string[],
@@ -212,7 +294,17 @@ export default function ProductCommonFields({
       uploader: { insertImageAsBase64URI: true },
       askBeforePasteHTML: false,
       askBeforePasteFromWord: false,
-      defaultActionOnPaste: 'insert_clear_html' as const,
+      // Keep ChatGPT bold/size; insert_clear_html was stripping question formatting
+      defaultActionOnPaste: 'insert_as_html' as const,
+      processPasteHTML: true,
+      events: {
+        processPaste(_event: unknown, html: string) {
+          return formatFaqPasteHtml(html);
+        },
+      },
+      style: {
+        font: '18px Inter, sans-serif',
+      },
       width: '100%',
       spellcheck: true,
       language: 'en',
