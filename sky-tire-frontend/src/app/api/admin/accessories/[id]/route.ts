@@ -94,6 +94,23 @@ export async function PUT(
     const keywords = formData.get('keywords') as string;
     const seoTitle = formData.get('seoTitle') as string;
     const metaDescription = formData.get('metaDescription') as string;
+    const faqs = formData.get('faqs') as string;
+    const tagsRaw = formData.get('tags') as string;
+    const alsoFoundInRaw = formData.get('alsoFoundIn') as string;
+    let tags: string[] = [];
+    let alsoFoundIn: string[] = [];
+    try {
+      tags = tagsRaw ? JSON.parse(tagsRaw) : [];
+      if (!Array.isArray(tags)) tags = [];
+    } catch {
+      tags = [];
+    }
+    try {
+      alsoFoundIn = alsoFoundInRaw ? JSON.parse(alsoFoundInRaw) : [];
+      if (!Array.isArray(alsoFoundIn)) alsoFoundIn = [];
+    } catch {
+      alsoFoundIn = [];
+    }
 
     const materialHardnessScoreStr = formData.get('materialHardnessScore') as string;
     const threadPrecisionScoreStr = formData.get('threadPrecisionScore') as string;
@@ -285,6 +302,9 @@ export async function PUT(
         keywords: keywords || null,
         seoTitle: seoTitle || null,
         metaDescription: metaDescription || null,
+        faqs: faqs || null,
+        tags,
+        alsoFoundIn,
         specifications,
         materialHardnessScore: materialHardnessScoreStr ? parseInt(materialHardnessScoreStr) : null,
         threadPrecisionScore: threadPrecisionScoreStr ? parseInt(threadPrecisionScoreStr) : null,

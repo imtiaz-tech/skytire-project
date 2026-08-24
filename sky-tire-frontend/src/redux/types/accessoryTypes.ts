@@ -64,6 +64,9 @@ export interface Accessory {
   keywords: string | null;
   metaDescription: string | null;
   seoTitle: string | null;
+  faqs?: string | null;
+  tags?: string[];
+  alsoFoundIn?: string[];
   specifications: AccessorySpecifications | null;
   materialHardnessScore: number | null;
   threadPrecisionScore: number | null;
