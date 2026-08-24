@@ -1689,7 +1689,7 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
             disabled={draftLoading || publishLoading} 
             className="px-12 py-4 bg-[#1e2a4a] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {publishLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editBoltOnWireWheelId ? 'Update Wire Wheel' : 'Save Wire Wheel')}
+            {publishLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (editBoltOnWireWheelId ? 'Update Bolt On Wire Wheel' : 'Save Wire Wheel')}
           </button>
         </div>
 
