@@ -890,3 +890,14 @@ model ChatMessage {
   @@index([conversationId, createdAt])
 }
 
+/// Category landing-page FAQs (one rich HTML document per category)
+model MainPageFaq {
+  id        String   @id @default(cuid())
+  category  String   @unique // tires | white_wall_tires | wheels | wire_wheels | bolt_on_wire_wheels | accessories
+  content   String?  @db.Text // Rich HTML FAQ content (Jodit)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+

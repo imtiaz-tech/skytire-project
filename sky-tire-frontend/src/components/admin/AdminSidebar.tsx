@@ -30,6 +30,7 @@ import {
   ChartColumn,
   RefreshCw,
   MessageSquare,
+  CircleHelp,
 } from 'lucide-react';
 
 const navItems = [
@@ -56,6 +57,7 @@ const navItems = [
   { label: 'Rotator', href: '/admin/rotator', icon: RotateCw },
   { label: 'Banners', href: '/admin/banner', icon: Image },
   { label: 'Blogs', href: '/admin/blogs', icon: FileText },
+  { label: 'FAQs', href: '/admin/faqs', icon: CircleHelp },
   { label: 'AI Prompts', href: '/admin/ai-prompts', icon: Cpu },
 ];
 
