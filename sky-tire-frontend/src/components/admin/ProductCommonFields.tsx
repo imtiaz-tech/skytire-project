@@ -347,145 +347,142 @@ export default function ProductCommonFields({
       </div>
     ) : null;
 
-  const seoInner = show('seo') ? (
-    <div className="space-y-6">
-      {seoCardTitle && wrapCards && (
-        <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">{seoCardTitle}</h3>
+  const metaDescriptionBlock = show('seo') ? (
+    <div className="relative w-full">
+      {metaDescription && (
+        <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
+          Meta Description
+        </label>
       )}
+      <textarea
+        placeholder="Meta Description"
+        className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y focus:ring-1 focus:ring-blue-500/20"
+        value={metaDescription}
+        onChange={(e) => setMetaDescription(e.target.value)}
+      />
+    </div>
+  ) : null;
 
-      <div className="space-y-3">
-        <div className="relative w-full">
-          {keywordInput && (
-            <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
-              Keywords
-            </label>
-          )}
-          <input
-            type="text"
-            placeholder="Press Enter or ; to add keywords"
-            className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            onKeyDown={handleKeywordKeyDown}
-          />
-        </div>
-        {keywords.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {keywords.map((kw) => (
-              <span
-                key={kw}
-                className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
-              >
-                {kw}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-blue-800"
-                  onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
-                />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="relative w-full">
-        {seoTitle && (
-          <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
-            SEO Title
-          </label>
-        )}
-        <input
-          type="text"
-          placeholder="SEO Title"
-          className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/20"
-          value={seoTitle}
-          onChange={(e) => setSeoTitle(e.target.value)}
-        />
-      </div>
-
-      <div className="relative w-full">
-        {metaDescription && (
-          <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
-            Meta Description
-          </label>
-        )}
-        <textarea
-          placeholder="Meta Description"
-          className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none min-h-[100px] resize-y focus:ring-1 focus:ring-blue-500/20"
-          value={metaDescription}
-          onChange={(e) => setMetaDescription(e.target.value)}
-        />
+  const faqsBlock = show('faqs') ? (
+    <div className="space-y-3">
+      <h3 className="text-[18px] font-bold text-[#1e2a4a]">FAQs</h3>
+      <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <JoditEditor value={faqs} config={faqEditorConfig} onBlur={(content) => setFaqs(content)} />
       </div>
     </div>
   ) : null;
 
-  const faqsInner = show('faqs') ? (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <h3 className="text-[18px] font-bold text-[#1e2a4a]">FAQs</h3>
-        <div className="rounded-xl border border-gray-200 overflow-hidden">
-          <JoditEditor value={faqs} config={faqEditorConfig} onBlur={(content) => setFaqs(content)} />
+  const keywordsBlock = show('seo') ? (
+    <div className="space-y-3">
+      <div className="relative w-full">
+        {keywordInput && (
+          <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
+            Keywords
+          </label>
+        )}
+        <input
+          type="text"
+          placeholder="Press Enter or ; to add keywords"
+          className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/50"
+          value={keywordInput}
+          onChange={(e) => setKeywordInput(e.target.value)}
+          onKeyDown={handleKeywordKeyDown}
+        />
+      </div>
+      {keywords.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {keywords.map((kw) => (
+            <span
+              key={kw}
+              className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
+            >
+              {kw}
+              <X
+                className="h-3 w-3 cursor-pointer hover:text-blue-800"
+                onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
+              />
+            </span>
+          ))}
         </div>
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-[16px] font-bold text-[#1e2a4a]">Tags</h3>
-        <input
-          type="text"
-          placeholder="Type tags and press Enter or semi-colon (;)"
-          className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleTagKeyDown}
-        />
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
-              >
-                {tag}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setTags(tags.filter((t) => t !== tag))}
-                />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-[16px] font-bold text-[#1e2a4a]">Also Found In</h3>
-        <input
-          type="text"
-          placeholder="Type categories and press Enter or semi-colon (;)"
-          className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
-          value={alsoFoundInInput}
-          onChange={(e) => setAlsoFoundInInput(e.target.value)}
-          onKeyDown={handleAlsoFoundInKeyDown}
-        />
-        {alsoFoundIn.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {alsoFoundIn.map((item) => (
-              <span
-                key={item}
-                className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-emerald-100"
-              >
-                {item}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setAlsoFoundIn(alsoFoundIn.filter((t) => t !== item))}
-                />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   ) : null;
 
-  const scoresInner = show('scores') ? (
+  const tagsBlock = show('faqs') ? (
+    <div className="space-y-3">
+      <h3 className="text-[16px] font-bold text-[#1e2a4a]">Tags</h3>
+      <input
+        type="text"
+        placeholder="Type tags and press Enter or semi-colon (;)"
+        className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
+        value={tagInput}
+        onChange={(e) => setTagInput(e.target.value)}
+        onKeyDown={handleTagKeyDown}
+      />
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100"
+            >
+              {tag}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setTags(tags.filter((t) => t !== tag))} />
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  const alsoFoundInBlock = show('faqs') ? (
+    <div className="space-y-3">
+      <h3 className="text-[16px] font-bold text-[#1e2a4a]">Also Found In</h3>
+      <input
+        type="text"
+        placeholder="Type categories and press Enter or semi-colon (;)"
+        className="w-full min-h-[120px] px-4 py-3 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none"
+        value={alsoFoundInInput}
+        onChange={(e) => setAlsoFoundInInput(e.target.value)}
+        onKeyDown={handleAlsoFoundInKeyDown}
+      />
+      {alsoFoundIn.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {alsoFoundIn.map((item) => (
+            <span
+              key={item}
+              className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[13px] font-bold flex items-center gap-2 border border-emerald-100"
+            >
+              {item}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => setAlsoFoundIn(alsoFoundIn.filter((t) => t !== item))}
+              />
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  const seoTitleBlock = show('seo') ? (
+    <div className="relative w-full">
+      {seoTitle && (
+        <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">
+          SEO Title
+        </label>
+      )}
+      <input
+        type="text"
+        placeholder="SEO Title"
+        className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] outline-none focus:ring-1 focus:ring-blue-500/20"
+        value={seoTitle}
+        onChange={(e) => setSeoTitle(e.target.value)}
+      />
+    </div>
+  ) : null;
+
+  const scoresBlock = show('scores') ? (
     <div className="space-y-6">
       <h3 className="text-[18px] font-bold text-[#1e2a4a]">{scoresCardTitle}</h3>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -519,27 +516,32 @@ export default function ProductCommonFields({
     </div>
   ) : null;
 
-  const wrap = (content: React.ReactNode, key: string) =>
-    content ? (
-      wrapCards ? (
-        <div key={key} className={cardClass}>
-          {content}
-        </div>
-      ) : (
-        <div key={key} className="space-y-6">
-          {content}
-        </div>
-      )
-    ) : null;
+  // Field order: description → meta description → FAQs → keywords → tags → also found in → SEO title → sky score
+  const orderedFields = [
+    { key: 'description', node: descriptionBlock },
+    { key: 'metaDescription', node: metaDescriptionBlock },
+    { key: 'faqs', node: faqsBlock },
+    { key: 'keywords', node: keywordsBlock },
+    { key: 'tags', node: tagsBlock },
+    { key: 'alsoFoundIn', node: alsoFoundInBlock },
+    { key: 'seoTitle', node: seoTitleBlock },
+    { key: 'scores', node: scoresBlock },
+  ].filter((field) => field.node != null);
 
-  return (
-    <>
-      {/* Description is usually embedded near product name — never auto-wrap in its own card */}
-      {descriptionBlock}
+  if (orderedFields.length === 0) return null;
 
-      {wrap(seoInner, 'seo')}
-      {wrap(faqsInner, 'faqs')}
-      {wrap(scoresInner, 'scores')}
-    </>
+  const body = (
+    <div className="space-y-8">
+      {seoCardTitle && wrapCards && (
+        <h3 className="text-[18px] font-bold text-[#1e2a4a] border-b border-gray-50 pb-4">{seoCardTitle}</h3>
+      )}
+      {orderedFields.map(({ key, node }) => (
+        <React.Fragment key={key}>{node}</React.Fragment>
+      ))}
+    </div>
   );
+
+  if (!wrapCards) return body;
+
+  return <div className={cardClass}>{body}</div>;
 }

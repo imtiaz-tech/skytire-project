@@ -1225,13 +1225,6 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
             <input type="text" placeholder="Product Name" className="w-full px-4 py-3.5 bg-transparent border border-gray-200 rounded-xl text-[#1e2a4a] text-[16px] focus:ring-1 focus:ring-blue-500/50 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
 
-          <ProductCommonFields
-            sections={['description']}
-            description={formData.description}
-            onDescriptionChange={(html) => setFormData({ ...formData, description: html })}
-            descriptionPlaceholder={editBoltOnWireWheelId ? '' : 'Enter bolt-on wire wheel description...'}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-50">
             <div className="relative w-full">
               {formData.sku && <label className="absolute -top-2.5 left-3 bg-white px-1 text-[12px] font-medium text-gray-400 z-10">SKU</label>}
@@ -1646,7 +1639,10 @@ export default function BoltOnWireWheelForm({ editBoltOnWireWheelId, duplicateId
 
         {/* SEO / FAQs / Tags / Also Found In / Sky Score */}
         <ProductCommonFields
-          sections={['seo', 'faqs', 'scores']}
+          sections={['description', 'seo', 'faqs', 'scores']}
+          description={formData.description}
+          onDescriptionChange={(html) => setFormData({ ...formData, description: html })}
+          descriptionPlaceholder={editBoltOnWireWheelId ? '' : 'Enter bolt-on wire wheel description...'}
           keywords={keywordArray}
           onKeywordsChange={setKeywordArray}
           seoTitle={formData.seoTitle}

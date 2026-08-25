@@ -678,21 +678,10 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             </div>
           </div>
 
-          <ProductCommonFields
-            sections={['seo']}
-            wrapCards={false}
-            seoCardTitle=""
-            keywords={keywordArray}
-            onKeywordsChange={setKeywordArray}
-            seoTitle={formData.seoTitle}
-            onSeoTitleChange={(v) => setFormData({ ...formData, seoTitle: v })}
-            metaDescription={formData.metaDescription}
-            onMetaDescriptionChange={(v) => setFormData({ ...formData, metaDescription: v })}
-          />
         </div>
 
         <ProductCommonFields
-          sections={['faqs']}
+          sections={['seo', 'faqs', 'scores']}
           keywords={keywordArray}
           onKeywordsChange={setKeywordArray}
           seoTitle={formData.seoTitle}
@@ -705,6 +694,19 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
           onTagsChange={setTagArray}
           alsoFoundIn={alsoFoundInArray}
           onAlsoFoundInChange={setAlsoFoundInArray}
+          scoreFields={[
+            { key: 'mileageScore', label: 'Mileage Score' },
+            { key: 'stabilityScore', label: 'Stability Score' },
+            { key: 'tractionScore', label: 'Traction Score' },
+            { key: 'feedbackScore', label: 'Feedback Score' },
+          ]}
+          scores={{
+            mileageScore: formData.mileageScore,
+            stabilityScore: formData.stabilityScore,
+            tractionScore: formData.tractionScore,
+            feedbackScore: formData.feedbackScore,
+          }}
+          onScoreChange={(key, value) => setFormData({ ...formData, [key]: value })}
         />
 
         {/* Product Videos */}
@@ -815,22 +817,6 @@ export default function TireSizeForm({ editTireId }: TireSizeFormProps) {
             showStockCostDetails={Boolean(editTireId)}
           />
 
-          <ProductCommonFields
-            sections={['scores']}
-            scoreFields={[
-              { key: 'mileageScore', label: 'Mileage Score' },
-              { key: 'stabilityScore', label: 'Stability Score' },
-              { key: 'tractionScore', label: 'Traction Score' },
-              { key: 'feedbackScore', label: 'Feedback Score' },
-            ]}
-            scores={{
-              mileageScore: formData.mileageScore,
-              stabilityScore: formData.stabilityScore,
-              tractionScore: formData.tractionScore,
-              feedbackScore: formData.feedbackScore,
-            }}
-            onScoreChange={(key, value) => setFormData({ ...formData, [key]: value })}
-          />
         </div>
 
         <div className="flex justify-end items-center gap-4 pt-8">

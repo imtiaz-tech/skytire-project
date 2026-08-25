@@ -856,13 +856,6 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
             />
           </div>
 
-          <ProductCommonFields
-            sections={['description']}
-            description={formData.description}
-            onDescriptionChange={(html) => setFormData({ ...formData, description: html })}
-            descriptionPlaceholder={editAccessoryId ? '' : 'Enter accessory description...'}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-50">
             <div className="relative w-full">
               {formData.sku && (
@@ -1183,7 +1176,10 @@ export default function AccessoryForm({ editAccessoryId, duplicateId }: Accessor
 
         {/* SEO / FAQs / Tags / Also Found In / Sky Score */}
         <ProductCommonFields
-          sections={['seo', 'faqs', 'scores']}
+          sections={['description', 'seo', 'faqs', 'scores']}
+          description={formData.description}
+          onDescriptionChange={(html) => setFormData({ ...formData, description: html })}
+          descriptionPlaceholder={editAccessoryId ? '' : 'Enter accessory description...'}
           seoCardTitle=""
           keywords={keywordArray}
           onKeywordsChange={setKeywordArray}
