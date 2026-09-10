@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Container from "@/components/storefront/Container";
-import { IMG, footerColumns, legalLinks, socialLinks } from "@/lib/storefront/content";
+import { ICO, IMG, footerColumns, legalLinks, socialLinks } from "@/lib/storefront/content";
 
 const shop = footerColumns[0];
 const support = footerColumns[1];
@@ -10,7 +10,8 @@ const company = footerColumns[2];
 export default function Footer() {
   return (
     <footer className="bg-black text-white">
-      <Container className="pt-16 pb-8 lg:pt-24 lg:pb-12">
+      <MobileFooter />
+      <Container className="hidden pt-16 pb-8 lg:block lg:pt-24 lg:pb-12">
         <div className="grid gap-12 lg:grid-cols-[1.35fr_0.85fr_0.85fr_1.15fr] lg:gap-8">
           <BrandColumn />
           <nav className="hidden lg:block" aria-label="Shop">
@@ -28,20 +29,6 @@ export default function Footer() {
             </nav>
           </div>
           <ContactColumn />
-        </div>
-
-        <div className="mt-10 space-y-0 border-t border-[#333438] lg:hidden">
-          {[shop, support, company].map((column) => (
-            <details key={column.title} className="border-b border-[#333438]">
-              <summary className="flex cursor-pointer items-center justify-between py-4 text-[14px] font-bold uppercase tracking-[0.1em] [&::-webkit-details-marker]:hidden">
-                {column.title}
-                <span aria-hidden className="text-[#A6A6A6]">
-                  +
-                </span>
-              </summary>
-              <FooterLinks links={column.links} className="pb-4" />
-            </details>
-          ))}
         </div>
 
         <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[#333438] pt-6">
@@ -63,6 +50,270 @@ export default function Footer() {
         </div>
       </Container>
     </footer>
+  );
+}
+
+function MobileFooter() {
+  const accordionColumns = [shop, company, support];
+
+  return (
+    <div className="relative overflow-hidden px-5 pt-10 pb-8 lg:hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 100% 0%, rgba(198, 161, 91, 0.08) 0%, rgba(198, 161, 91, 0) 60%)",
+        }}
+      />
+
+      <div className="relative flex flex-col gap-10">
+        <div className="flex flex-col gap-[7px]">
+          <Link href="/" className="inline-block" aria-label="Sky Tire home">
+            <span className="font-display text-[36px] leading-[1.11] tracking-[0.05em] text-white">
+              SKY TIRE
+            </span>
+          </Link>
+          <p className="font-display text-[18px] uppercase leading-[1.25] tracking-[0.025em] text-white">
+            Tires for every ride.
+            <br />
+            Wheels for every style.
+          </p>
+          <p className="font-body text-[10px] font-bold uppercase leading-[1.5] tracking-[0.2em] text-[#C6A15B]">
+            Your lowrider headquarters
+          </p>
+          <p className="font-body text-[13px] leading-[1.5] text-[#C9CDD1]">
+            Wire Wheels • Original Whitewalls • Lowrider Accessories
+          </p>
+        </div>
+
+        <div aria-hidden className="h-px w-full bg-[linear-gradient(90deg,rgba(201,205,209,0)_0%,rgba(201,205,209,0.2)_50%,rgba(201,205,209,0)_100%)]" />
+
+        <div className="flex flex-col gap-4">
+          <h3 className="font-display text-[20px] uppercase leading-[1.4] tracking-[0.05em] text-white">
+            About Us
+          </h3>
+          <p className="font-body text-[14px] leading-[1.5] text-[#C9CDD1]">
+            Your trusted road safety partner, providing reliable quality and personalized service.
+          </p>
+          <ul className="flex flex-wrap gap-3 pt-2">
+            {socialLinks.map((item) => (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  aria-label={item.name}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(201,205,209,0.3)] text-white"
+                >
+                  <SocialIcon name={item.icon} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <h3 className="font-display text-[20px] uppercase leading-[1.4] tracking-[0.05em] text-white">
+            Stay in the loop
+          </h3>
+          <form className="flex flex-col gap-3">
+            <label htmlFor="footer-email-mobile" className="sr-only">
+              Email Address
+            </label>
+            <input
+              id="footer-email-mobile"
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              className="h-[52px] w-full rounded border border-[rgba(201,205,209,0.4)] bg-transparent px-4 font-body text-[16px] leading-[1.21] text-white placeholder:text-[rgba(201,205,209,0.5)]"
+            />
+            <button
+              type="submit"
+              className="flex h-[52px] w-full items-center justify-center rounded bg-white font-body text-[14px] font-bold uppercase leading-[1.43] tracking-[0.1em] text-black"
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
+
+        <div>
+          {accordionColumns.map((column) => (
+            <details
+              key={column.title}
+              className="group border-b border-[rgba(201,205,209,0.2)]"
+            >
+              <summary className="flex cursor-pointer items-center justify-between py-[14px] [&::-webkit-details-marker]:hidden">
+                <span className="font-display text-[18px] uppercase leading-[1.56] tracking-[0.025em] text-white">
+                  {column.title}
+                </span>
+                {/* Figma chevron; next/image is unnecessary for this local SVG. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${ICO}/chevron-down.svg`}
+                  alt=""
+                  width={12}
+                  height={12}
+                  className="h-3 w-3 transition-transform group-open:rotate-180"
+                />
+              </summary>
+              <ul className="pb-4">
+                {column.links.map((link) => (
+                  <li key={link.href + link.label}>
+                    <Link
+                      href={link.href}
+                      className="block py-[12px] font-body text-[14px] leading-[1.43] text-[#C9CDD1]"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <h3 className="font-display text-[20px] uppercase leading-[1.4] tracking-[0.05em] text-white">
+            Our guarantee
+          </h3>
+          <a
+            href="https://www.bbb.org/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-3"
+          >
+            <Image
+              src={`${IMG}/badge-bbb.png`}
+              alt="BBB Accredited Business"
+              width={161}
+              height={61}
+              className="h-[48px] w-auto shrink-0"
+            />
+            <span className="font-body text-[11px] leading-snug text-[#A6A6A6]">
+              BBB Rating: A+
+              <br />
+              As of 9/2/2026
+              <br />
+              Click for Profile
+            </span>
+          </a>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <h3 className="font-display text-[20px] uppercase leading-[1.4] tracking-[0.05em] text-white">
+            Contact
+          </h3>
+          <div className="flex flex-col gap-6">
+            <ContactRow icon="pin" href="https://maps.google.com/?q=Sacramento+CA+95838">
+              Sacramento, CA 95838
+            </ContactRow>
+            <ContactRow icon="phone" href="tel:+19166164759">
+              +1 (916) 616-4759
+            </ContactRow>
+            <ContactRow icon="mail" href="mailto:info@skytire.com">
+              info@skytire.com
+            </ContactRow>
+            <a
+              href="https://maps.google.com/?q=Sacramento+CA+95838"
+              className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded border border-[rgba(201,205,209,0.3)] font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.1em] text-[#C9CDD1]"
+            >
+              <ContactGlyph name="pin" className="text-[#C6A15B]" />
+              Get Directions
+            </a>
+            <div className="relative h-[88px] overflow-hidden rounded border border-[#333438] bg-[#111]">
+              <Image
+                src={`${IMG}/map.png`}
+                alt="Stylized map of California"
+                fill
+                className="object-cover object-center opacity-60"
+                sizes="335px"
+              />
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-[linear-gradient(0deg,rgba(11,11,12,0.6)_0%,rgba(11,11,12,0)_100%)]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-[#333438] pt-4">
+          <ul className="grid grid-cols-3 gap-y-2 text-center">
+            {legalLinks.slice(0, 3).map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="font-body text-[11px] leading-[1.45] text-[#C9CDD1]"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li className="col-span-3">
+              <Link
+                href={legalLinks[3].href}
+                className="font-body text-[11px] leading-[1.45] text-[#C9CDD1]"
+              >
+                {legalLinks[3].label}
+              </Link>
+            </li>
+          </ul>
+          <p className="text-center font-body text-[11px] uppercase leading-[1.5] tracking-[0.1em] text-[rgba(201,205,209,0.6)]">
+            © 2026 Sky Tire. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContactRow({
+  icon,
+  href,
+  children,
+}: {
+  icon: "pin" | "phone" | "mail";
+  href: string;
+  children: string;
+}) {
+  return (
+    <a href={href} className="flex items-center gap-4">
+      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[rgba(201,205,209,0.3)]">
+        <ContactGlyph name={icon} />
+      </span>
+      <span className="font-body text-[14px] leading-[1.43] text-[#C9CDD1]">{children}</span>
+    </a>
+  );
+}
+
+function ContactGlyph({ name, className = "" }: { name: "pin" | "phone" | "mail"; className?: string }) {
+  const classNames = `h-3.5 w-3.5 fill-none stroke-current ${className}`;
+  if (name === "phone") {
+    return (
+      <svg viewBox="0 0 24 24" className={classNames} aria-hidden>
+        <path
+          d="M7.2 3.8h2.4l1.2 3-1.6 1a12.5 12.5 0 0 0 6 6l1-1.6 3 1.2v2.4c0 .8-.7 1.6-1.5 1.7-7.2.8-13.1-5.1-12.3-12.3.1-.8.9-1.4 1.8-1.4Z"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (name === "mail") {
+    return (
+      <svg viewBox="0 0 24 24" className={classNames} aria-hidden>
+        <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" strokeWidth="1.5" />
+        <path d="M4 7.2 12 13l8-5.8" strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" className={classNames} aria-hidden>
+      <path
+        d="M12 21s7-5.33 7-11a7 7 0 1 0-14 0c0 5.67 7 11 7 11Z"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10" r="2.4" strokeWidth="1.5" />
+    </svg>
   );
 }
 
