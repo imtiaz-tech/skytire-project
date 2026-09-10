@@ -391,6 +391,13 @@ export const tireShowcaseProducts = [
 
 export const cultureTags = ["#LowriderStyle", "#StreetKings", "#SkyTireBuilds"] as const;
 
+export const cultureFilters = [
+  { label: "Chrome", href: "/wire-wheels?finish=Chrome" },
+  { label: "Gold", href: "/wire-wheels?finish=All Gold" },
+  { label: "Rose Gold", href: "/wire-wheels?finish=Rose Gold", accent: true },
+  { label: "Whitewalls", href: "/products?sidewall=WHITE_WALL" },
+] as const;
+
 export const cultureColumns = [
   [
     {

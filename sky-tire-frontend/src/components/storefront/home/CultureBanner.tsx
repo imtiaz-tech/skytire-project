@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { cultureColumns, cultureTags } from "@/lib/storefront/content";
+import { cultureColumns, cultureFilters, cultureTags } from "@/lib/storefront/content";
 
 function ShopBadge() {
   return (
@@ -70,12 +70,31 @@ export default function CultureBanner() {
           ))}
         </div>
 
-        <div className="mt-10 text-center lg:mt-16">
+        <div className="mt-10 flex flex-col items-center gap-8 lg:mt-16">
+          <div className="flex w-full items-center justify-start gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-auto lg:justify-center lg:overflow-visible">
+            {cultureFilters.map((filter) => (
+              <Link
+                key={filter.label}
+                href={filter.href}
+                className={`inline-flex h-[33px] shrink-0 items-center rounded-full bg-white/10 px-4 font-body text-[10px] font-semibold uppercase leading-[1.5] ${
+                  "accent" in filter && filter.accent
+                    ? "border border-[#C6A15B] text-[#C6A15B]"
+                    : "border border-white/20 text-white"
+                }`}
+              >
+                {filter.label}
+              </Link>
+            ))}
+          </div>
+
           <Link
             href="/wire-wheels"
-            className="inline-flex items-center justify-center border border-white/30 px-12 py-4 font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.1em] text-white"
+            className="inline-flex w-full items-center justify-center border border-white/30 px-12 py-4 font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.1em] text-white lg:w-auto"
           >
             Explore The Collection
+            <span className="ml-2 lg:hidden" aria-hidden>
+              →
+            </span>
           </Link>
         </div>
       </div>

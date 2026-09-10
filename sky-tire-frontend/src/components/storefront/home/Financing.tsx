@@ -6,14 +6,24 @@ export default function Financing() {
   return (
     <section id="financing" className="bg-[#0B0B0C] py-10 lg:py-24">
       <div className="mx-auto w-full max-w-[1280px] px-5 lg:px-4">
-        <div className="flex flex-col items-center text-center">
-          <h2 className="font-display text-[30px] uppercase leading-none tracking-[-0.025em] text-white lg:whitespace-nowrap lg:text-[72px] lg:tracking-normal">
+        <div className="lg:hidden">
+          <h2 className="font-display text-[30px] uppercase leading-none tracking-[-0.025em] text-white">
             Love the look.
-            <br className="lg:hidden" /> Love the payment.
+            <br />
+            Love the payment.
           </h2>
-          <p className="mt-4 font-display text-[20px] uppercase italic leading-none tracking-[0.025em] text-[#D4AF37] lg:hidden">
-            Build Now. Pay Later.
+          <p className="mt-2 font-display text-[20px] uppercase leading-none tracking-[0.025em] text-[#C9CDD1]">
+            Build Now. Pay Over Time.
           </p>
+          <p className="mt-3 font-body text-[14px] leading-[1.5] text-[#C9CDD1]">
+            Choose the payment option that fits your build.
+          </p>
+        </div>
+
+        <div className="hidden flex-col items-center text-center lg:flex">
+          <h2 className="font-display text-[30px] uppercase leading-none tracking-[-0.025em] text-white lg:whitespace-nowrap lg:text-[72px] lg:tracking-normal">
+            Love the look. Love the payment.
+          </h2>
           <p className="mt-4 hidden font-body text-[14px] font-bold uppercase italic leading-[1.43] tracking-[0.2em] text-[#D4AF37] lg:block">
             Build Now. Pay Later.
           </p>
@@ -79,9 +89,14 @@ export default function Financing() {
           >
             Check Your Eligibility
           </Link>
-          <p className="font-body text-[11px] font-semibold uppercase leading-[1.5] tracking-[0.15em] text-[#C9CDD1] lg:hidden">
-            No impact to your credit to apply.
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <p className="font-body text-[11px] font-semibold uppercase leading-[1.5] tracking-[0.15em] text-[#C9CDD1]">
+              No impact to your credit to apply.
+            </p>
+            <p className="max-w-[302px] text-center font-body text-[12px] leading-[1.5] text-[#C9CDD1]/70 lg:max-w-none">
+              Financing subject to approval. Terms provided by our financing partners.
+            </p>
+          </div>
         </div>
       </div>
     </section>
