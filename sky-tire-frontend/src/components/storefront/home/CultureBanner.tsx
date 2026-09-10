@@ -40,7 +40,7 @@ export default function CultureBanner() {
           ))}
         </div>
 
-        <div className="mt-10 grid grid-cols-2 items-start gap-3 lg:mt-16 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-10 grid grid-cols-2 gap-3 lg:mt-16 lg:grid-cols-4 lg:gap-6">
           {cultureColumns.map((column, columnIndex) => (
             <div key={columnIndex} className="flex flex-col gap-3 lg:gap-6">
               {column.map((item) => {
@@ -49,7 +49,7 @@ export default function CultureBanner() {
                 return (
                   <article
                     key={item.src}
-                    className={`relative overflow-hidden ${item.aspect} ${
+                    className={`relative aspect-square overflow-hidden ${
                       featured
                         ? "border-2 border-[#C6A15B]"
                         : "border border-white/10"

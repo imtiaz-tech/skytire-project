@@ -44,11 +44,11 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-[#333438] pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[#333438] pt-6">
           <p className="text-[11px] uppercase tracking-[0.08em] text-[#A6A6A6]">
             © 2026 Sky Tire. All rights reserved.
           </p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {legalLinks.map((link) => (
               <li key={link.href}>
                 <Link

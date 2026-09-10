@@ -397,12 +397,10 @@ export const cultureColumns = [
       src: `${IMG}/culture-1.png`,
       alt: "Black vintage Cadillac grille",
       shop: true,
-      aspect: "aspect-square",
     },
     {
       src: `${IMG}/culture-2.png`,
       alt: "Chrome custom wheel close-up",
-      aspect: "aspect-[294/320]",
     },
   ],
   [
@@ -411,37 +409,31 @@ export const cultureColumns = [
       alt: "Blue Impala on a city street",
       shop: true,
       featured: true,
-      aspect: "aspect-square",
     },
     {
       src: `${IMG}/culture-4.png`,
       alt: "Red classic car in front of a graffiti mural",
-      aspect: "aspect-[294/452]",
     },
   ],
   [
     {
       src: `${IMG}/culture-5.png`,
       alt: "Wheels catching sunset on a city street",
-      aspect: "aspect-square",
     },
     {
       src: `${IMG}/culture-6.png`,
       alt: "Classic car interior with blue tufted seats",
       shop: true,
-      aspect: "aspect-[294/322]",
     },
   ],
   [
     {
       src: `${IMG}/culture-7.png`,
       alt: "Classic cars at a night meet under neon",
-      aspect: "aspect-square",
     },
     {
       src: `${IMG}/culture-8.png`,
       alt: "White classic Chevrolet at golden hour",
-      aspect: "aspect-[294/402]",
     },
   ],
 ] as const;
