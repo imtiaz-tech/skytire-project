@@ -1,25 +1,112 @@
 import Image from "next/image";
 import Link from "next/link";
+import Icon from "@/components/storefront/Icon";
 import { IMG } from "@/lib/storefront/content";
 
-const finishes = [
-  { name: "Chrome", color: "#F3F4F6", selected: true },
-  { name: "Gold", color: "#C6A15B" },
-  { name: "Black", color: "#000000" },
-  { name: "Silver", color: "#9CA3AF" },
+const visualizerFinishes = [
+  {
+    name: "Chrome",
+    selected: true,
+    className: "bg-gradient-to-br from-[#F3F4F6] to-[#9CA3AF] border-2 border-[#C6A15B]",
+  },
+  {
+    name: "Gold",
+    className: "bg-gradient-to-br from-[#D4AF37] to-[#8B7322]",
+  },
+  {
+    name: "Rose Gold",
+    className: "bg-gradient-to-br from-[#E0BFB8] to-[#B76E79]",
+  },
+  {
+    name: "Neon",
+    className: "bg-[#39FF14] shadow-[0px_0px_8px_0px_rgba(57,255,20,0.5)]",
+  },
 ] as const;
+
+const visualizerSelects = [
+  { label: "Vehicle", value: "’64 Impala" },
+  { label: "Wheel", value: "Zenith 72" },
+  { label: "Tire", value: "Vogue White" },
+  { label: "Finish", value: "Chrome" },
+] as const;
+
+function VisualizerControls() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3">
+        {visualizerSelects.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-[2px] border border-white/10 bg-white/5 p-4"
+          >
+            <p className="font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#6B7280]">
+              {item.label}
+            </p>
+            <div className="mt-1 flex items-center justify-between">
+              <p className="font-body text-[14px] font-semibold uppercase leading-[1.43] text-white">
+                {item.value}
+              </p>
+              <Icon name="chevron-down" alt="" size={10} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-start gap-4 py-2">
+        {visualizerFinishes.map((finish) => (
+          <div
+            key={finish.name}
+            className={`flex flex-col items-center gap-2 ${finish.selected ? "" : "opacity-50"}`}
+          >
+            <span
+              className={`h-10 w-10 rounded-full ${finish.className}`}
+              aria-label={finish.selected ? `${finish.name}, selected` : finish.name}
+            />
+            <span className="font-body text-[9px] uppercase leading-[1.5] tracking-[-0.05em] text-white">
+              {finish.name}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <Link
+        href="/#vehicle-finder"
+        className="inline-flex h-[60px] w-full items-center justify-center gap-3 bg-white font-display text-[20px] uppercase leading-[1.4] text-[#0B0B0C]"
+      >
+        Visualize Your Ride
+        <span aria-hidden>→</span>
+      </Link>
+    </div>
+  );
+}
 
 export default function Visualizer() {
   return (
     <section className="bg-[#0B0B0C] py-16 lg:py-24">
-      <div className="mx-auto w-full max-w-[1280px] px-5 lg:px-4">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-0">
-          <h2 className="font-display text-[48px] uppercase leading-[1.25] tracking-[-0.025em] text-white lg:hidden">
-            See it on
-            <br />
-            your ride.
-          </h2>
+      <div className="px-5 lg:hidden">
+        <h2 className="font-display text-[48px] uppercase leading-[1.25] tracking-[-0.025em] text-white">
+          See it on
+          <br />
+          your ride.
+        </h2>
 
+        <div className="relative mt-8 aspect-[346/259] w-full overflow-hidden rounded">
+          <Image
+            src={`${IMG}/visualizer-car.png`}
+            alt="Red classic convertible with chrome wire wheels"
+            fill
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
+
+        <div className="mt-8">
+          <VisualizerControls />
+        </div>
+      </div>
+
+      <div className="mx-auto hidden w-full max-w-[1280px] px-5 lg:block lg:px-4">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-0">
           <div className="relative lg:w-[749px] lg:shrink-0">
             <span
               aria-hidden
@@ -66,61 +153,9 @@ export default function Visualizer() {
               vehicle&apos;s stance.
             </p>
 
-            <div className="mt-6 grid grid-cols-2 gap-4 lg:mt-6">
-              <div className="border border-white/5 bg-[#202124] px-4 pb-[17.5px] pt-4">
-                <p className="font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#6B7280]">
-                  Vehicle
-                </p>
-                <p className="mt-1 font-body text-[14px] font-bold leading-[1.43] text-white">
-                  Select
-                </p>
-                <p className="font-body text-[14px] font-bold leading-[1.43] text-white">
-                  Year/Make/Model
-                </p>
-              </div>
-              <div className="border border-white/5 bg-[#202124] px-4 pt-4 pb-4">
-                <p className="font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#6B7280]">
-                  Wheel
-                </p>
-                <p className="mt-1.5 font-body text-[14px] font-bold leading-[1.43] text-white">
-                  13&quot; Rev-Master
-                </p>
-              </div>
-              <div className="border border-white/5 bg-[#202124] px-4 py-4">
-                <p className="font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#6B7280]">
-                  Tire
-                </p>
-                <p className="mt-1.5 font-body text-[14px] font-bold leading-[1.43] tracking-[-0.01em] text-white">
-                  155/80R13 Whitewall
-                </p>
-              </div>
-              <div className="border border-white/5 bg-[#202124] px-4 py-4">
-                <p className="font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#6B7280]">
-                  Finish
-                </p>
-                <div className="mt-1 flex items-center">
-                  {finishes.map((finish, index) => (
-                    <span
-                      key={finish.name}
-                      className={`inline-flex h-5 w-5 rounded-full ${index === 0 ? "" : "ml-3"} ${
-                        finish.selected
-                          ? "shadow-[0_0_0_2px_#202124,0_0_0_4px_#C6A15B]"
-                          : ""
-                      }`}
-                      style={{ backgroundColor: finish.color }}
-                      aria-label={finish.selected ? `${finish.name}, selected` : finish.name}
-                    />
-                  ))}
-                </div>
-              </div>
+            <div className="mt-6">
+              <VisualizerControls />
             </div>
-
-            <Link
-              href="/#vehicle-finder"
-              className="mt-4 flex h-[52px] w-full items-center justify-center bg-white font-body text-[14px] font-bold uppercase leading-[1.43] tracking-[0.1em] text-[#0B0B0C]"
-            >
-              Launch Visualizer
-            </Link>
           </div>
         </div>
       </div>
