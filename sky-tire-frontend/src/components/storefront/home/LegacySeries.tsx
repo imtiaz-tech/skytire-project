@@ -19,7 +19,7 @@ export default function LegacySeries() {
         <div className="flex flex-1 items-center px-5 py-12 lg:px-20 lg:pr-32 lg:py-0">
           <div className="w-full max-w-[512px]">
             <p className="font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.3em] text-[#C6A15B]">
-              Legacy Series
+              The Original Whitewall Tires
             </p>
             <h2 className="mt-4 font-display text-[48px] uppercase leading-none text-white lg:text-[72px]">
               The look that
@@ -27,25 +27,25 @@ export default function LegacySeries() {
               never left.
             </h2>
             <p className="mt-6 font-body text-[16px] leading-[1.625] text-[#C9CDD1] lg:text-[18px]">
-              The thin white stripe isn&apos;t just a detail; it&apos;s the signature of the streets.
-              Since 1963, we&apos;ve perfected the chemistry of the whitewall to ensure it stays
-              brilliant while you cruise.
+              Authentic whitewall styling for classic cars, lowriders and custom
+              builds.
             </p>
             <p className="mt-4 font-body text-[16px] font-medium italic leading-[1.5] text-[#C6A15B]">
-              Crafted for the heavy-hitters and the daily rollers alike.
+              Factory-produced white sidewalls — not painted, shaved or
+              artificially added.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <div className="mt-8 flex flex-col items-stretch gap-6 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-8 lg:gap-y-4">
               <Link
                 href="/products?sidewall=WHITE_WALL"
-                className="inline-flex h-[52px] items-center justify-center bg-white px-10 font-body text-[14px] font-bold uppercase leading-[1.43] tracking-[0.1em] text-[#0B0B0C]"
+                className="inline-flex h-[52px] w-full items-center justify-center bg-white px-10 font-body text-[14px] font-bold uppercase leading-[1.43] tracking-[0.1em] text-[#0B0B0C] lg:w-auto"
               >
-                Shop Whitewalls
+                Shop Original Whitewalls
               </Link>
               <Link
-                href="/products?sidewall=WHITE_WALL"
-                className="font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.1em] text-[#C6A15B] underline decoration-[#C6A15B] underline-offset-4"
+                href="/#vehicle-finder"
+                className="text-center font-body text-[12px] font-bold uppercase leading-[1.33] tracking-[0.1em] text-[#C6A15B] lg:text-left"
               >
-                View Technology
+                Find Your Size →
               </Link>
             </div>
           </div>
