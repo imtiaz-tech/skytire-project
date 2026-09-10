@@ -99,3 +99,20 @@ body {
   width: 100%;
   transform: translateX(var(--pkg-shift));
 }
+
+.storefront .tire-viewport {
+  --tire-shift: 0%;
+}
+
+.storefront #home-tire-1:checked ~ .tire-viewport { --tire-shift: -100%; }
+.storefront #home-tire-2:checked ~ .tire-viewport { --tire-shift: -200%; }
+.storefront #home-tire-3:checked ~ .tire-viewport { --tire-shift: -300%; }
+.storefront #home-tire-4:checked ~ .tire-viewport { --tire-shift: -400%; }
+.storefront #home-tire-5:checked ~ .tire-viewport { --tire-shift: -500%; }
+.storefront #home-tire-6:checked ~ .tire-viewport { --tire-shift: -600%; }
+.storefront #home-tire-7:checked ~ .tire-viewport { --tire-shift: -700%; }
+
+.storefront .tire-track {
+  width: 100%;
+  transform: translateX(var(--tire-shift));
+}
