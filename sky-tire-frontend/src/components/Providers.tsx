@@ -7,7 +7,7 @@ import { fetchCurrentUser } from '@/redux/slices/authSlice';
 import { FingerprintProvider } from '@fingerprint/react';
 
 import { Toaster } from 'react-hot-toast';
-import ChatWidget from '@/components/ChatWidget';
+// import ChatWidget from '@/components/ChatWidget';
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -28,7 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         region="us"
       >
         <AuthInitializer>{children}</AuthInitializer>
-        <ChatWidget />
+        {/* <ChatWidget /> */}
         <Toaster 
           position="top-center" 
           reverseOrder={false}
