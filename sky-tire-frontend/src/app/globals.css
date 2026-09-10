@@ -82,3 +82,20 @@ body {
 .storefront-menu[open] summary span:nth-child(3) {
   transform: translateY(-4px) rotate(-45deg);
 }
+
+.storefront .pkg-viewport {
+  --pkg-shift: 0%;
+}
+
+.storefront #home-pkg-b:checked ~ .pkg-viewport {
+  --pkg-shift: -100%;
+}
+
+.storefront #home-pkg-c:checked ~ .pkg-viewport {
+  --pkg-shift: -200%;
+}
+
+.storefront .pkg-track {
+  width: 100%;
+  transform: translateX(var(--pkg-shift));
+}
