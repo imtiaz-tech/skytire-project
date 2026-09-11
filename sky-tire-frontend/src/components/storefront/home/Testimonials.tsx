@@ -22,12 +22,12 @@ function ReviewCard({
 }) {
   if (desktop) {
     return (
-      <article className="relative rounded-lg border border-[#333438] bg-[#0B0B0C] p-6 lg:p-[33px]">
+      <article className="relative rounded-lg border border-[#E6E7E9] bg-white p-6 lg:p-[33px]">
         <div className="flex items-center gap-4 pr-16">
           <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full lg:h-12 lg:w-12">
             <Image src={item.image} alt="" fill className="object-cover" sizes="48px" />
           </span>
-          <p className="font-body text-[14px] font-bold uppercase tracking-[0.05em] text-white lg:text-[15px] lg:font-semibold lg:leading-[1.5]">
+          <p className="font-body text-[16px] font-bold uppercase tracking-[0.05em] text-black lg:font-semibold lg:leading-[1.5]">
             {item.name}
           </p>
         </div>
@@ -35,10 +35,10 @@ function ReviewCard({
           Verified
         </span>
         <StarRow size={14} className="mt-6" />
-        <p className="mt-6 font-body text-[14px] italic leading-[1.43] text-[#A6A6A6] lg:text-[15px] lg:leading-[1.625]">
+        <p className="mt-6 font-body text-[16px] italic leading-[1.5] text-black lg:leading-[1.625]">
           “{item.quote}”
         </p>
-        <p className="mt-6 font-body text-[10px] uppercase leading-[1.5] tracking-[0.1em] text-[#A6A6A6]">
+        <p className="mt-6 font-body text-[16px] uppercase leading-[1.5] tracking-[0.1em] text-black">
           {item.purchase}
         </p>
       </article>
