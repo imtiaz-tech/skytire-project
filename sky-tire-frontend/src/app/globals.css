@@ -83,6 +83,33 @@ body {
   transform: translateY(-4px) rotate(-45deg);
 }
 
+html:has(#storefront-nav-drawer:checked),
+body:has(#storefront-nav-drawer:checked) {
+  overflow: hidden;
+}
+
+.storefront .nav-drawer-panel {
+  display: none;
+}
+
+.storefront:has(#storefront-nav-drawer:checked) .nav-drawer-panel {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .storefront .nav-drawer-panel {
+    display: none !important;
+  }
+}
+
+.storefront .nav-drawer-wire > summary .nav-drawer-chevron {
+  transform: rotate(-90deg);
+}
+
+.storefront .nav-drawer-wire[open] > summary .nav-drawer-chevron {
+  transform: rotate(0deg);
+}
+
 .storefront .pkg-viewport {
   --pkg-shift: 0%;
 }

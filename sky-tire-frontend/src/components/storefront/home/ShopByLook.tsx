@@ -6,7 +6,7 @@ export default function ShopByLook() {
   const mobileLooks = looks.slice(0, 4);
 
   return (
-    <section className="bg-[#0B0B0C] text-white">
+    <section id="shop-by-look" className="bg-[#0B0B0C] text-white">
       <div className="px-6 py-16 lg:hidden">
         <p className="font-body text-[11px] font-bold uppercase leading-[1.5] tracking-[0.1em] text-[#C6A15B]">
           No Technical Terms Needed

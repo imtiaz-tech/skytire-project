@@ -183,7 +183,7 @@ function PackageSlider() {
 
 export default function Packages() {
   return (
-    <section className="bg-white py-16 lg:py-24">
+    <section id="packages" className="bg-white py-16 lg:py-24">
       <div className="mx-auto w-full max-w-[1280px] px-5 lg:px-6">
         <div className="flex flex-col items-center gap-4">
           <h2 className="text-center font-display text-[40px] uppercase leading-none text-[#0B0B0C] lg:text-[72px]">
