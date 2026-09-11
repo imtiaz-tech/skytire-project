@@ -116,3 +116,12 @@ body {
   width: 100%;
   transform: translateX(var(--tire-shift));
 }
+
+.storefront .hero-mobile-bg {
+  position: absolute;
+  width: auto;
+  max-width: none;
+  height: 170%;
+  left: -77%;
+  top: -33%;
+}
